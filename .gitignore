@@ -147,3 +147,29 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build
+dist/
+build/
+out/
+
+# Logs
+*.log
+
+# Prisma
+prisma/migrations/**/migration_lock.toml
+
+# Editor
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Vercel / Render
+.vercel
+.render
