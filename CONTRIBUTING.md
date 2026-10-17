@@ -39,7 +39,7 @@ docs(project): add contribution guide
 
 ## Project structure
 
-- `client/`: React + Vite frontend.
+- `frontend/`: React + Vite frontend.
 - `server/`: backend API, Prisma schema, and migrations.
 - `.github/`: issue and PR templates.
 

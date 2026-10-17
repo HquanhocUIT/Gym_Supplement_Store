@@ -16,3 +16,24 @@
 - **Container:** Docker
 
 ## Cấu trúc thư mục
+
+```text
+frontend/   React + Vite client
+server/     Express API and Prisma schema
+.github/    Issue and pull request templates
+```
+
+## Chạy frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Vite hiển thị ứng dụng tại `http://localhost:5173`. Các route mẫu:
+
+- `/`: cửa hàng công khai
+- `/admin`: dashboard quản trị
+- `/admin/products`: danh sách sản phẩm mẫu
+- `/member`: dashboard thành viên

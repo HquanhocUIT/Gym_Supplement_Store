@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #f0f8e9;
+  --color-brand-100: #e1f2d0;
+  --color-brand-500: #9aca42;
+  --color-brand-600: #7cac2c;
+  --color-brand-700: #5e8420;
+  --color-ink: #16231e;
+  --color-ink-soft: #40534a;
+  --color-muted: #738078;
+  --color-paper: #f5f7f2;
+  --color-surface: #ffffff;
+  --color-line: #e3e9e1;
+  --color-night: #18251f;
+  --color-night-soft: #22332b;
+  --font-sans: "Inter", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Manrope", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --spacing-18: 4.5rem;
+  --spacing-22: 5.5rem;
+  --spacing-28: 7rem;
+  --radius-card: 1.25rem;
+  --shadow-card: 0 18px 50px rgb(22 35 30 / 8%);
+}
+
+:root {
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-paper);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+::selection {
+  color: var(--color-ink);
+  background: var(--color-brand-100);
+}
