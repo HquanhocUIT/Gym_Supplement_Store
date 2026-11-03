@@ -264,3 +264,5 @@ Vite hiển thị ứng dụng tại `http://localhost:5173`. Các route mẫu:
 - `/admin`: dashboard quản trị
 - `/admin/products`: danh sách sản phẩm mẫu
 - `/member`: dashboard thành viên
+- `/ui-kit`: component dùng chung của Task 5
+- `/ui-kit/common`: trang kiểm tra API client, trạng thái, phân trang và chọn ảnh của Task 6

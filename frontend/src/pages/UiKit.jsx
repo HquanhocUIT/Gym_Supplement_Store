@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button, Input, Select, Textarea, FormField, Modal, ConfirmDialog, DataTable } from '../components/ui';
 
 export default function UiKit() {
@@ -35,6 +36,8 @@ export default function UiKit() {
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">UI Kit Demo</h1>
         <p className="text-gray-500">Thư viện component dùng chung của nhóm 28.</p>
+        {/* Liên kết sang trang minh chứng các component của Task 6. */}
+        <Link className="mt-4 inline-flex min-h-11 items-center font-semibold text-brand-700 underline underline-offset-4" to="/ui-kit/common">Xem Common components →</Link>
       </div>
 
       {/* Button */}
