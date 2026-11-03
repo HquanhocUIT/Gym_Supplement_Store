@@ -40,7 +40,8 @@ docs(project): add contribution guide
 ## Project structure
 
 - `frontend/`: React + Vite frontend.
-- `server/`: backend API, Prisma schema, and migrations.
+- `backend/`: Express API using `pg` and PostgreSQL.
+- `database/schema/`, `database/seed/`, `database/migrations/`: SQL schema, demo data, and migrations (added with the database tasks).
 - `.github/`: issue and PR templates.
 
 ## API response convention
@@ -76,7 +77,9 @@ Do not include sensitive information in `message` or `details`. Update `openapi.
 ## Data changes and configuration
 
 - Never commit `.env` files, tokens, secrets, or real user data. Update `.env.example` when adding an environment variable.
-- When changing the schema, include the corresponding Prisma migration and describe its impact in the PR.
+- Put SQL in `backend/src/repositories/` and use the shared `pg` Pool from `backend/src/config/db.js`.
+- Pass input values as SQL parameters (`$1`, `$2`, etc.); never concatenate input into SQL. Transactions must use one checked-out client, released in `finally`.
+- When changing an established schema, add a new SQL file in `database/migrations/` and describe its impact and execution order in the PR. Initial schema and seed files belong to Tasks 14 and 15 after ERD approval.
 - Update `openapi.yaml` in the same PR when changing an endpoint.
 
 ## Reporting issues

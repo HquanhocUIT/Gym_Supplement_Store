@@ -1,0 +1,15 @@
+# Không đưa dữ liệu local hoặc secret vào Docker build context.
+node_modules/
+.env
+.env.*
+certs/
+*.crt
+*.cer
+*.pem
+*.key
+*.p12
+*.pfx
+.git/
+coverage/
+test/
+*.log

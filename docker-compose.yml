@@ -1,0 +1,58 @@
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      # Dùng thông tin PostgreSQL local trong .env, không ghi mật khẩu vào Git.
+      POSTGRES_DB: ${PGDATABASE:-gym_supplement_store}
+      POSTGRES_USER: ${PGUSER:-postgres}
+      POSTGRES_PASSWORD: ${PGPASSWORD:?Hãy đặt PGPASSWORD trong file .env ở thư mục gốc}
+    ports:
+      # Cổng 5433 tránh trùng PostgreSQL local đang dùng cổng 5432.
+      - "127.0.0.1:${DOCKER_DB_PORT:-5433}:5432"
+    volumes:
+      # PostgreSQL 18 lưu dữ liệu trong /var/lib/postgresql/18/docker.
+      - postgres_data:/var/lib/postgresql
+      # Các file SQL chỉ tự chạy lần đầu khi volume database còn trống.
+      - ./database/schema:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Compose luôn kết nối database trong Docker, không dùng URL Supabase ở .env.
+      NODE_ENV: production
+      PORT: "5000"
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      DATABASE_URL: ""
+      DATABASE_SSL: "false"
+      DATABASE_SSL_CA_PATH: ""
+      PGHOST: db
+      PGPORT: "5432"
+      PGDATABASE: ${PGDATABASE:-gym_supplement_store}
+      PGUSER: ${PGUSER:-postgres}
+      PGPASSWORD: ${PGPASSWORD:?Hãy đặt PGPASSWORD trong file .env ở thư mục gốc}
+    ports:
+      - "127.0.0.1:${DOCKER_API_PORT:-5000}:5000"
+    healthcheck:
+      # /health kiểm tra API; /api/health/db được kiểm tra riêng sau khi chạy.
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+# Volume giữ dữ liệu PostgreSQL khi dừng và chạy lại container.
+volumes:
+  postgres_data:

@@ -1,0 +1,122 @@
+openapi: 3.0.3
+info:
+  title: Gym and Supplement Store API
+  version: 0.2.0
+  description: API liveness and PostgreSQL connectivity health checks.
+servers:
+  - url: http://localhost:5000
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Check API liveness without a database connection
+      responses:
+        '200':
+          $ref: '#/components/responses/Healthy'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/health:
+    get:
+      operationId: getApiHealth
+      summary: API-prefixed alias of the liveness endpoint
+      responses:
+        '200':
+          $ref: '#/components/responses/Healthy'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /health/db:
+    get:
+      operationId: getDatabaseHealth
+      summary: Check the configured PostgreSQL database with a read-only query
+      responses:
+        '200':
+          $ref: '#/components/responses/DatabaseHealthy'
+        '503':
+          $ref: '#/components/responses/DatabaseUnavailable'
+  /api/health/db:
+    get:
+      operationId: getApiDatabaseHealth
+      summary: API-prefixed alias of the database health endpoint
+      responses:
+        '200':
+          $ref: '#/components/responses/DatabaseHealthy'
+        '503':
+          $ref: '#/components/responses/DatabaseUnavailable'
+components:
+  responses:
+    DatabaseHealthy:
+      description: PostgreSQL returned a result from the read-only health query
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [success, data, error]
+            properties:
+              success:
+                type: boolean
+                enum: [true]
+              data:
+                type: object
+                required: [status, database, timestamp]
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+                  database:
+                    type: string
+                    enum: [connected]
+                  timestamp:
+                    type: string
+                    format: date-time
+              error:
+                type: object
+                nullable: true
+                example: null
+    DatabaseUnavailable:
+      description: Connection or query failed; connection details are not exposed
+      content:
+        application/json:
+          example:
+            success: false
+            data: null
+            error:
+              code: DATABASE_UNAVAILABLE
+              message: Không thể kết nối database. Kiểm tra cấu hình và thử lại.
+    Healthy:
+      description: API is running; database readiness is not checked
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [success, data, error]
+            properties:
+              success:
+                type: boolean
+                enum: [true]
+              data:
+                type: object
+                required: [status, timestamp, uptime]
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+                  timestamp:
+                    type: string
+                    format: date-time
+                  uptime:
+                    type: number
+                    minimum: 0
+              error:
+                type: object
+                nullable: true
+                example: null
+    InternalError:
+      description: Unexpected server error
+      content:
+        application/json:
+          example:
+            success: false
+            data: null
+            error:
+              code: INTERNAL_ERROR
+              message: Internal Server Error

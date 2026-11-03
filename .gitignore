@@ -161,8 +161,8 @@ out/
 # Logs
 *.log
 
-# Prisma
-prisma/migrations/**/migration_lock.toml
+# Chứng chỉ kết nối database chỉ lưu trên máy hoặc cấu hình ở dịch vụ deploy.
+backend/certs/
 
 # Editor
 .vscode/
