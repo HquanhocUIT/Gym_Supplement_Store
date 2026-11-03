@@ -1,0 +1,157 @@
+name: CI
+
+on:
+  pull_request:
+    # Chạy lại kiểm tra tiêu đề khi PR được đổi tên.
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  detect-project:
+    name: Detect backend and Dockerfile
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.detect.outputs.backend }}
+      docker: ${{ steps.detect.outputs.docker }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Main cũ chưa có backend/ và Dockerfile của Task 3 và Task 8.
+      - name: Check available files
+        id: detect
+        run: |
+          if [ -f backend/package.json ]; then
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -f backend/Dockerfile ]; then
+            echo "docker=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  backend-tests:
+    name: Backend tests
+    needs: detect-project
+    if: needs.detect-project.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run backend tests
+        working-directory: backend
+        env:
+          DATABASE_URL: ''
+          DATABASE_SSL: 'false'
+          DATABASE_SSL_CA_PATH: ''
+        run: npm test
+
+  docker-build:
+    name: Docker build
+    needs: detect-project
+    if: needs.detect-project.outputs.docker == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build --tag gym-supplement-backend:ci ./backend
+
+  frontend:
+    name: Frontend lint and build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+  backend:
+    name: Backend lint and health
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Main hiện có server/; Task 3 đổi thành backend/.
+      - name: Find backend directory
+        id: backend
+        shell: bash
+        run: |
+          if [ -f backend/package.json ]; then
+            echo "dir=backend" >> "$GITHUB_OUTPUT"
+          elif [ -f server/package.json ]; then
+            echo "dir=server" >> "$GITHUB_OUTPUT"
+          else
+            echo "Không tìm thấy backend/package.json hoặc server/package.json."
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ steps.backend.outputs.dir }}/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: ${{ steps.backend.outputs.dir }}
+        run: npm ci
+
+      # Dùng phiên bản cố định; không sửa package.json của Task 3 đang chờ merge.
+      - name: Lint backend
+        run: npx --yes oxlint@1.81.0 --deny-warnings --config ci/oxlint-backend.json "${{ steps.backend.outputs.dir }}/src"
+
+      - name: Smoke test health endpoint
+        run: node ci/smoke-health.cjs "${{ steps.backend.outputs.dir }}"
+
+  pr-title:
+    name: PR title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Test title checker
+        run: node --test ci/check-pr-title.test.cjs
+
+      # Truyền tiêu đề qua biến môi trường, không đưa trực tiếp vào lệnh shell.
+      - name: Check PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: node ci/check-pr-title.cjs
