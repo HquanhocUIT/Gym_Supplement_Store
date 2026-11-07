@@ -1,5 +1,8 @@
 # Data Dictionary - Gym & Supplement Store
 
+> Task 13 review draft: `erd-v1.dbml` contains the proposed columns. The PNG
+> is the older Task 12 diagram. See `../decisions.md` for review and constraints.
+
 ## 1. Auth & Gym Module
 *   **`users`**: Stores all accounts (Admin, Staff, Member). The `role` column handles RBAC.
 *   **`membership_plans`**: The available gym packages (e.g., 1 Month, 1 Year).
@@ -8,10 +11,10 @@
 
 ## 2. Store Module
 *   **`categories`**: Product categories (Whey, Creatine, Accessories).
-*   **`products`**: The general product info (e.g., Whey Protein).
+*   **`products`**: The general product info and one optional product image URL.
 *   **`product_variants`**: Specific versions of a product (e.g., Chocolate 1kg, Vanilla 2kg). This holds the `price` and `stock`.
 *   **`carts` & `cart_items`**: Temporary storage for items before checkout.
-*   **`orders` & `order_items`**: Finalized purchases. `order_items` stores the price at the time of purchase.
+*   **`orders` & `order_items`**: Purchases, delivery details, discount and totals. Order items preserve the product name, variant description and price at purchase time.
 
 ## 3. Shared Module
-*   **`payments`**: Handles money transactions. It connects to **either** an `order_id` (Store) **or** a `membership_id` (Gym), leaving the other column `NULL`.
+*   **`payments`**: Handles money transactions. It connects to **exactly one** of `order_id` (Store) or `membership_id` (Gym), leaving the other column `NULL`.
