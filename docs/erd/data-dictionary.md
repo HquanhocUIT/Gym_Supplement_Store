@@ -1,6 +1,7 @@
 # Data Dictionary - Gym & Supplement Store
 
-> Task 13 review draft: `erd-v1.dbml` contains the proposed columns. The PNG
+> Task 13 review draft: `erd-v1.dbml` contains the proposed columns and
+> `erd-task13.png` / `erd-task13.svg` show the proposed diagram. `erd-v1.png`
 > is the older Task 12 diagram. See `../decisions.md` for review and constraints.
 
 ## 1. Auth & Gym Module

@@ -3,8 +3,9 @@
 ## ERD v1 — đề xuất, chưa chốt
 
 - Trạng thái: chờ Quân và Sang cùng xem và xác nhận.
-- Nguồn thiết kế: `docs/erd/erd-v1.dbml`. Ảnh `docs/erd/erd-v1.png` là bản
-  Task 12 cũ, chưa phản ánh các thay đổi đề xuất; cần xuất lại sau khi thống nhất.
+- Nguồn thiết kế: `docs/erd/erd-v1.dbml`. Sơ đồ đề xuất Task 13 nằm trong
+  `docs/erd/erd-task13.png` và `docs/erd/erd-task13.svg`; ảnh `erd-v1.png` là
+  bản Task 12 cũ. Nếu thay đổi DBML sau khi duyệt, cần cập nhật lại sơ đồ.
 - Chưa tạo hoặc áp dụng SQL. Task 14 và 15 chỉ bắt đầu viết SQL sau khi cả hai
   đồng ý ERD; các thay đổi về sau đi qua migration và PR theo plan.
 
@@ -54,4 +55,4 @@ kiểm tra trong Task 14–15 hoặc backend liên quan:
 4. Quy tắc payment gắn đúng một đơn hoặc một membership; trạng thái COD.
 5. Phạm vi phần Gym, đặc biệt các trường membership và check-in do Sang phụ trách.
 
-Sau khi cả hai đồng ý, cập nhật trạng thái tại đây và xuất lại hình ERD từ DBML.
+Sau khi cả hai đồng ý, cập nhật trạng thái tại đây và cập nhật hình nếu DBML thay đổi.
