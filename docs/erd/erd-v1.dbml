@@ -1,94 +1,127 @@
-// ==========================================
-// GYM & SUPPLEMENT STORE - ERD (12 Tables)
-// ==========================================
+// ERD v1 đề xuất: cần Quân và Sang cùng duyệt trước khi chốt.
+// Các CHECK và quy tắc nghiệp vụ được ghi trong docs/decisions.md.
 
 Table users {
   id int [pk, increment]
-  email varchar [unique]
-  password_hash varchar
-  full_name varchar
-  role varchar [note: 'admin, staff, member']
-  created_at timestamp [default: `now()`]
+  email varchar(255) [not null, unique]
+  password_hash varchar(255) [not null]
+  full_name varchar(255) [not null]
+  role varchar(20) [not null, note: 'admin, staff, member']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
 }
 
 Table membership_plans {
   id int [pk, increment]
-  name varchar
-  duration_days int
-  price decimal
-  status varchar [note: 'active, hidden']
+  name varchar(255) [not null]
+  duration_days int [not null]
+  price decimal(12,2) [not null]
+  status varchar(20) [not null, note: 'active, hidden']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
 }
 
 Table memberships {
   id int [pk, increment]
-  user_id int [ref: > users.id]
-  plan_id int [ref: > membership_plans.id]
-  start_date date
-  end_date date
-  status varchar [note: 'Active, Expired, Cancelled']
+  user_id int [not null, ref: > users.id]
+  plan_id int [not null, ref: > membership_plans.id]
+  start_date date [not null]
+  end_date date [not null]
+  status varchar(20) [not null, note: 'active, expired, cancelled']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
 }
 
 Table checkins {
   id int [pk, increment]
-  user_id int [ref: > users.id]
-  checkin_time timestamp [default: `now()`]
+  user_id int [not null, ref: > users.id]
+  checkin_time timestamptz [not null, default: `now()`]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
 }
 
 Table categories {
   id int [pk, increment]
-  name varchar
+  name varchar(255) [not null, unique]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
 }
 
 Table products {
   id int [pk, increment]
-  category_id int [ref: > categories.id]
-  name varchar
+  category_id int [not null, ref: > categories.id]
+  name varchar(255) [not null]
   description text
+  image_url text [note: 'Đường dẫn ảnh sản phẩm trên Supabase Storage']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
 }
 
 Table product_variants {
   id int [pk, increment]
-  product_id int [ref: > products.id]
-  flavor varchar
-  size varchar
-  price decimal
-  stock int [note: 'CHECK stock >= 0']
+  product_id int [not null, ref: > products.id]
+  flavor varchar(100) [note: 'Có thể trống với sản phẩm không có hương vị']
+  size varchar(100) [not null]
+  price decimal(12,2) [not null]
+  stock int [not null, default: 0]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
 }
 
 Table carts {
   id int [pk, increment]
-  user_id int [ref: - users.id, unique]
+  user_id int [not null, unique, ref: - users.id]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
 }
 
 Table cart_items {
   id int [pk, increment]
-  cart_id int [ref: > carts.id]
-  variant_id int [ref: > product_variants.id]
-  quantity int
+  cart_id int [not null, ref: > carts.id]
+  variant_id int [not null, ref: > product_variants.id]
+  quantity int [not null]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (cart_id, variant_id) [unique]
+  }
 }
 
 Table orders {
   id int [pk, increment]
-  user_id int [ref: > users.id]
-  total_amount decimal
-  status varchar [note: 'Pending, Confirmed, Shipping, Delivered, Cancelled']
-  created_at timestamp [default: `now()`]
+  user_id int [not null, ref: > users.id]
+  recipient_name varchar(255) [not null]
+  recipient_phone varchar(30) [not null]
+  shipping_address text [not null]
+  subtotal decimal(12,2) [not null]
+  discount_amount decimal(12,2) [not null, default: 0]
+  total_amount decimal(12,2) [not null]
+  status varchar(20) [not null, note: 'pending, confirmed, shipping, delivered, cancelled']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
 }
 
 Table order_items {
   id int [pk, increment]
-  order_id int [ref: > orders.id]
-  variant_id int [ref: > product_variants.id]
-  price decimal
-  quantity int
+  order_id int [not null, ref: > orders.id]
+  variant_id int [not null, ref: > product_variants.id]
+  product_name varchar(255) [not null, note: 'Tên sản phẩm tại thời điểm đặt hàng']
+  variant_description varchar(255) [not null, note: 'Hương vị và kích thước tại thời điểm đặt hàng']
+  price decimal(12,2) [not null, note: 'Đơn giá tại thời điểm đặt hàng']
+  quantity int [not null]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
 }
 
 Table payments {
   id int [pk, increment]
-  user_id int [ref: > users.id]
-  order_id int [ref: > orders.id, null]
-  membership_id int [ref: > memberships.id, null]
-  amount decimal
-  payment_method varchar [note: 'COD, Bank Transfer']
-  status varchar [note: 'Pending, Completed']
+  user_id int [not null, ref: > users.id]
+  order_id int [ref: > orders.id]
+  membership_id int [ref: > memberships.id]
+  amount decimal(12,2) [not null]
+  payment_method varchar(30) [not null, note: 'cod, bank_transfer']
+  status varchar(20) [not null, note: 'pending, completed']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
 }
