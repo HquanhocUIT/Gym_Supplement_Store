@@ -1,6 +1,6 @@
-# API Documentation - Auth & Gym
+# API Documentation - Auth, Gym, Store & Dashboard
 
-> Phase 1 - Design (DB & API). Audience: Quân (reviewer).
+> Phase 1 - Design (DB & API). Audience: Quân and Sang (reviewers).
 > Base URL: `https://api.gymstore.local/v1`
 > Auth: Bearer JWT in `Authorization: Bearer <token>` header unless marked Public.
 
@@ -88,7 +88,62 @@ Role values: `admin`, `staff`, `member`.
 
 ---
 
-## 3. Example payloads
+## 3. Store
+
+| Method | URL | Access | Request (main fields) | Response (success) | Errors |
+|--------|-----|--------|-----------------------|--------------------|--------|
+| GET | `/store/categories` | Public | — | `categories [ { id, name } ]` | 500 |
+| GET | `/store/products` | Public | Query: `category_id`, `q`, `page`, `limit` (optional) | `items [ { id, name, description, image_url, category, variants } ]`, `page`, `limit`, `total` | 400, 500 |
+| GET | `/store/products/:id` | Public | — | `product { id, name, description, image_url, category, variants }` | 404, 500 |
+| POST | `/store/products` | Staff / Admin | `category_id`, `name`, `description`, `image_url` (optional) | `product { ... }` | 400, 401, 403, 404, 409, 422, 500 |
+| PUT | `/store/products/:id` | Staff / Admin | `category_id`, `name`, `description`, `image_url` | `product { ... }` | 400, 401, 403, 404, 409, 422, 500 |
+| POST | `/store/products/:id/variants` | Staff / Admin | `flavor` (optional), `size`, `price`, `stock` | `variant { id, flavor, size, price, stock }` | 400, 401, 403, 404, 422, 500 |
+| PUT | `/store/variants/:id` | Staff / Admin | `flavor`, `size`, `price`, `stock` | `variant { ... }` | 400, 401, 403, 404, 422, 500 |
+| GET | `/store/cart` | Authenticated | — | `cart { id, items [ { id, variant, quantity } ], subtotal }` | 401, 500 |
+| POST | `/store/cart/items` | Authenticated | `variant_id`, `quantity` | `item { id, variant, quantity }` | 400, 401, 404, 409, 422, 500 |
+| PUT | `/store/cart/items/:id` | Authenticated | `quantity` | `item { id, variant, quantity }` | 400, 401, 403, 404, 409, 422, 500 |
+| DELETE | `/store/cart/items/:id` | Authenticated | — | `{ success: true }` | 401, 403, 404, 500 |
+| POST | `/store/orders` | Authenticated | `recipient_name`, `recipient_phone`, `shipping_address`, `payment_method` | `order { id, items, subtotal, discount_amount, total_amount, status }`, `payment { id, amount, payment_method, status }` | 400, 401, 404, 409, 422, 500 |
+| GET | `/store/orders` | Authenticated | Query: `page`, `limit` (optional) | `items [ { id, total_amount, status, created_at } ]`, `page`, `limit`, `total` | 401, 500 |
+| GET | `/store/orders/:id` | Authenticated | — | `order { id, items, subtotal, discount_amount, total_amount, status }` | 401, 403, 404, 500 |
+| PUT | `/store/orders/:id/status` | Staff / Admin | `status` | `order { id, status, updated_at }` | 400, 401, 403, 404, 409, 422, 500 |
+
+### Store access and business rules
+
+- Anyone can browse categories and products. A logged-in user can manage their own cart and view their own orders.
+- Staff and admins can manage products and variants, view all orders, and update order status.
+- The server checks stock and calculates prices, discounts, and totals during checkout. It creates the order and payment in one transaction.
+- Order status values: `pending`, `confirmed`, `shipping`, `delivered`, `cancelled`.
+- Payment methods: `cod`, `bank_transfer`. Payment status values: `pending`, `completed`.
+- Cart and order quantities must be greater than zero. Variant price and stock cannot be negative.
+
+### Store error codes detail
+
+| Code | Meaning |
+|------|---------|
+| 400 | Bad request (missing or invalid fields) |
+| 401 | Unauthorized (missing or expired token) |
+| 403 | Forbidden (role not allowed or accessing another user's data) |
+| 404 | Not found (category, product, variant, cart item, or order not found) |
+| 409 | Conflict (not enough stock or order cannot change to that status) |
+| 422 | Unprocessable entity (validation failed) |
+| 500 | Internal server error |
+
+---
+
+## 4. Dashboard
+
+| Method | URL | Access | Request (main fields) | Response (success) | Errors |
+|--------|-----|--------|-----------------------|--------------------|--------|
+| GET | `/dashboard/summary` | Staff / Admin | Query: `from`, `to` (optional) | `net_sales`, `order_count`, `product_count`, `customer_count`, `low_stock_count` | 400, 401, 403, 500 |
+| GET | `/dashboard/recent-orders` | Staff / Admin | Query: `limit` (optional) | `orders [ { id, customer, item_summary, status, total_amount, created_at } ]` | 400, 401, 403, 500 |
+| GET | `/dashboard/inventory` | Staff / Admin | Query: `limit` (optional) | `items [ { variant_id, product_name, flavor, size, stock } ]` | 400, 401, 403, 500 |
+
+Dashboard data is for the admin store overview: sales, orders, products, customers, recent orders, and inventory. The low-stock threshold must be agreed and defined during implementation before returning `low_stock_count`.
+
+---
+
+## 5. Example payloads
 
 ### Register (Admin)
 ```http
@@ -152,6 +207,38 @@ Content-Type: application/json
 }
 ```
 
+### Add an item to the cart (Member)
+```http
+POST /store/cart/items
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "variant_id": 1,
+  "quantity": 2
+}
+```
+
+### Create an order from the cart (Member)
+```http
+POST /store/orders
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "recipient_name": "Alex Nguyen",
+  "recipient_phone": "0900000000",
+  "shipping_address": "District 1, Ho Chi Minh City",
+  "payment_method": "cod"
+}
+```
+
+### Get dashboard summary (Staff)
+```http
+GET /dashboard/summary?from=2026-11-01&to=2026-11-30
+Authorization: Bearer <token>
+```
+
 ---
 
-> Reviewer: Quân. Pending approval before frontend/backend implementation.
+> Auth and Gym endpoints are documented in Task 16. Store and Dashboard endpoints are a design proposal for review before implementation.
