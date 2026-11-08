@@ -1,11 +1,12 @@
 -- ============================================================
 -- database/schema/01_auth_gym.sql
--- Schema Auth & Gym (Task 14) - chạy trong Supabase SQL Editor
--- Tạo bảng nếu chưa tồn tại: users, membership_plans, memberships, checkins
--- Quy tuong: docs/erd/erd-v1.dbml va docs/decisions.md
+-- Schema Auth & Gym (Task 14) - run in Supabase SQL Editor
+-- Creates tables if not exist: users, membership_plans,
+-- memberships, checkins
+-- Reference: docs/erd/erd-v1.dbml and docs/decisions.md
 -- ============================================================
 
--- Bảng users: tat ca tai khoan (Admin, Staff, Member)
+-- users: all accounts (Admin, Staff, Member)
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -16,7 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Bảng membership_plans: goi tap gym
+-- membership_plans: gym membership packages
 CREATE TABLE IF NOT EXISTS membership_plans (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
@@ -27,7 +28,7 @@ CREATE TABLE IF NOT EXISTS membership_plans (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Bảng memberships: goi tap ma hoi vien da mua
+-- memberships: package purchased by a member
 CREATE TABLE IF NOT EXISTS memberships (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
@@ -39,7 +40,7 @@ CREATE TABLE IF NOT EXISTS memberships (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Bảng checkins: lich su diem danh vao phong tap
+-- checkins: gym check-in history
 CREATE TABLE IF NOT EXISTS checkins (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
@@ -49,8 +50,8 @@ CREATE TABLE IF NOT EXISTS checkins (
 );
 
 -- ============================================================
--- Chi muc (indexes) ho tro truy van Auth & Gym
--- (email da co unique index tu rang buoc UNIQUE o tren)
+-- Indexes to support Auth & Gym queries
+-- (email already has a unique index from the UNIQUE constraint)
 -- ============================================================
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
 CREATE INDEX IF NOT EXISTS idx_memberships_user_id ON memberships(user_id);
