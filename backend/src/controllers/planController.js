@@ -1,4 +1,3 @@
-const { authenticate, authorize } = require('../middlewares/authMiddleware');
 const planRepository = require('../repositories/planRepository');
 
 /**

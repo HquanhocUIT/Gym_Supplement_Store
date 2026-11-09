@@ -26,7 +26,7 @@ function authenticate(req, res, next) {
       role: decoded.role,
     };
     next();
-  } catch (err) {
+  } catch {
     return res.status(401).json({
       success: false,
       data: null,

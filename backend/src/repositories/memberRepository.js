@@ -12,7 +12,7 @@ async function getMembers(search, page, limit) {
   const offset = (page - 1) * limit;
 
   // Truy vấn chính: lấy user + gói tập mới nhất (theo end_date DESC)
-  const query = `
+  let query = `
     WITH latest_membership AS (
       SELECT DISTINCT ON (m.user_id) m.user_id, m.membership_id, m.plan_id,
              m.start_date, m.end_date, m.status,
@@ -44,7 +44,7 @@ async function getMembers(search, page, limit) {
   const dataResult = await pool.query(query, values);
 
   // Truy vấn tổng số bản ghi (dùng cho phân trang)
-  const countQuery = `
+  let countQuery = `
     SELECT COUNT(*) AS total
     FROM users u
     WHERE u.role = 'member'
