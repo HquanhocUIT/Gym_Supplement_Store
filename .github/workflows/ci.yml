@@ -56,6 +56,7 @@ jobs:
           DATABASE_URL: ''
           DATABASE_SSL: 'false'
           DATABASE_SSL_CA_PATH: ''
+          JWT_SECRET: test_secret_key
         run: npm test
 
   docker-build:
@@ -133,6 +134,8 @@ jobs:
         run: npx --yes oxlint@1.81.0 --deny-warnings --config ci/oxlint-backend.json "${{ steps.backend.outputs.dir }}/src"
 
       - name: Smoke test health endpoint
+        env:
+          JWT_SECRET: test_secret_key
         run: node ci/smoke-health.cjs "${{ steps.backend.outputs.dir }}"
 
   pr-title:
