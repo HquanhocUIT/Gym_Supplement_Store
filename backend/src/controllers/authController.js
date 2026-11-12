@@ -2,7 +2,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { findUserByEmail, createUser } = require('../repositories/authRepository');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_change_me_in_production';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 /**
@@ -11,7 +14,7 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
  */
 async function register(req, res) {
   try {
-    const { email, password, full_name, role } = req.body;
+    const { email, password, full_name } = req.body;
 
     if (!email || !password || !full_name) {
       return res.status(400).json({
@@ -31,12 +34,12 @@ async function register(req, res) {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const userRole = role || 'member';
+    const userRole = 'member';
 
     const user = await createUser(email, passwordHash, full_name, userRole);
 
     const token = jwt.sign(
-      { user_id: user.user_id, role: user.role },
+      { user_id: user.id, role: user.role },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
@@ -45,7 +48,7 @@ async function register(req, res) {
       success: true,
       data: {
         user: {
-          user_id: user.user_id,
+          user_id: user.id,
           email: user.email,
           full_name: user.full_name,
           role: user.role,
@@ -99,7 +102,7 @@ async function login(req, res) {
     }
 
     const token = jwt.sign(
-      { user_id: user.user_id, role: user.role },
+      { user_id: user.id, role: user.role },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
@@ -108,7 +111,7 @@ async function login(req, res) {
       success: true,
       data: {
         user: {
-          user_id: user.user_id,
+          user_id: user.id,
           email: user.email,
           full_name: user.full_name,
           role: user.role,
