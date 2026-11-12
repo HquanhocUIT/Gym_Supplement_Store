@@ -7,7 +7,7 @@ const pool = require('../config/db');
  */
 async function findUserByEmail(email) {
   const query = `
-    SELECT id, email, password_hash, full_name, phone, role, is_active
+    SELECT id, email, password_hash, full_name, role
     FROM users
     WHERE email = $1
   `;
@@ -21,13 +21,13 @@ async function findUserByEmail(email) {
  * @param {string} passwordHash - đã băm bằng bcrypt
  * @param {string} fullName
  * @param {string} role - 'admin' | 'staff' | 'member'
- * @returns {Object} Dòng user vừa chèn (bao gồm user_id)
+ * @returns {Object} Dòng user vừa chèn (bao gồm id)
  */
 async function createUser(email, passwordHash, fullName, role = 'member') {
   const query = `
     INSERT INTO users (email, password_hash, full_name, role)
     VALUES ($1, $2, $3, $4)
-    RETURNING id, email, full_name, role, is_active, created_at
+    RETURNING id, email, full_name, role, created_at
   `;
   const result = await pool.query(query, [email, passwordHash, fullName, role]);
   return result.rows[0];

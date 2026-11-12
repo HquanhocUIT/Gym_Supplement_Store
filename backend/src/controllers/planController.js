@@ -67,7 +67,7 @@ async function getPlanById(req, res) {
  */
 async function createPlan(req, res) {
   try {
-    const { name, description, duration_days, price } = req.body;
+    const { name, duration_days, price, status } = req.body;
 
     if (!name || duration_days == null || price == null) {
       return res.status(400).json({
@@ -77,7 +77,7 @@ async function createPlan(req, res) {
       });
     }
 
-    const plan = await planRepository.createPlan(name, description || null, duration_days, price);
+    const plan = await planRepository.createPlan(name, duration_days, price, status || 'active');
 
     return res.status(201).json({
       success: true,
@@ -111,10 +111,9 @@ async function updatePlan(req, res) {
 
     const fields = {};
     if (req.body.name !== undefined) fields.name = req.body.name;
-    if (req.body.description !== undefined) fields.description = req.body.description;
     if (req.body.duration_days !== undefined) fields.duration_days = req.body.duration_days;
     if (req.body.price !== undefined) fields.price = req.body.price;
-    if (req.body.is_active !== undefined) fields.is_active = req.body.is_active;
+    if (req.body.status !== undefined) fields.status = req.body.status;
 
     const plan = await planRepository.updatePlan(id, fields);
     if (!plan) {
@@ -166,7 +165,7 @@ async function softDeletePlan(req, res) {
 
     return res.status(200).json({
       success: true,
-      data: { plan_id: plan.plan_id, is_active: plan.is_active },
+      data: { plan_id: plan.id, status: plan.status },
       error: null,
     });
   } catch (err) {

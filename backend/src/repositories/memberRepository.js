@@ -21,11 +21,11 @@ async function getMembers(search, page, limit) {
       JOIN membership_plans mp ON mp.id = m.plan_id
       ORDER BY m.user_id ASC, m.end_date DESC, m.created_at DESC
     )
-    SELECT u.id, u.email, u.full_name, u.phone, u.role, u.is_active, u.created_at,
+    SELECT u.id, u.email, u.full_name, u.role, u.created_at,
            lm.id AS membership_id, lm.plan_id, lm.start_date, lm.end_date, lm.status,
            lm.plan_name, lm.duration_days
     FROM users u
-    LEFT JOIN latest_membership lm ON lm.user_id = u.user_id
+    LEFT JOIN latest_membership lm ON lm.user_id = u.id
     WHERE u.role = 'member'
   `;
 
@@ -70,7 +70,7 @@ async function getMembers(search, page, limit) {
  */
 async function getMemberById(id) {
   const userQuery = `
-    SELECT id, email, full_name, phone, role, is_active, created_at
+    SELECT id, email, full_name, role, created_at
     FROM users
     WHERE id = $1 AND role = 'member'
   `;

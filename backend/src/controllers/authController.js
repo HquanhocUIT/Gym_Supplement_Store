@@ -32,6 +32,8 @@ async function register(req, res) {
       });
     }
 
+    if (!requireJwtSecret(res)) return;
+
     const existing = await findUserByEmail(email);
     if (existing) {
       return res.status(409).json({
@@ -45,8 +47,6 @@ async function register(req, res) {
     const userRole = 'member';
 
     const user = await createUser(email, passwordHash, full_name, userRole);
-
-    if (!requireJwtSecret(res)) return;
 
     const token = jwt.sign(
       { user_id: user.id, role: user.role },
