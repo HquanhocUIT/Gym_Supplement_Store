@@ -9,6 +9,7 @@ process.env.DATABASE_SSL = 'false';
 process.env.DATABASE_SSL_CA_PATH = '';
 process.env.PGHOST = '127.0.0.1';
 process.env.PGPORT = '1';
+process.env.JWT_SECRET = 'test_secret_key';
 
 const app = require('../src/app');
 const pool = require('../src/config/db');

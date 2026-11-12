@@ -35,6 +35,18 @@ jobs:
     needs: detect-project
     if: needs.detect-project.outputs.backend == 'true'
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -50,12 +62,21 @@ jobs:
         working-directory: backend
         run: npm ci
 
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Load database schema
+        run: psql -h localhost -U postgres -d postgres -f database/schema/01_auth_gym.sql
+        env:
+          PGPASSWORD: postgres
+
       - name: Run backend tests
         working-directory: backend
         env:
-          DATABASE_URL: ''
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
           DATABASE_SSL: 'false'
           DATABASE_SSL_CA_PATH: ''
+          JWT_SECRET: test_secret_key
         run: npm test
 
   docker-build:
@@ -133,6 +154,8 @@ jobs:
         run: npx --yes oxlint@1.81.0 --deny-warnings --config ci/oxlint-backend.json "${{ steps.backend.outputs.dir }}/src"
 
       - name: Smoke test health endpoint
+        env:
+          JWT_SECRET: test_secret_key
         run: node ci/smoke-health.cjs "${{ steps.backend.outputs.dir }}"
 
   pr-title:
