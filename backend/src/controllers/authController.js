@@ -2,8 +2,19 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { findUserByEmail, createUser } = require('../repositories/authRepository');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_change_me_in_production';
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+
+function requireJwtSecret(res) {
+  if (!JWT_SECRET) {
+    return res.status(500).json({
+      success: false,
+      data: null,
+      error: { code: 'CONFIGURATION_ERROR', message: 'JWT_SECRET is not configured' },
+    });
+  }
+  return true;
+}
 
 /**
  * Đăng ký tài khoản mới (mặc định role = member).
@@ -34,6 +45,8 @@ async function register(req, res) {
     const userRole = 'member';
 
     const user = await createUser(email, passwordHash, full_name, userRole);
+
+    if (!requireJwtSecret(res)) return;
 
     const token = jwt.sign(
       { user_id: user.id, role: user.role },
@@ -97,6 +110,8 @@ async function login(req, res) {
         error: { code: 'INVALID_CREDENTIALS', message: 'Email or password is incorrect' },
       });
     }
+
+    if (!requireJwtSecret(res)) return;
 
     const token = jwt.sign(
       { user_id: user.id, role: user.role },

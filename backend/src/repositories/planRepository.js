@@ -6,10 +6,10 @@ const pool = require('../config/db');
  */
 async function getAllActivePlans() {
   const query = `
-    SELECT plan_id, name, description, duration_days, price, is_active, created_at, updated_at
+    SELECT id, name, description, duration_days, price, is_active, created_at, updated_at
     FROM membership_plans
     WHERE is_active = TRUE
-    ORDER BY plan_id ASC
+    ORDER BY id ASC
   `;
   const result = await pool.query(query);
   return result.rows;
@@ -22,9 +22,9 @@ async function getAllActivePlans() {
  */
 async function getPlanById(id) {
   const query = `
-    SELECT plan_id, name, description, duration_days, price, is_active, created_at, updated_at
+    SELECT id, name, description, duration_days, price, is_active, created_at, updated_at
     FROM membership_plans
-    WHERE plan_id = $1
+    WHERE id = $1
   `;
   const result = await pool.query(query, [id]);
   return result.rows[0] || null;
@@ -42,7 +42,7 @@ async function createPlan(name, description, duration_days, price) {
   const query = `
     INSERT INTO membership_plans (name, description, duration_days, price, is_active)
     VALUES ($1, $2, $3, $4, TRUE)
-    RETURNING plan_id, name, description, duration_days, price, is_active, created_at, updated_at
+    RETURNING id, name, description, duration_days, price, is_active, created_at, updated_at
   `;
   const result = await pool.query(query, [name, description, duration_days, price]);
   return result.rows[0];
@@ -75,8 +75,8 @@ async function updatePlan(id, fields) {
   const query = `
     UPDATE membership_plans
     SET ${setClauses.join(', ')}
-    WHERE plan_id = $${paramIndex}
-    RETURNING plan_id, name, description, duration_days, price, is_active, created_at, updated_at
+    WHERE id = $${paramIndex}
+    RETURNING id, name, description, duration_days, price, is_active, created_at, updated_at
   `;
   const result = await pool.query(query, values);
   return result.rows[0] || null;
@@ -91,8 +91,8 @@ async function softDeletePlan(id) {
   const query = `
     UPDATE membership_plans
     SET is_active = FALSE
-    WHERE plan_id = $1
-    RETURNING plan_id, name, is_active
+    WHERE id = $1
+    RETURNING id, name, is_active
   `;
   const result = await pool.query(query, [id]);
   return result.rows[0] || null;

@@ -14,15 +14,15 @@ async function getMembers(search, page, limit) {
   // Truy vấn chính: lấy user + gói tập mới nhất (theo end_date DESC)
   let query = `
     WITH latest_membership AS (
-      SELECT DISTINCT ON (m.user_id) m.user_id, m.membership_id, m.plan_id,
+      SELECT DISTINCT ON (m.user_id) m.user_id, m.id, m.plan_id,
              m.start_date, m.end_date, m.status,
              mp.name AS plan_name, mp.duration_days
       FROM memberships m
-      JOIN membership_plans mp ON mp.plan_id = m.plan_id
+      JOIN membership_plans mp ON mp.id = m.plan_id
       ORDER BY m.user_id ASC, m.end_date DESC, m.created_at DESC
     )
-    SELECT u.user_id, u.email, u.full_name, u.phone, u.role, u.is_active, u.created_at,
-           lm.membership_id, lm.plan_id, lm.start_date, lm.end_date, lm.status,
+    SELECT u.id, u.email, u.full_name, u.phone, u.role, u.is_active, u.created_at,
+           lm.id AS membership_id, lm.plan_id, lm.start_date, lm.end_date, lm.status,
            lm.plan_name, lm.duration_days
     FROM users u
     LEFT JOIN latest_membership lm ON lm.user_id = u.user_id
@@ -38,7 +38,7 @@ async function getMembers(search, page, limit) {
     paramIndex += 1;
   }
 
-  query += ` ORDER BY u.user_id ASC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+  query += ` ORDER BY u.id ASC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
   values.push(limit, offset);
 
   const dataResult = await pool.query(query, values);
@@ -70,9 +70,9 @@ async function getMembers(search, page, limit) {
  */
 async function getMemberById(id) {
   const userQuery = `
-    SELECT user_id, email, full_name, phone, role, is_active, created_at
+    SELECT id, email, full_name, phone, role, is_active, created_at
     FROM users
-    WHERE user_id = $1 AND role = 'member'
+    WHERE id = $1 AND role = 'member'
   `;
   const userResult = await pool.query(userQuery, [id]);
   if (userResult.rows.length === 0) {
@@ -80,10 +80,10 @@ async function getMemberById(id) {
   }
 
   const membershipsQuery = `
-    SELECT m.membership_id, m.plan_id, m.start_date, m.end_date, m.status,
+    SELECT m.id AS membership_id, m.plan_id, m.start_date, m.end_date, m.status,
            mp.name AS plan_name, mp.duration_days, mp.price
     FROM memberships m
-    JOIN membership_plans mp ON mp.plan_id = m.plan_id
+    JOIN membership_plans mp ON mp.id = m.plan_id
     WHERE m.user_id = $1
     ORDER BY m.created_at DESC
   `;
@@ -104,7 +104,7 @@ async function getPlanDuration(planId) {
   const query = `
     SELECT duration_days
     FROM membership_plans
-    WHERE plan_id = $1
+    WHERE id = $1
   `;
   const result = await pool.query(query, [planId]);
   return result.rows[0] ? result.rows[0].duration_days : null;
@@ -123,7 +123,7 @@ async function createMembership(userId, planId, startDate, endDate, status) {
   const query = `
     INSERT INTO memberships (user_id, plan_id, start_date, end_date, status)
     VALUES ($1, $2, $3, $4, $5)
-    RETURNING membership_id, user_id, plan_id, start_date, end_date, status, created_at, updated_at
+    RETURNING id AS membership_id, user_id, plan_id, start_date, end_date, status, created_at, updated_at
   `;
   const result = await pool.query(query, [userId, planId, startDate, endDate, status]);
   return result.rows[0];

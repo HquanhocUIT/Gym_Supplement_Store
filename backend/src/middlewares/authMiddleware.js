@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_change_me_in_production';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 /**
  * Xác thực Bearer JWT từ header Authorization.
@@ -18,6 +18,14 @@ function authenticate(req, res, next) {
   }
 
   const token = authHeader.split(' ')[1];
+
+  if (!JWT_SECRET) {
+    return res.status(500).json({
+      success: false,
+      data: null,
+      error: { code: 'CONFIGURATION_ERROR', message: 'JWT_SECRET is not configured' },
+    });
+  }
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
