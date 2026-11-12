@@ -113,6 +113,8 @@ async function login(req, res) {
 
     if (!requireJwtSecret(res)) return;
 
+    console.log('Login user role:', user.role);
+
     const token = jwt.sign(
       { user_id: user.id, role: user.role },
       JWT_SECRET,
