@@ -1,7 +1,7 @@
 # API Documentation - Auth, Gym, Store & Dashboard
 
 > Phase 1 - Design (DB & API). Audience: Quân and Sang (reviewers).
-> Base URL: `https://api.gymstore.local/v1`
+> Base URL (local): `http://localhost:5000/api`. The deployed host depends on the environment.
 > Auth: Bearer JWT in `Authorization: Bearer <token>` header unless marked Public.
 
 ## Conventions
@@ -90,15 +90,24 @@ Role values: `admin`, `staff`, `member`.
 
 ## 3. Store
 
+Task 30 implements category, product, variant, and product-image endpoints. The common response envelope is `{ success, data, error }`.
+
 | Method | URL | Access | Request (main fields) | Response (success) | Errors |
 |--------|-----|--------|-----------------------|--------------------|--------|
-| GET | `/store/categories` | Public | — | `categories [ { id, name } ]` | 500 |
-| GET | `/store/products` | Public | Query: `category_id`, `q`, `page`, `limit` (optional) | `items [ { id, name, description, image_url, category, variants } ]`, `page`, `limit`, `total` | 400, 500 |
-| GET | `/store/products/:id` | Public | — | `product { id, name, description, image_url, category, variants }` | 404, 500 |
-| POST | `/store/products` | Staff / Admin | `category_id`, `name`, `description`, `image_url` (optional) | `product { ... }` | 400, 401, 403, 404, 409, 422, 500 |
-| PUT | `/store/products/:id` | Staff / Admin | `category_id`, `name`, `description`, `image_url` | `product { ... }` | 400, 401, 403, 404, 409, 422, 500 |
-| POST | `/store/products/:id/variants` | Staff / Admin | `flavor` (optional), `size`, `price`, `stock` | `variant { id, flavor, size, price, stock }` | 400, 401, 403, 404, 422, 500 |
-| PUT | `/store/variants/:id` | Staff / Admin | `flavor`, `size`, `price`, `stock` | `variant { ... }` | 400, 401, 403, 404, 422, 500 |
+| GET | `/store/categories` | Public | — | `data: category[]` | 500 |
+| POST | `/store/categories` | Admin | `{ name }` | `201`, `data: category` | 400, 401, 403, 409, 500 |
+| PUT | `/store/categories/:id` | Admin | `{ name }` | `200`, `data: category` | 400, 401, 403, 404, 409, 500 |
+| DELETE | `/store/categories/:id` | Admin | — | `200`, `data: deleted category` | 401, 403, 404, 409, 500 |
+| GET | `/store/products` | Public | No filters or pagination yet | `data: product[]` with `id`, `category_id`, `name`, `description`, `image_url`, `category_name`, timestamps | 500 |
+| GET | `/store/products/:productId/variants` | Public | — | `data: variant[]` | 400, 500 |
+| POST | `/store/products` | Admin | `{ categoryId, name, description? }` | `201`, `data: product` | 400, 401, 403, 500 |
+| PUT | `/store/products/:productId` | Admin | `{ categoryId, name, description? }` | `200`, `data: product` | 400, 401, 403, 404, 500 |
+| DELETE | `/store/products/:productId` | Admin | — | `200`, `data: deleted product` | 401, 403, 404, 409, 500 |
+| POST | `/store/products/:productId/variants` | Admin | `{ flavor?, size, price, stock? }` | `201`, `data: variant` | 400, 401, 403, 404, 500 |
+| PUT | `/store/products/:productId/variants/:variantId` | Admin | `{ flavor?, size, price, stock }` | `200`, `data: variant` | 400, 401, 403, 404, 500 |
+| DELETE | `/store/products/:productId/variants/:variantId` | Admin | — | `200`, `data: deleted variant` | 401, 403, 404, 409, 500 |
+| POST | `/store/products/:productId/image` | Admin | `multipart/form-data`, file field `image` (JPEG, PNG, or WebP; max 5 MB) | `200`, `data: updated product with image_url` | 400, 401, 403, 404, 413, 500 |
+| GET | `/store/products/:productId` | Planned (Task 32) | — | Product detail with variants | Not implemented yet |
 | GET | `/store/cart` | Authenticated | — | `cart { id, items [ { id, variant, quantity } ], subtotal }` | 401, 500 |
 | POST | `/store/cart/items` | Authenticated | `variant_id`, `quantity` | `item { id, variant, quantity }` | 400, 401, 404, 409, 422, 500 |
 | PUT | `/store/cart/items/:id` | Authenticated | `quantity` | `item { id, variant, quantity }` | 400, 401, 403, 404, 409, 422, 500 |
@@ -110,8 +119,9 @@ Role values: `admin`, `staff`, `member`.
 
 ### Store access and business rules
 
-- Anyone can browse categories and products. A logged-in user can manage their own cart and view their own orders.
-- Staff and admins can manage products and variants, view all orders, and update order status.
+- Task 30: anyone can browse categories, products, and product variants. Only an authenticated Admin can create, update, or delete categories, products, and variants, or upload product images.
+- Product filters, pagination, and product detail are planned for Task 32. Cart and order endpoints in the table remain design proposals for later tasks.
+- Cart and order proposal: a logged-in user can manage their own cart and view their own orders. Staff/admin order access will be implemented with the order-management task.
 - The server checks stock and calculates prices, discounts, and totals during checkout. It creates the order and payment in one transaction.
 - Order status values: `pending`, `confirmed`, `shipping`, `delivered`, `cancelled`.
 - Payment methods: `cod`, `bank_transfer`. Payment status values: `pending`, `completed`.
@@ -241,4 +251,4 @@ Authorization: Bearer <token>
 
 ---
 
-> Auth and Gym endpoints are documented in Task 16. Store and Dashboard endpoints are a design proposal for review before implementation.
+> Auth and Gym endpoints are documented in Task 16. Task 30 implements the category, product, variant, and image routes listed above. Cart, order, and Dashboard routes remain design proposals for later tasks.

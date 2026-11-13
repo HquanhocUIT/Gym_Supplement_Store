@@ -3,7 +3,7 @@ const app = require('./app');
 const pool = require('./config/db');
 
 const server = app.listen(port, () => {
-  console.log(`Server running on port ${server.address().port}`);
+  console.log(`Server running on port ${port}`);
 });
 
 server.on('error', async (err) => {
