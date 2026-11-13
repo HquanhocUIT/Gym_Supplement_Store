@@ -5,14 +5,21 @@ const { findUserByEmail, createUser } = require('../repositories/authRepository'
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
+// Kiểm tra cấu hình; trả false để controller dừng khi thiếu secret.
 function requireJwtSecret(res) {
   if (!JWT_SECRET) {
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       data: null,
-      error: { code: 'CONFIGURATION_ERROR', message: 'JWT_SECRET is not configured' },
+      error: {
+        code: 'CONFIGURATION_ERROR',
+        message: 'JWT_SECRET is not configured',
+      },
     });
+
+    return false;
   }
+
   return true;
 }
 
