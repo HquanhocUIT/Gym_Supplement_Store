@@ -359,7 +359,7 @@ exports.deleteProduct = async (id) => {
     if (product.image_url) {
       try {
         await productImageService.deleteProductImage(product.image_url);
-      } catch (error) {
+      } catch {
         console.error("Không thể xóa ảnh sản phẩm khỏi Supabase Storage.");
       }
     }
@@ -427,7 +427,7 @@ exports.uploadProductImage = async (id, file) => {
   } catch (error) {
     try {
       await productImageService.deleteProductImage(uploaded.imageUrl);
-    } catch (cleanupError) {
+    } catch {
       console.error("Không thể dọn ảnh mới khỏi Supabase Storage.");
     }
 
@@ -437,7 +437,7 @@ exports.uploadProductImage = async (id, file) => {
   if (existingProduct.image_url) {
     try {
       await productImageService.deleteProductImage(existingProduct.image_url);
-    } catch (error) {
+    } catch {
       console.error("Không thể xóa ảnh cũ khỏi Supabase Storage.");
     }
   }
