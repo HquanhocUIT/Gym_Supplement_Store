@@ -1,9 +1,24 @@
 const productService = require('../services/productService');
 
-// Lấy danh sách sản phẩm và gửi kết quả về client.
+// Nhận bộ lọc từ query string và gửi danh sách sản phẩm về client.
 exports.list = async (req, res, next) => {
   try {
-    const data = await productService.listProducts();
+    const data = await productService.listProducts(req.query);
+
+    return res.status(200).json({
+      success: true,
+      data,
+      error: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Lấy chi tiết một sản phẩm theo ID trên URL.
+exports.get = async (req, res, next) => {
+  try {
+    const data = await productService.getProductDetail(req.params.productId);
 
     return res.status(200).json({
       success: true,

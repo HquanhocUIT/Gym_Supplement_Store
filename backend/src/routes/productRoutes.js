@@ -8,6 +8,7 @@ const router = express.Router();
 // Khách có thể xem danh sách sản phẩm và các variant.
 router.get('/', productController.list);
 router.get('/:productId/variants', productController.listVariants);
+router.get('/:productId', productController.get);
 
 // Các route bên dưới chỉ dành cho Admin đã đăng nhập.
 router.use(authenticate, authorize('admin'));

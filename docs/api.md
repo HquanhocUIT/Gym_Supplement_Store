@@ -98,7 +98,8 @@ Task 30 implements category, product, variant, and product-image endpoints. The 
 | POST | `/store/categories` | Admin | `{ name }` | `201`, `data: category` | 400, 401, 403, 409, 500 |
 | PUT | `/store/categories/:id` | Admin | `{ name }` | `200`, `data: category` | 400, 401, 403, 404, 409, 500 |
 | DELETE | `/store/categories/:id` | Admin | — | `200`, `data: deleted category` | 401, 403, 404, 409, 500 |
-| GET | `/store/products` | Public | No filters or pagination yet | `data: product[]` with `id`, `category_id`, `name`, `description`, `image_url`, `category_name`, timestamps | 500 |
+| GET | `/store/products` | Public | Query: `q`, `category` (category ID), `minPrice`, `maxPrice`, `sort`, `page`, `limit` (optional) | `data: { items: product[], pagination: { page, limit, total, totalPages } }`; products include `lowest_price` and `total_stock` | 400, 500 |
+| GET | `/store/products/:productId` | Public | — | `data: product` with `category_name` and `variants[]` | 400, 404, 500 |
 | GET | `/store/products/:productId/variants` | Public | — | `data: variant[]` | 400, 500 |
 | POST | `/store/products` | Admin | `{ categoryId, name, description? }` | `201`, `data: product` | 400, 401, 403, 500 |
 | PUT | `/store/products/:productId` | Admin | `{ categoryId, name, description? }` | `200`, `data: product` | 400, 401, 403, 404, 500 |
@@ -107,7 +108,6 @@ Task 30 implements category, product, variant, and product-image endpoints. The 
 | PUT | `/store/products/:productId/variants/:variantId` | Admin | `{ flavor?, size, price, stock }` | `200`, `data: variant` | 400, 401, 403, 404, 500 |
 | DELETE | `/store/products/:productId/variants/:variantId` | Admin | — | `200`, `data: deleted variant` | 401, 403, 404, 409, 500 |
 | POST | `/store/products/:productId/image` | Admin | `multipart/form-data`, file field `image` (JPEG, PNG, or WebP; max 5 MB) | `200`, `data: updated product with image_url` | 400, 401, 403, 404, 413, 500 |
-| GET | `/store/products/:productId` | Planned (Task 32) | — | Product detail with variants | Not implemented yet |
 | GET | `/store/cart` | Authenticated | — | `cart { id, items [ { id, variant, quantity } ], subtotal }` | 401, 500 |
 | POST | `/store/cart/items` | Authenticated | `variant_id`, `quantity` | `item { id, variant, quantity }` | 400, 401, 404, 409, 422, 500 |
 | PUT | `/store/cart/items/:id` | Authenticated | `quantity` | `item { id, variant, quantity }` | 400, 401, 403, 404, 409, 422, 500 |
@@ -120,7 +120,7 @@ Task 30 implements category, product, variant, and product-image endpoints. The 
 ### Store access and business rules
 
 - Task 30: anyone can browse categories, products, and product variants. Only an authenticated Admin can create, update, or delete categories, products, and variants, or upload product images.
-- Product filters, pagination, and product detail are planned for Task 32. Cart and order endpoints in the table remain design proposals for later tasks.
+- Product listing supports keyword, category ID, price range, sorting, and pagination. Sort values are `newest`, `name_asc`, `name_desc`, `price_asc`, and `price_desc`; `limit` defaults to 12 and cannot exceed 100. Product detail includes its variants. Cart and order endpoints in the table remain design proposals for later tasks.
 - Cart and order proposal: a logged-in user can manage their own cart and view their own orders. Staff/admin order access will be implemented with the order-management task.
 - The server checks stock and calculates prices, discounts, and totals during checkout. It creates the order and payment in one transaction.
 - Order status values: `pending`, `confirmed`, `shipping`, `delivered`, `cancelled`.

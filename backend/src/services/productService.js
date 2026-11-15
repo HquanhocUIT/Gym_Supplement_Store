@@ -9,8 +9,100 @@ function createServiceError(status, code, message) {
   return error;
 }
 
-// Lấy danh sách sản phẩm.
-exports.listProducts = () => productRepository.listProducts();
+// Kiểm tra tham số lọc rồi lấy danh sách sản phẩm.
+exports.listProducts = async (query = {}) => {
+  const rawSearch = query.q;
+  const q = typeof rawSearch === 'string' ? rawSearch.trim() : '';
+
+  if (rawSearch !== undefined && typeof rawSearch !== 'string') {
+    throw createServiceError(400, 'INVALID_SEARCH', 'Từ khóa tìm kiếm không hợp lệ.');
+  }
+
+  if (q.length > 255) {
+    throw createServiceError(400, 'INVALID_SEARCH', 'Từ khóa không được quá 255 ký tự.');
+  }
+
+  // Nhận category trên URL là ID danh mục.
+  let categoryId;
+  if (query.category !== undefined && query.category !== '') {
+    categoryId = Number(query.category);
+    if (!Number.isInteger(categoryId) || categoryId < 1) {
+      throw createServiceError(400, 'INVALID_CATEGORY_ID', 'Danh mục không hợp lệ.');
+    }
+  }
+
+  // Chuyển giá từ query string sang số và không nhận giá âm.
+  const parsePrice = (value, fieldName) => {
+    if (value === undefined || value === '') return undefined;
+
+    const price = Number(value);
+    if (!Number.isFinite(price) || price < 0) {
+      throw createServiceError(400, 'INVALID_PRICE', `${fieldName} phải là số không âm.`);
+    }
+
+    return price;
+  };
+
+  const minPrice = parsePrice(query.minPrice, 'minPrice');
+  const maxPrice = parsePrice(query.maxPrice, 'maxPrice');
+
+  if (minPrice !== undefined && maxPrice !== undefined && minPrice > maxPrice) {
+    throw createServiceError(400, 'INVALID_PRICE_RANGE', 'minPrice không được lớn hơn maxPrice.');
+  }
+
+  // Chỉ nhận các kiểu sắp xếp mà repository hỗ trợ.
+  const allowedSorts = ['newest', 'name_asc', 'name_desc', 'price_asc', 'price_desc'];
+  const sort = query.sort || 'newest';
+  if (!allowedSorts.includes(sort)) {
+    throw createServiceError(400, 'INVALID_SORT', 'Kiểu sắp xếp không hợp lệ.');
+  }
+
+  // Trang và giới hạn trang phải là số nguyên dương.
+  const parsePositiveInteger = (value, defaultValue, fieldName) => {
+    if (value === undefined || value === '') return defaultValue;
+
+    const number = Number(value);
+    if (!Number.isInteger(number) || number < 1) {
+      throw createServiceError(400, `INVALID_${fieldName.toUpperCase()}`, `${fieldName} phải là số nguyên dương.`);
+    }
+
+    return number;
+  };
+
+  const page = parsePositiveInteger(query.page, 1, 'page');
+  const limit = parsePositiveInteger(query.limit, 12, 'limit');
+
+  if (limit > 100) {
+    throw createServiceError(400, 'INVALID_LIMIT', 'limit không được lớn hơn 100.');
+  }
+
+  return productRepository.listProducts({
+    q,
+    categoryId,
+    minPrice,
+    maxPrice,
+    sort,
+    page,
+    limit,
+  });
+};
+
+// Lấy chi tiết sản phẩm kèm danh sách variant.
+exports.getProductDetail = async (productId) => {
+  const numericId = Number(productId);
+
+  if (!Number.isInteger(numericId) || numericId < 1) {
+    throw createServiceError(400, 'INVALID_PRODUCT_ID', 'Mã sản phẩm không hợp lệ.');
+  }
+
+  const product = await productRepository.getProductDetailById(numericId);
+  if (!product) {
+    throw createServiceError(404, 'PRODUCT_NOT_FOUND', 'Không tìm thấy sản phẩm.');
+  }
+
+  const variants = await productRepository.listVariantsByProductId(numericId);
+  return { ...product, variants };
+};
 
 // Lấy variants của sản phẩm sau khi kiểm tra mã sản phẩm.
 exports.listVariantsByProductId = (productId) => {

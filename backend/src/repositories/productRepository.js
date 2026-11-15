@@ -1,7 +1,136 @@
 const pool = require('../config/db');
 
-// Lấy danh sách sản phẩm kèm tên danh mục.
-exports.listProducts = async () => {
+// Lấy danh sách sản phẩm theo bộ lọc và phân trang.
+exports.listProducts = async ({
+  q,
+  categoryId,
+  minPrice,
+  maxPrice,
+  sort = 'newest',
+  page = 1,
+  limit = 12,
+} = {}) => {
+  const conditions = [];
+  const values = [];
+
+  // Tìm từ khóa trong tên hoặc mô tả sản phẩm.
+  if (q) {
+    values.push(`%${q}%`);
+    const searchPosition = values.length;
+    conditions.push(
+      `(p.name ILIKE $${searchPosition}
+        OR COALESCE(p.description, '') ILIKE $${searchPosition})`,
+    );
+  }
+
+  // Lọc theo ID danh mục.
+  if (categoryId !== undefined && categoryId !== null) {
+    values.push(categoryId);
+    conditions.push(`p.category_id = $${values.length}`);
+  }
+
+  // Nếu lọc giá, hai điều kiện phải cùng đúng trên một variant.
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    const priceConditions = ['v.product_id = p.id'];
+
+    if (minPrice !== undefined) {
+      values.push(minPrice);
+      priceConditions.push(`v.price >= $${values.length}`);
+    }
+
+    if (maxPrice !== undefined) {
+      values.push(maxPrice);
+      priceConditions.push(`v.price <= $${values.length}`);
+    }
+
+    conditions.push(`
+      EXISTS (
+        SELECT 1
+        FROM product_variants AS v
+        WHERE ${priceConditions.join(' AND ')}
+      )
+    `);
+  }
+
+  const whereSql = conditions.length
+    ? `WHERE ${conditions.join(' AND ')}`
+    : '';
+
+  // Chỉ cho phép các kiểu sắp xếp định trước.
+  const sortOptions = {
+    newest: 'p.created_at DESC',
+    name_asc: 'p.name ASC',
+    name_desc: 'p.name DESC',
+    price_asc: 'price_summary.lowest_price ASC NULLS LAST',
+    price_desc: 'price_summary.lowest_price DESC NULLS LAST',
+  };
+  const orderBy = sortOptions[sort] || sortOptions.newest;
+
+  // Đếm số sản phẩm thỏa bộ lọc để tính tổng số trang.
+  const countResult = await pool.query({
+    text: `
+      SELECT COUNT(*)::int AS total
+      FROM products AS p
+      JOIN categories AS c ON c.id = p.category_id
+      ${whereSql}
+    `,
+    values,
+    query_timeout: 5000,
+  });
+
+  // Tính vị trí bắt đầu của trang đang được yêu cầu.
+  const offset = (page - 1) * limit;
+  const limitPosition = values.length + 1;
+  const offsetPosition = values.length + 2;
+
+  // Trả giá thấp nhất và tổng tồn kho để giao diện có thể hiển thị.
+  const productResult = await pool.query({
+    text: `
+      SELECT
+        p.id,
+        p.name,
+        p.description,
+        p.image_url,
+        p.category_id,
+        c.name AS category_name,
+        price_summary.lowest_price,
+        COALESCE(price_summary.total_stock, 0)::int AS total_stock,
+        p.created_at,
+        p.updated_at
+      FROM products AS p
+      JOIN categories AS c ON c.id = p.category_id
+      LEFT JOIN (
+        SELECT
+          product_id,
+          MIN(price) AS lowest_price,
+          SUM(stock) AS total_stock
+        FROM product_variants
+        GROUP BY product_id
+      ) AS price_summary ON price_summary.product_id = p.id
+      ${whereSql}
+      ORDER BY ${orderBy}, p.id ASC
+      LIMIT $${limitPosition}
+      OFFSET $${offsetPosition}
+    `,
+    values: [...values, limit, offset],
+    query_timeout: 5000,
+  });
+
+  const total = Number(countResult.rows[0].total);
+
+  return {
+    items: productResult.rows,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+};
+
+// Lấy thông tin sản phẩm và tên danh mục theo ID.
+exports.getProductDetailById = async (id) => {
   const result = await pool.query({
     text: `
       SELECT
@@ -15,12 +144,13 @@ exports.listProducts = async () => {
         p.updated_at
       FROM products AS p
       JOIN categories AS c ON c.id = p.category_id
-      ORDER BY p.id
+      WHERE p.id = $1
     `,
+    values: [id],
     query_timeout: 5000,
   });
 
-  return result.rows;
+  return result.rows[0] || null;
 };
 
 // Lấy các phiên bản của một sản phẩm.
