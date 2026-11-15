@@ -9,6 +9,7 @@ import NotFoundPage from './pages/NotFoundPage.jsx'
 import StoreHomePage from './pages/StoreHomePage.jsx'
 import UiKit from './pages/UiKit'; 
 import CommonComponentsPage from './pages/CommonComponentsPage.jsx'
+import AdminLoginPage from "./pages/AdminLoginPage.jsx";
 
 function App() {
   return (
@@ -21,6 +22,8 @@ function App() {
           {/* Trang minh chứng cho các component và API client của Task 6. */}
           <Route path="ui-kit/common" element={<CommonComponentsPage />} />
         </Route>
+
+        <Route path="/admin/login" element={<AdminLoginPage />} />
         
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboardPage />} />

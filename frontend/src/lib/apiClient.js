@@ -7,6 +7,17 @@ export const apiClient = axios.create({
   headers: { Accept: 'application/json' },
 })
 
+// Tự gửi token Admin kèm request nếu người dùng đã đăng nhập.
+apiClient.interceptors.request.use((config) => {
+  const token = sessionStorage.getItem("access_token");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
 // Đổi lỗi mạng và lỗi HTTP thành thông báo dễ hiển thị trong giao diện.
 apiClient.interceptors.response.use(
   (response) => response,
