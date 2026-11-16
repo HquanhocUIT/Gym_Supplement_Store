@@ -90,7 +90,7 @@ Role values: `admin`, `staff`, `member`.
 
 ## 3. Store
 
-Task 30 implements category, product, variant, and product-image endpoints. The common response envelope is `{ success, data, error }`.
+Task 30 implements category, product, variant, and product-image endpoints. Task 35 implements authenticated cart endpoints. The common response envelope is `{ success, data, error }`.
 
 | Method | URL | Access | Request (main fields) | Response (success) | Errors |
 |--------|-----|--------|-----------------------|--------------------|--------|
@@ -109,9 +109,9 @@ Task 30 implements category, product, variant, and product-image endpoints. The 
 | DELETE | `/store/products/:productId/variants/:variantId` | Admin | — | `200`, `data: deleted variant` | 401, 403, 404, 409, 500 |
 | POST | `/store/products/:productId/image` | Admin | `multipart/form-data`, file field `image` (JPEG, PNG, or WebP; max 5 MB) | `200`, `data: updated product with image_url` | 400, 401, 403, 404, 413, 500 |
 | GET | `/store/cart` | Authenticated | — | `cart { id, items [ { id, variant, quantity } ], subtotal }` | 401, 500 |
-| POST | `/store/cart/items` | Authenticated | `variant_id`, `quantity` | `item { id, variant, quantity }` | 400, 401, 404, 409, 422, 500 |
-| PUT | `/store/cart/items/:id` | Authenticated | `quantity` | `item { id, variant, quantity }` | 400, 401, 403, 404, 409, 422, 500 |
-| DELETE | `/store/cart/items/:id` | Authenticated | — | `{ success: true }` | 401, 403, 404, 500 |
+| POST | `/store/cart/items` | Authenticated | `{ variant_id, quantity }` | `200`, `data: item { id, variant, quantity }` | 400, 401, 404, 409, 500 |
+| PUT | `/store/cart/items/:itemId` | Authenticated | `{ quantity }` | `200`, `data: item { id, variant, quantity }` | 400, 401, 404, 409, 500 |
+| DELETE | `/store/cart/items/:itemId` | Authenticated | — | `200`, `data: { id, variant_id }` | 400, 401, 404, 500 |
 | POST | `/store/orders` | Authenticated | `recipient_name`, `recipient_phone`, `shipping_address`, `payment_method` | `order { id, items, subtotal, discount_amount, total_amount, status }`, `payment { id, amount, payment_method, status }` | 400, 401, 404, 409, 422, 500 |
 | GET | `/store/orders` | Authenticated | Query: `page`, `limit` (optional) | `items [ { id, total_amount, status, created_at } ]`, `page`, `limit`, `total` | 401, 500 |
 | GET | `/store/orders/:id` | Authenticated | — | `order { id, items, subtotal, discount_amount, total_amount, status }` | 401, 403, 404, 500 |
@@ -120,8 +120,9 @@ Task 30 implements category, product, variant, and product-image endpoints. The 
 ### Store access and business rules
 
 - Task 30: anyone can browse categories, products, and product variants. Only an authenticated Admin can create, update, or delete categories, products, and variants, or upload product images.
-- Product listing supports keyword, category ID, price range, sorting, and pagination. Sort values are `newest`, `name_asc`, `name_desc`, `price_asc`, and `price_desc`; `limit` defaults to 12 and cannot exceed 100. Product detail includes its variants. Cart and order endpoints in the table remain design proposals for later tasks.
-- Cart and order proposal: a logged-in user can manage their own cart and view their own orders. Staff/admin order access will be implemented with the order-management task.
+- Product listing supports keyword, category ID, price range, sorting, and pagination. Sort values are `newest`, `name_asc`, `name_desc`, `price_asc`, and `price_desc`; `limit` defaults to 12 and cannot exceed 100. Product detail includes its variants.
+- A logged-in user can view and manage only their own cart. Adding an existing variant increases its quantity; add and update requests fail with `409 INSUFFICIENT_STOCK` when the requested quantity exceeds current stock. Order endpoints remain planned for later tasks.
+- Staff/admin order access will be implemented with the order-management task.
 - The server checks stock and calculates prices, discounts, and totals during checkout. It creates the order and payment in one transaction.
 - Order status values: `pending`, `confirmed`, `shipping`, `delivered`, `cancelled`.
 - Payment methods: `cod`, `bank_transfer`. Payment status values: `pending`, `completed`.
@@ -251,4 +252,4 @@ Authorization: Bearer <token>
 
 ---
 
-> Auth and Gym endpoints are documented in Task 16. Task 30 implements the category, product, variant, and image routes listed above. Cart, order, and Dashboard routes remain design proposals for later tasks.
+> Auth and Gym endpoints are documented in Task 16. Task 30 implements the category, product, variant, and image routes listed above. Task 35 implements the cart routes. Order and Dashboard routes remain design proposals for later tasks.

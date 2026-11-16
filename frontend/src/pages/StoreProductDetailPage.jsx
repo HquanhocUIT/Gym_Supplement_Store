@@ -1,9 +1,12 @@
 import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Check, CircleAlert, Minus, Package, Plus, ShoppingBag } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { EmptyState, Skeleton } from '../components/common/index.js'
 import { Eyebrow } from '../components/Brand.jsx'
 import useApiQuery from '../hooks/useApiQuery.js'
+import { getAccessToken } from '../lib/authToken.js'
+import { addCartItem } from '../lib/cartApi.js'
 
 const inputClass = 'min-h-12 w-full rounded-xl border border-line bg-white px-3 text-sm text-ink outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-100'
 const buttonClass = 'inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700 disabled:cursor-not-allowed disabled:opacity-50'
@@ -43,11 +46,21 @@ function ProductImage({ product }) {
 
 // Thông tin mua hàng và phiên bản được tách riêng để trạng thái bắt đầu lại khi đổi sản phẩm.
 function ProductDetailContent({ product }) {
+  const queryClient = useQueryClient()
   const [selectedVariantId, setSelectedVariantId] = useState(() => String(product.variants?.[0]?.id || ''))
   const [quantity, setQuantity] = useState(1)
   const [cartMessage, setCartMessage] = useState('')
   const variants = product?.variants || []
   const selectedVariant = variants.find((variant) => String(variant.id) === selectedVariantId) || variants[0]
+
+  // Gửi món đã chọn lên API rồi cập nhật số lượng hiển thị trên header.
+  const addToCartMutation = useMutation({
+    mutationFn: () => addCartItem(Number(selectedVariant.id), quantity),
+    onSuccess: () => {
+      setCartMessage('Đã thêm sản phẩm vào giỏ hàng.')
+      queryClient.invalidateQueries({ queryKey: ['store-cart'] })
+    },
+  })
 
   // Giới hạn số lượng chọn không vượt quá tồn kho của phiên bản đang xem.
   function updateQuantity(nextQuantity) {
@@ -56,9 +69,16 @@ function ProductDetailContent({ product }) {
     setCartMessage('')
   }
 
-  // Backend giỏ hàng thuộc task tiếp theo; thông báo rõ để không giả vờ đã lưu món hàng.
+  // Yêu cầu đăng nhập trước khi gọi API giỏ hàng.
   function handleAddToCart() {
-    setCartMessage('Giỏ hàng hiện chưa khả dụng. Bạn có thể xem sản phẩm và chọn phiên bản trước.')
+    setCartMessage('')
+
+    if (!getAccessToken()) {
+      setCartMessage('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.')
+      return
+    }
+
+    addToCartMutation.mutate()
   }
 
   return (
@@ -124,13 +144,18 @@ function ProductDetailContent({ product }) {
                 <button
                   className={`${buttonClass} min-w-48 flex-1 bg-ink text-white hover:bg-brand-700`}
                   type="button"
-                  disabled={!selectedVariant || Number(selectedVariant.stock) <= 0}
+                  disabled={!selectedVariant || Number(selectedVariant.stock) <= 0 || addToCartMutation.isPending}
                   onClick={handleAddToCart}
                 >
-                  <ShoppingBag size={18} aria-hidden="true" /> Thêm vào giỏ
+                  <ShoppingBag size={18} aria-hidden="true" /> {addToCartMutation.isPending ? 'Đang thêm…' : 'Thêm vào giỏ'}
                 </button>
               </div>
-              {cartMessage && <p className="mt-3 text-sm text-ink-soft" role="status" aria-live="polite">{cartMessage}</p>}
+              {(cartMessage || addToCartMutation.isError) && (
+                <p className={`mt-3 text-sm ${addToCartMutation.isError ? 'text-red-700' : 'text-ink-soft'}`} role={addToCartMutation.isError ? 'alert' : 'status'} aria-live="polite">
+                  {addToCartMutation.isError ? addToCartMutation.error.message : cartMessage}
+                  {!getAccessToken() && <Link className="ml-1 font-bold underline underline-offset-4" to="/cart">Mở giỏ hàng để đăng nhập.</Link>}
+                </p>
+              )}
             </>
           ) : (
             <EmptyState title="Sản phẩm chưa có phiên bản" description="Phiên bản, giá và tồn kho sẽ hiển thị tại đây khi được thêm vào danh mục." />

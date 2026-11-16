@@ -9,6 +9,7 @@ import NotFoundPage from './pages/NotFoundPage.jsx'
 import StoreHomePage from './pages/StoreHomePage.jsx'
 import StoreShopPage from './pages/StoreShopPage.jsx'
 import StoreProductDetailPage from './pages/StoreProductDetailPage.jsx'
+import StoreCartPage from './pages/StoreCartPage.jsx'
 import UiKit from './pages/UiKit'; 
 import CommonComponentsPage from './pages/CommonComponentsPage.jsx'
 
@@ -20,6 +21,7 @@ function App() {
           <Route index element={<StoreHomePage />} />
           <Route path="shop" element={<StoreShopPage />} />
           <Route path="product/:productId" element={<StoreProductDetailPage />} />
+          <Route path="cart" element={<StoreCartPage />} />
           {/* Đã thêm route ui-kit ở đây */}
           <Route path="ui-kit" element={<UiKit />} />
           {/* Trang minh chứng cho các component và API client của Task 6. */}

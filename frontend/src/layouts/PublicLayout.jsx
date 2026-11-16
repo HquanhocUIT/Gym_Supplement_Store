@@ -1,8 +1,30 @@
-import { ArrowUpRight, Search, ShoppingBag } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { ArrowUpRight, CircleUserRound, Search, ShoppingBag } from 'lucide-react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { BrandMark } from '../components/Brand.jsx'
+import { getAccessToken } from '../lib/authToken.js'
+import { getCart } from '../lib/cartApi.js'
 
 function PublicLayout() {
+  const [hasToken, setHasToken] = useState(() => Boolean(getAccessToken()))
+
+  // Đồng bộ badge khi trang đăng nhập lưu token trong cùng tab.
+  useEffect(() => {
+    const updateTokenState = () => setHasToken(Boolean(getAccessToken()))
+    window.addEventListener('auth-token-changed', updateTokenState)
+    return () => window.removeEventListener('auth-token-changed', updateTokenState)
+  }, [])
+
+  // Chỉ tải giỏ khi token có sẵn, tránh gọi API riêng tư với khách chưa đăng nhập.
+  const cartQuery = useQuery({
+    queryKey: ['store-cart'],
+    queryFn: getCart,
+    enabled: hasToken,
+    retry: false,
+  })
+  const cartCount = (cartQuery.data?.items || []).reduce((total, item) => total + Number(item.quantity || 0), 0)
+
   return (
     <div className="min-h-screen bg-paper">
       <div className="bg-night px-4 py-2 text-center text-[11px] font-semibold tracking-wide text-white sm:text-xs">
@@ -20,8 +42,12 @@ function PublicLayout() {
             <Link className="grid size-10 place-items-center rounded-full text-ink-soft transition hover:bg-paper hover:text-ink" to="/shop" aria-label="Search products">
               <Search size={19} aria-hidden="true" />
             </Link>
+            <Link className="relative grid size-10 place-items-center rounded-full text-ink-soft transition hover:bg-paper hover:text-ink" to="/cart" aria-label={`Giỏ hàng, ${cartCount} sản phẩm`}>
+              <ShoppingBag size={19} aria-hidden="true" />
+              {cartCount > 0 && <span className="absolute right-0 top-0 grid min-h-5 min-w-5 place-items-center rounded-full bg-brand-500 px-1 text-[10px] font-extrabold text-ink" aria-hidden="true">{cartCount > 99 ? '99+' : cartCount}</span>}
+            </Link>
             <Link className="inline-flex min-h-10 items-center gap-2 rounded-full bg-ink px-4 text-sm font-bold text-white transition hover:bg-brand-700" to="/member">
-              <ShoppingBag size={16} aria-hidden="true" />
+              <CircleUserRound size={16} aria-hidden="true" />
               <span className="hidden sm:inline">My account</span>
               <ArrowUpRight size={15} aria-hidden="true" />
             </Link>
