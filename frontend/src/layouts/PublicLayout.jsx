@@ -12,14 +12,14 @@ function PublicLayout() {
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-4 sm:px-6 lg:px-8">
           <BrandMark />
           <nav className="order-3 flex w-full items-center gap-5 overflow-x-auto whitespace-nowrap text-sm font-semibold text-ink-soft sm:order-none sm:w-auto sm:gap-7" aria-label="Store navigation">
-            <a className="transition hover:text-brand-700" href="#catalog">Shop</a>
-            <a className="transition hover:text-brand-700" href="#why-us">Our standard</a>
+            <NavLink className={({ isActive }) => `transition hover:text-brand-700 ${isActive ? 'text-brand-700' : ''}`} to="/shop">Shop</NavLink>
+            <Link className="transition hover:text-brand-700" to="/#why-us">Our standard</Link>
             <NavLink className="transition hover:text-brand-700" to="/member">Member area</NavLink>
           </nav>
           <div className="flex items-center gap-2">
-            <button className="grid size-10 place-items-center rounded-full text-ink-soft transition hover:bg-paper hover:text-ink" type="button" aria-label="Search products (demo)">
+            <Link className="grid size-10 place-items-center rounded-full text-ink-soft transition hover:bg-paper hover:text-ink" to="/shop" aria-label="Search products">
               <Search size={19} aria-hidden="true" />
-            </button>
+            </Link>
             <Link className="inline-flex min-h-10 items-center gap-2 rounded-full bg-ink px-4 text-sm font-bold text-white transition hover:bg-brand-700" to="/member">
               <ShoppingBag size={16} aria-hidden="true" />
               <span className="hidden sm:inline">My account</span>
