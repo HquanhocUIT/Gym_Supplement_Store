@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axiosClient from '../../api/axiosClient';
-import { Shield, Clock, Clock as ClockIcon } from 'lucide-react';
+import { Shield, Clock } from 'lucide-react';
 
 /**
  * MemberDashboard - Member portal page.
@@ -110,23 +110,17 @@ export default function MemberDashboard() {
               <thead>
                 <tr className="border-b border-[#e3e9e1] bg-[#f4f6f3]">
                   <th className="px-4 py-3 text-sm font-semibold text-muted">Time</th>
-                  <th className="px-4 py-3 text-sm font-semibold text-muted">Method</th>
-                  <th className="px-4 py-3 text-sm font-semibold text-muted text-right">Plan</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e3e9e1]">
                 {checkins.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-muted">No check-ins yet.</td>
+                    <td colSpan={1} className="px-4 py-8 text-center text-muted">No check-ins yet.</td>
                   </tr>
                 ) : (
                   checkins.map((c) => (
-                    <tr key={c.checkin_id} className="hover:bg-[#f4f6f3]/50 transition-colors">
+                    <tr key={c.id} className="hover:bg-[#f4f6f3]/50 transition-colors">
                       <td className="px-4 py-3 text-sm text-ink">{c.checkin_time}</td>
-                      <td className="px-4 py-3 text-sm text-muted">{c.method}</td>
-                      <td className="px-4 py-3 text-sm text-muted text-right">
-                        {c.plan_name || '-'}
-                      </td>
                     </tr>
                   ))
                 )}

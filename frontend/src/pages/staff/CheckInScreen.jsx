@@ -1,17 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axiosClient from '../../api/axiosClient';
-import { CheckCircle, XCircle, Clock, User } from 'lucide-react';
+import { CheckCircle, XCircle, Clock } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 
 /**
  * CheckInScreen - Staff page to check in a member.
- * POST /checkins with { user_id, method }.
+ * POST /checkins with { user_id }.
  * GET /checkins/today to list today's check-ins.
  */
 export default function CheckInScreen() {
   const [userId, setUserId] = useState('');
-  const [method, setMethod] = useState('manual');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null); // { type: 'success' | 'error', message: string }
   const [checkins, setCheckins] = useState([]);
@@ -23,16 +22,17 @@ export default function CheckInScreen() {
     try {
       const response = await axiosClient.post('/checkins', {
         user_id: Number(userId),
-        method,
       });
       setResult({
         type: 'success',
         message: response.data?.data?.message || 'Check-in successful.',
       });
+      // Refresh today's check-in list after a successful check-in
+      await fetchTodayCheckins();
     } catch (err) {
       setResult({
         type: 'error',
-        message: err.message || 'Check-in failed.',
+        message: 'Check-in failed.',
       });
     } finally {
       setLoading(false);
@@ -50,12 +50,10 @@ export default function CheckInScreen() {
     }
   }
 
-  // Load today's check-ins on mount
-  const [loaded, setLoaded] = useState(false);
-  if (!loaded) {
-    setLoaded(true);
+  // Load today's check-ins on mount (inside useEffect, not during render)
+  useEffect(() => {
     fetchTodayCheckins();
-  }
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#f4f6f3]">
@@ -79,17 +77,6 @@ export default function CheckInScreen() {
                   value={userId}
                   onChange={(e) => setUserId(e.target.value)}
                 />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-ink">Method</label>
-                <select
-                  value={method}
-                  onChange={(e) => setMethod(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#3a4a3e] rounded-lg text-sm bg-white text-ink focus:outline-none focus:ring-2 focus:ring-[#84cc16]"
-                >
-                  <option value="manual">Manual</option>
-                  <option value="qr">QR Code</option>
-                </select>
               </div>
               <div className="flex items-end">
                 <Button type="submit" loading={loading}>
@@ -124,20 +111,18 @@ export default function CheckInScreen() {
                 <tr className="border-b border-[#e3e9e1] bg-[#f4f6f3]">
                   <th className="px-4 py-3 text-sm font-semibold text-muted">User ID</th>
                   <th className="px-4 py-3 text-sm font-semibold text-muted">Time</th>
-                  <th className="px-4 py-3 text-sm font-semibold text-muted">Method</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e3e9e1]">
                 {checkins.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-muted">No check-ins today.</td>
+                    <td colSpan={2} className="px-4 py-8 text-center text-muted">No check-ins today.</td>
                   </tr>
                 ) : (
                   checkins.map((c) => (
-                    <tr key={c.checkin_id} className="hover:bg-[#f4f6f3]/50 transition-colors">
+                    <tr key={c.id} className="hover:bg-[#f4f6f3]/50 transition-colors">
                       <td className="px-4 py-3 text-sm text-ink">{c.user_id}</td>
                       <td className="px-4 py-3 text-sm text-muted">{c.checkin_time}</td>
-                      <td className="px-4 py-3 text-sm text-muted">{c.method}</td>
                     </tr>
                   ))
                 )}
