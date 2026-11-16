@@ -208,21 +208,23 @@ function StoreShopPage() {
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {products.map((product) => (
                 <article className="group rounded-card border border-line bg-white p-3 transition hover:-translate-y-1 hover:shadow-card" key={product.id}>
-                  <ProductImage product={product} />
-                  <div className="px-1 pb-2 pt-4">
-                    <p className="text-xs font-semibold text-brand-700">{product.category_name}</p>
-                    <h2 className="mt-1 font-display text-base font-bold text-ink">{product.name}</h2>
-                    <p className="mt-2 min-h-10 text-sm leading-5 text-ink-soft">{product.description || 'Thông tin sản phẩm đang được cập nhật.'}</p>
-                    <div className="mt-4 flex items-end justify-between gap-3 border-t border-line pt-3">
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted">Giá từ</p>
-                        <p className="mt-1 text-sm font-extrabold text-ink">{formatPrice(product.lowest_price)}</p>
+                  <Link className="block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-700" to={`/product/${product.id}`} aria-label={`Xem chi tiết ${product.name}`}>
+                    <ProductImage product={product} />
+                    <div className="px-1 pb-2 pt-4">
+                      <p className="text-xs font-semibold text-brand-700">{product.category_name}</p>
+                      <h2 className="mt-1 font-display text-base font-bold text-ink">{product.name}</h2>
+                      <p className="mt-2 min-h-10 text-sm leading-5 text-ink-soft">{product.description || 'Thông tin sản phẩm đang được cập nhật.'}</p>
+                      <div className="mt-4 flex items-end justify-between gap-3 border-t border-line pt-3">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-muted">Giá từ</p>
+                          <p className="mt-1 text-sm font-extrabold text-ink">{formatPrice(product.lowest_price)}</p>
+                        </div>
+                        <p className={`text-xs font-semibold ${Number(product.total_stock) > 0 ? 'text-brand-700' : 'text-red-600'}`}>
+                          {Number(product.total_stock) > 0 ? `Còn ${product.total_stock}` : 'Hết hàng'}
+                        </p>
                       </div>
-                      <p className={`text-xs font-semibold ${Number(product.total_stock) > 0 ? 'text-brand-700' : 'text-red-600'}`}>
-                        {Number(product.total_stock) > 0 ? `Còn ${product.total_stock}` : 'Hết hàng'}
-                      </p>
                     </div>
-                  </div>
+                  </Link>
                 </article>
               ))}
             </div>
