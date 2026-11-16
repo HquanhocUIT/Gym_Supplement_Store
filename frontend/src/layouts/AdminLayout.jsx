@@ -1,4 +1,4 @@
-import { ArrowUpRight, Boxes, LayoutDashboard, Search, Settings, Users } from 'lucide-react';
+import { ArrowUpRight, Boxes, LayoutDashboard, Package, Search, Settings, Users } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { BrandMark } from '../components/Brand.jsx';
 
@@ -6,6 +6,7 @@ const navigation = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/plans', label: 'Membership Plans', icon: Boxes },
   { to: '/admin/members', label: 'Members', icon: Users },
+  { to: '/admin/products', label: 'Products', icon: Package },
 ];
 
 function NavItems({ mobile = false }) {
