@@ -3,18 +3,18 @@ const checkinRepository = require('../repositories/checkinRepository');
 /**
  * Tạo check-in mới (Admin/Staff).
  * POST /api/checkins
- * Body: { user_id, method? }
+ * Body: { user_id }
  * Logic: Kiểm tra gói tập active trước khi cho check-in.
  */
 async function createCheckin(req, res) {
   try {
-    const { user_id, method } = req.body;
+    const { user_id } = req.body;
 
     if (!user_id) {
       return res.status(400).json({
         success: false,
         data: null,
-        error: { code: 'VALIDATION_ERROR', message: 'user_id là bắt buộc' },
+        error: { code: 'VALIDATION_ERROR', message: 'user_id is required' },
       });
     }
 
@@ -23,27 +23,25 @@ async function createCheckin(req, res) {
       return res.status(400).json({
         success: false,
         data: null,
-        error: { code: 'VALIDATION_ERROR', message: 'user_id phải là số nguyên dương' },
+        error: { code: 'VALIDATION_ERROR', message: 'user_id must be a positive integer' },
       });
     }
 
-    const checkinMethod = method || 'manual';
-
     // Kiểm tra gói tập active
-    const membershipId = await checkinRepository.checkActiveMembership(userId);
-    if (!membershipId) {
+    const hasActiveMembership = await checkinRepository.checkActiveMembership(userId);
+    if (!hasActiveMembership) {
       return res.status(400).json({
         success: false,
         data: null,
         error: {
           code: 'MEMBERSHIP_EXPIRED',
-          message: 'Gói tập đã hết hạn hoặc chưa đăng ký',
+          message: 'Membership is expired or not registered',
         },
       });
     }
 
     // Tạo check-in
-    const checkin = await checkinRepository.createCheckin(userId, membershipId, checkinMethod);
+    const checkin = await checkinRepository.createCheckin(userId);
 
     return res.status(201).json({
       success: true,
@@ -55,7 +53,7 @@ async function createCheckin(req, res) {
     return res.status(500).json({
       success: false,
       data: null,
-      error: { code: 'SERVER_ERROR', message: err.message },
+      error: { code: 'SERVER_ERROR', message: 'Internal Server Error' },
     });
   }
 }
@@ -78,7 +76,7 @@ async function getTodayCheckins(req, res) {
     return res.status(500).json({
       success: false,
       data: null,
-      error: { code: 'SERVER_ERROR', message: err.message },
+      error: { code: 'SERVER_ERROR', message: 'Internal Server Error' },
     });
   }
 }
