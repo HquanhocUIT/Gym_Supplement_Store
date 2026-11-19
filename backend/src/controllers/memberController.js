@@ -15,7 +15,7 @@ async function getMembers(req, res) {
       return res.status(400).json({
         success: false,
         data: null,
-        error: { code: 'VALIDATION_ERROR', message: 'page phải là số nguyên >= 1' },
+        error: { code: 'VALIDATION_ERROR', message: 'page must be an integer >= 1' },
       });
     }
 
@@ -23,7 +23,7 @@ async function getMembers(req, res) {
       return res.status(400).json({
         success: false,
         data: null,
-        error: { code: 'VALIDATION_ERROR', message: 'limit phải là số nguyên từ 1 đến 100' },
+        error: { code: 'VALIDATION_ERROR', message: 'limit must be an integer from 1 to 100' },
       });
     }
 
@@ -47,7 +47,7 @@ async function getMembers(req, res) {
     return res.status(500).json({
       success: false,
       data: null,
-      error: { code: 'SERVER_ERROR', message: err.message },
+      error: { code: 'SERVER_ERROR', message: 'Internal Server Error' },
     });
   }
 }
@@ -63,7 +63,7 @@ async function getMemberById(req, res) {
       return res.status(400).json({
         success: false,
         data: null,
-        error: { code: 'VALIDATION_ERROR', message: 'user_id phải là số nguyên dương' },
+        error: { code: 'VALIDATION_ERROR', message: 'user_id must be a positive integer' },
       });
     }
 
@@ -72,7 +72,7 @@ async function getMemberById(req, res) {
       return res.status(404).json({
         success: false,
         data: null,
-        error: { code: 'NOT_FOUND', message: 'Không tìm thấy hội viên' },
+        error: { code: 'NOT_FOUND', message: 'Member not found' },
       });
     }
 
@@ -86,7 +86,7 @@ async function getMemberById(req, res) {
     return res.status(500).json({
       success: false,
       data: null,
-      error: { code: 'SERVER_ERROR', message: err.message },
+      error: { code: 'SERVER_ERROR', message: 'Internal Server Error' },
     });
   }
 }
@@ -104,7 +104,7 @@ async function createMembership(req, res) {
       return res.status(400).json({
         success: false,
         data: null,
-        error: { code: 'VALIDATION_ERROR', message: 'user_id phải là số nguyên dương' },
+        error: { code: 'VALIDATION_ERROR', message: 'user_id must be a positive integer' },
       });
     }
 
@@ -113,7 +113,7 @@ async function createMembership(req, res) {
       return res.status(400).json({
         success: false,
         data: null,
-        error: { code: 'VALIDATION_ERROR', message: 'plan_id và start_date là bắt buộc' },
+        error: { code: 'VALIDATION_ERROR', message: 'plan_id and start_date are required' },
       });
     }
 
@@ -123,7 +123,7 @@ async function createMembership(req, res) {
       return res.status(404).json({
         success: false,
         data: null,
-        error: { code: 'NOT_FOUND', message: 'Không tìm thấy gói tập' },
+        error: { code: 'NOT_FOUND', message: 'Membership plan not found' },
       });
     }
 
@@ -133,7 +133,7 @@ async function createMembership(req, res) {
       return res.status(400).json({
         success: false,
         data: null,
-        error: { code: 'VALIDATION_ERROR', message: 'start_date không hợp lệ' },
+        error: { code: 'VALIDATION_ERROR', message: 'start_date is invalid' },
       });
     }
 
@@ -160,7 +160,7 @@ async function createMembership(req, res) {
     return res.status(500).json({
       success: false,
       data: null,
-      error: { code: 'SERVER_ERROR', message: err.message },
+      error: { code: 'SERVER_ERROR', message: 'Internal Server Error' },
     });
   }
 }

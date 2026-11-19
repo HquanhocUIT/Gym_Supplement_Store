@@ -4,6 +4,8 @@ const healthController = require('../controllers/healthController');
 const authRoutes = require('./authRoutes');
 const planRoutes = require('./planRoutes');
 const memberRoutes = require('./memberRoutes');
+const checkinRoutes = require('./checkinRoutes');
+const meRoutes = require('./meRoutes');
 const categoryRoutes = require('./categoryRoutes');
 const productRoutes = require('./productRoutes');
 const cartRoutes = require('./cartRoutes');
@@ -15,6 +17,8 @@ router.get('/health/db', healthController.checkDatabase);
 router.use('/auth', authRoutes);
 router.use('/plans', planRoutes);
 router.use('/members', memberRoutes);
+router.use('/checkins', checkinRoutes);
+router.use('/me', meRoutes);
 
 // Mount các endpoint danh mục dưới /api/store/categories.
 router.use('/store/categories', categoryRoutes);
