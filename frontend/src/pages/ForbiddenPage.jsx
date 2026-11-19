@@ -1,19 +1,19 @@
 import { Link } from 'react-router-dom';
 
+/**
+ * ForbiddenPage - 403 page when user does not have access rights.
+ */
 export default function ForbiddenPage() {
   return (
-    <div className="min-h-screen bg-night flex items-center justify-center px-4">
-      <div className="max-w-md w-full border-2 border-[#9aca42] bg-[#22332b] p-10 rounded-lg shadow-[0_0_20px_rgba(138,202,66,0.25)] text-center">
-        <div className="text-[#9aca42] text-6xl mb-4">403</div>
-        <h1 className="text-2xl font-bold text-white mb-2">Bạn không có quyền truy cập</h1>
-        <p className="text-muted text-sm mb-8">
-          Tài khoản của bạn không được phép vào trang này. Vui lòng đăng nhập với quyền thích hợp.
-        </p>
+    <div className="min-h-screen flex items-center justify-center bg-[#f4f6f3]">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-ink">403 - Forbidden</h1>
+        <p className="text-muted mt-2">You do not have access to this page.</p>
         <Link
-          to="/login"
-          className="inline-flex items-center gap-2 py-3 px-6 border border-[#9aca42] text-sm font-bold rounded-lg text-white bg-[#9aca42] hover:bg-[#7cac2c] transition-all"
+          to="/"
+          className="mt-4 inline-block px-6 py-2 border border-[#84cc16] text-[#84cc16] rounded-xl font-medium hover:bg-[#84cc16] hover:text-white transition-colors"
         >
-          Quay lại đăng nhập
+          Back to home
         </Link>
       </div>
     </div>

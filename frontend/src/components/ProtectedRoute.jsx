@@ -2,18 +2,18 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
- * ProtectedRoute kiểm tra quyền truy cập trước khi render các con.
- * - allowedRoles: mảng role được phép (ví dụ ['admin'], ['admin', 'staff']).
- * - Nếu chưa login -> redirect về /login.
- * - Nếu login nhưng role không khớp -> redirect về /403.
+ * ProtectedRoute checks access rights before rendering children.
+ * - allowedRoles: array of allowed roles (e.g. ['admin'], ['admin', 'staff']).
+ * - If not logged in -> redirect to /login.
+ * - If logged in but role doesn't match -> redirect to /403.
  */
 export default function ProtectedRoute({ children, allowedRoles }) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-night">
-        <p className="text-white text-center mt-10">Đang tải...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#f4f6f3]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#84cc16]"></div>
       </div>
     );
   }

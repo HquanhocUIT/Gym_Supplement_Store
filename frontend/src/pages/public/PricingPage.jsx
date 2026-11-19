@@ -172,7 +172,7 @@ function PricingCard({ plan, formatPrice, formatDuration }) {
         </div>
 
         <ul className="space-y-3 mb-8 text-sm text-muted">
-          {plan.features.map((feature, idx) => (
+          {(plan.features || []).map((feature, idx) => (
             <li key={idx} className="flex items-start gap-3">
               <Check className="w-4 h-4 text-[#9aca42] shrink-0 mt-0.5" />
               <span>{feature}</span>
