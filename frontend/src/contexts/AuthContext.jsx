@@ -4,20 +4,21 @@ import axiosClient from '../api/axiosClient';
 const AuthContext = createContext(null);
 
 /**
- * AuthContext quản lý trạng thái xác thực của ứng dụng.
- * - user: thông tin user hiện tại (id, email, full_name, role)
+ * AuthContext manages authentication state.
+ * - user: current user info (id, email, full_name, role)
  * - token: JWT access token
- * - login(email, password): gọi API đăng nhập, lưu vào localStorage
- * - register(email, password, full_name): gọi API đăng ký
- * - logout(): xóa localStorage và reset state
- * - useAuth(): custom hook để consume context
+ * - isLoading: whether auth state is still being initialized
+ * - login(email, password): call login API, save to localStorage
+ * - register(email, password, full_name): call register API, save to localStorage
+ * - logout(): clear localStorage and reset state
+ * - useAuth(): custom hook to consume context
  */
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Khôi phục state từ localStorage khi component mount.
+  // Restore state from localStorage on mount.
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');

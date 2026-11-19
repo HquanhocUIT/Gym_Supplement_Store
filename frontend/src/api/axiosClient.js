@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 /**
- * Axios instance dùng chung cho toàn bộ frontend.
- * Base URL trỏ về backend API. Mỗi request sẽ tự động gắn Bearer token
- * từ localStorage nếu có.
+ * Axios instance used throughout the frontend.
+ * Base URL points to the backend API. Each request automatically
+ * attaches the Bearer token from localStorage if present.
  */
 export const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, '') || 'http://localhost:5000/api',
@@ -12,7 +12,8 @@ export const axiosClient = axios.create({
 });
 
 /**
- * Request interceptor: gắn Authorization: Bearer <token> nếu có token trong localStorage.
+ * Request interceptor: attach Authorization: Bearer <token>
+ * if a token exists in localStorage.
  */
 axiosClient.interceptors.request.use(
   (config) => {

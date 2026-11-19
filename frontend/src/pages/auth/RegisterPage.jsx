@@ -1,94 +1,86 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
 
+/**
+ * RegisterPage - Registration page.
+ * Calls POST /auth/register, saves token to localStorage via AuthContext.
+ * New account defaults to role = member.
+ */
 export default function RegisterPage() {
-  const { register } = useAuth();
-  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [full_name, setFullName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      await register(
-        e.target.email.value,
-        e.target.password.value,
-        e.target.full_name.value
-      );
-      navigate('/member', { replace: true });
+      await register(email, password, full_name);
+      navigate('/');
     } catch (err) {
-      setError(err.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+      setError(err.response?.data?.error?.message || 'Registration failed.');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-night flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full border-2 border-[#9aca42] bg-[#22332b] p-8 rounded-lg shadow-[0_0_20px_rgba(138,202,66,0.25)]">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-white tracking-tight">Tạo tài khoản</h1>
-          <p className="text-sm text-muted mt-2">Tham gia Form &amp; Fuel ngay hôm nay</p>
+    <div className="min-h-screen flex items-center justify-center bg-[#f4f6f3]">
+      <div className="w-full max-w-md space-y-6 p-8 bg-white rounded-xl shadow-card">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-ink">Register</h1>
+          <p className="text-sm text-muted">Create a new account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-white mb-1">Họ và tên</label>
-            <input
-              name="full_name"
-              type="text"
+          {error && (
+            <div className="text-sm text-red-600 bg-red-50/50 px-3 py-2 rounded border border-red-100">
+              {error}
+            </div>
+          )}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-ink">Full name</label>
+            <Input
               required
-              autoComplete="name"
-              className="w-full px-3 py-2 border rounded-lg text-sm text-white bg-[#18251f] focus:outline-none focus:ring-2 focus:ring-[#9aca42] focus:border-transparent transition-all placeholder:text-gray-500"
-              placeholder="Nguyễn Văn A"
+              value={full_name}
+              onChange={(e) => setFullName(e.target.value)}
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-white mb-1">Email</label>
-            <input
-              name="email"
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-ink">Email</label>
+            <Input
               type="email"
               required
-              autoComplete="email"
-              className="w-full px-3 py-2 border rounded-lg text-sm text-white bg-[#18251f] focus:outline-none focus:ring-2 focus:ring-[#9aca42] focus:border-transparent transition-all placeholder:text-gray-500"
-              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-white mb-1">Mật khẩu</label>
-            <input
-              name="password"
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-ink">Password</label>
+            <Input
               type="password"
               required
-              autoComplete="new-password"
-              minLength="6"
-              className="w-full px-3 py-2 border rounded-lg text-sm text-white bg-[#18251f] focus:outline-none focus:ring-2 focus:ring-[#9aca42] focus:border-transparent transition-all placeholder:text-gray-500"
-              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-
-          {error && (
-            <p className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded border border-red-500/30">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 px-4 border border-[#9aca42] text-sm font-bold rounded-lg text-white bg-[#9aca42] hover:bg-[#7cac2c] disabled:opacity-60 disabled:cursor-not-allowed transition-all"
-          >
-            {loading ? 'Đang xử lý...' : 'Tạo tài khoản'}
-          </button>
+          <Button type="submit" loading={loading} className="w-full">
+            Register
+          </Button>
         </form>
 
-        <p className="text-center text-sm text-white mt-6">
-          Đã có tài khoản?{' '}
-          <Link to="/login" className="text-[#9aca42] hover:text-[#7cac2c] font-semibold underline underline-offset-4">
-            Đăng nhập
+        <p className="text-center text-sm text-muted">
+          Already have an account?{' '}
+          <Link to="/login" className="text-[#84cc16] font-medium hover:underline">
+            Login now
           </Link>
         </p>
       </div>

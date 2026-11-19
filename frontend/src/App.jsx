@@ -44,6 +44,7 @@ function App() {
         }
       >
         <Route index element={<MemberDashboardPage />} />
+        <Route path="dashboard" element={<MemberDashboardPage />} />
       </Route>
 
       {/* Admin routes (requires 'admin' role) */}
@@ -61,7 +62,7 @@ function App() {
         <Route path="members" element={<MemberList />} />
       </Route>
 
-      {/* Staff routes (requires 'staff' role) - example for future expansion */}
+      {/* Staff routes (requires 'staff' or 'admin' role) */}
       <Route
         path="/staff"
         element={
@@ -72,13 +73,14 @@ function App() {
             </div>
           </ProtectedRoute>
         }
-      />
+      >
+        <Route path="check-in" element={<Navigate to="/staff/check-in" replace />} />
+      </Route>
 
       {/* 404 */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }
-
 
 export default App;
