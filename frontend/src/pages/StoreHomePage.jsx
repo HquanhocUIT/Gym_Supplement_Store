@@ -36,9 +36,9 @@ function StoreHomePage() {
             Thoughtful essentials for the work you put in: quality-tested supplements, clear ingredients, and a routine that fits real life.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <a className="inline-flex min-h-12 items-center gap-2 rounded-full bg-ink px-6 text-sm font-bold text-white transition hover:bg-brand-700" href="#catalog">
+            <Link className="inline-flex min-h-12 items-center gap-2 rounded-full bg-ink px-6 text-sm font-bold text-white transition hover:bg-brand-700" to="/shop">
               Explore the shop <ArrowRight size={16} aria-hidden="true" />
-            </a>
+            </Link>
             <Link className="inline-flex min-h-12 items-center gap-2 rounded-full border border-line bg-white px-6 text-sm font-bold text-ink transition hover:border-brand-500" to="/member">
               Member area <ArrowUpRight size={16} aria-hidden="true" />
             </Link>

@@ -1,4 +1,4 @@
-import { Route, Routes, Navigate } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLayout from './layouts/AdminLayout';
 import MemberLayout from './layouts/MemberLayout';
@@ -8,6 +8,9 @@ import AdminProductsPage from './pages/AdminProductsPage';
 import MemberDashboardPage from './pages/MemberDashboardPage';
 import NotFoundPage from './pages/NotFoundPage';
 import StoreHomePage from './pages/StoreHomePage';
+import StoreShopPage from './pages/StoreShopPage';
+import StoreProductDetailPage from './pages/StoreProductDetailPage';
+import StoreCartPage from './pages/StoreCartPage';
 import UiKit from './pages/UiKit';
 import CommonComponentsPage from './pages/CommonComponentsPage';
 import LoginPage from './pages/auth/LoginPage';
@@ -21,20 +24,24 @@ import MemberList from './pages/admin/MemberList';
 function App() {
   return (
     <Routes>
-      {/* Auth routes (public) */}
+      {/* Các trang đăng nhập và đăng ký không cần đăng nhập trước. */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/403" element={<ForbiddenPage />} />
 
-      {/* Public store routes */}
+      {/* Các trang công khai của gym và cửa hàng dùng chung thanh điều hướng. */}
       <Route element={<PublicLayout />}>
         <Route index element={<LandingPage />} />
         <Route path="pricing" element={<PricingPage />} />
+        <Route path="store" element={<StoreHomePage />} />
+        <Route path="shop" element={<StoreShopPage />} />
+        <Route path="product/:productId" element={<StoreProductDetailPage />} />
+        <Route path="cart" element={<StoreCartPage />} />
         <Route path="ui-kit" element={<UiKit />} />
         <Route path="ui-kit/common" element={<CommonComponentsPage />} />
       </Route>
 
-      {/* Member routes (requires 'member' role) */}
+      {/* Khu vực hội viên chỉ dành cho người đã đăng nhập. */}
       <Route
         path="/member"
         element={
@@ -47,7 +54,7 @@ function App() {
         <Route path="dashboard" element={<MemberDashboardPage />} />
       </Route>
 
-      {/* Admin routes (requires 'admin' role) */}
+      {/* Trang quản trị chỉ dành cho admin. */}
       <Route
         path="/admin"
         element={
@@ -62,22 +69,20 @@ function App() {
         <Route path="members" element={<MemberList />} />
       </Route>
 
-      {/* Staff routes (requires 'staff' or 'admin' role) */}
+      {/* Giữ đường dẫn check-in cho nhân viên; màn hình sẽ được bổ sung ở task riêng. */}
       <Route
-        path="/staff"
+        path="/staff/check-in"
         element={
           <ProtectedRoute allowedRoles={['staff', 'admin']}>
-            <div className="p-8 text-center text-white">
-              <h1 className="text-2xl font-bold">Staff Dashboard</h1>
-              <p className="text-muted">Welcome, staff!</p>
+            <div className="p-8 text-center text-ink">
+              <h1 className="text-2xl font-bold">Staff Check-in</h1>
+              <p className="text-muted">The check-in page is not available yet.</p>
             </div>
           </ProtectedRoute>
         }
-      >
-        <Route path="check-in" element={<Navigate to="/staff/check-in" replace />} />
-      </Route>
+      />
 
-      {/* 404 */}
+      {/* Chuyển đường dẫn lạ tới trang 404. */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

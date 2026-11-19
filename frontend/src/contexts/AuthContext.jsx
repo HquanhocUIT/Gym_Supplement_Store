@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
+import { clearAccessToken, saveAccessToken } from '../lib/authToken';
 
 const AuthContext = createContext(null);
 
@@ -24,6 +25,8 @@ export function AuthProvider({ children }) {
     const storedUser = localStorage.getItem('user');
     if (storedToken && storedUser) {
       setToken(storedToken);
+      // Đồng bộ token để API Store dùng chung trạng thái đăng nhập.
+      saveAccessToken(storedToken);
       try {
         setUser(JSON.parse(storedUser));
       } catch {
@@ -38,6 +41,7 @@ export function AuthProvider({ children }) {
     const { access_token, user: userData } = response.data.data;
     localStorage.setItem('token', access_token);
     localStorage.setItem('user', JSON.stringify(userData));
+    saveAccessToken(access_token);
     setToken(access_token);
     setUser(userData);
     return userData;
@@ -52,6 +56,7 @@ export function AuthProvider({ children }) {
     const { access_token, user: userData } = response.data.data;
     localStorage.setItem('token', access_token);
     localStorage.setItem('user', JSON.stringify(userData));
+    saveAccessToken(access_token);
     setToken(access_token);
     setUser(userData);
     return userData;
@@ -60,6 +65,7 @@ export function AuthProvider({ children }) {
   function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    clearAccessToken();
     setToken(null);
     setUser(null);
   }
