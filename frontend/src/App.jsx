@@ -21,6 +21,9 @@ import LandingPage from './pages/public/LandingPage';
 import PricingPage from './pages/public/PricingPage';
 import PlanManagement from './pages/admin/PlanManagement';
 import MemberList from './pages/admin/MemberList';
+import CheckInScreen from './pages/staff/CheckInScreen';
+import MembershipForm from './pages/staff/MembershipForm';
+import MemberDashboard from './pages/member/MemberDashboard';
 
 function App() {
   return (
@@ -53,7 +56,7 @@ function App() {
         }
       >
         <Route index element={<MemberDashboardPage />} />
-        <Route path="dashboard" element={<MemberDashboardPage />} />
+        <Route path="dashboard" element={<MemberDashboard />} />
       </Route>
 
       {/* Các trang quản trị chỉ dành cho admin. */}
@@ -80,6 +83,14 @@ function App() {
               <h1 className="text-2xl font-bold">Staff Check-in</h1>
               <p className="text-muted">The check-in page is not available yet.</p>
             </div>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff/renew"
+        element={
+          <ProtectedRoute allowedRoles={['staff', 'admin']}>
+            <MembershipForm />
           </ProtectedRoute>
         }
       />
