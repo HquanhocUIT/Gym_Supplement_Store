@@ -32,6 +32,19 @@ function App() {
         <Route path="ui-kit/common" element={<CommonComponentsPage />} />
       </Route>
 
+      {/* Member routes (requires 'member' role) */}
+      <Route
+        path="/member"
+        element={
+          <ProtectedRoute allowedRoles={['member', 'admin', 'staff']}>
+            <MemberLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<MemberDashboardPage />} />
+        <Route path="dashboard" element={<MemberDashboardPage />} />
+      </Route>
+
       {/* Admin routes (requires 'admin' role) */}
       <Route
         path="/admin"
@@ -44,16 +57,6 @@ function App() {
         <Route index element={<AdminDashboardPage />} />
         <Route path="products" element={<AdminProductsPage />} />
       </Route>
-
-      {/* Member routes (requires 'member' role) */}
-      <Route
-        path="/member/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['member', 'admin', 'staff']}>
-            <MemberDashboardPage />
-          </ProtectedRoute>
-        }
-      />
 
       {/* Staff routes (requires 'staff' or 'admin' role) */}
       <Route

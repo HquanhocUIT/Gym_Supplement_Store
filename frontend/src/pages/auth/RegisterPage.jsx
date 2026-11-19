@@ -5,9 +5,9 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 
 /**
- * RegisterPage - Trang đăng ký.
- * Gọi POST /auth/register, lưu token vào localStorage qua AuthContext.
- * Tài khoản mới mặc định role = member.
+ * RegisterPage - Registration page.
+ * Calls POST /auth/register, saves token to localStorage via AuthContext.
+ * New account defaults to role = member.
  */
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -26,7 +26,7 @@ export default function RegisterPage() {
       await register(email, password, full_name);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Đăng ký thất bại.');
+      setError(err.response?.data?.error?.message || 'Registration failed.');
     } finally {
       setLoading(false);
     }
@@ -36,8 +36,8 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#f4f6f3]">
       <div className="w-full max-w-md space-y-6 p-8 bg-white rounded-xl shadow-card">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-ink">Đăng ký</h1>
-          <p className="text-sm text-muted">Tạo tài khoản mới</p>
+          <h1 className="text-2xl font-bold text-ink">Register</h1>
+          <p className="text-sm text-muted">Create a new account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -47,7 +47,7 @@ export default function RegisterPage() {
             </div>
           )}
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-ink">Họ và tên</label>
+            <label className="block text-sm font-semibold text-ink">Full name</label>
             <Input
               required
               value={full_name}
@@ -64,7 +64,7 @@ export default function RegisterPage() {
             />
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-ink">Mật khẩu</label>
+            <label className="block text-sm font-semibold text-ink">Password</label>
             <Input
               type="password"
               required
@@ -73,14 +73,14 @@ export default function RegisterPage() {
             />
           </div>
           <Button type="submit" loading={loading} className="w-full">
-            Đăng ký
+            Register
           </Button>
         </form>
 
         <p className="text-center text-sm text-muted">
-          Đã có tài khoản?{' '}
+          Already have an account?{' '}
           <Link to="/login" className="text-[#84cc16] font-medium hover:underline">
-            Đăng nhập ngay
+            Login now
           </Link>
         </p>
       </div>

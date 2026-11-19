@@ -2,8 +2,10 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
- * ProtectedRoute kiểm tra quyền truy cập trước khi render các con.
- * allowedRoles: mảng các role được phép vào (ví dụ: ['admin'], ['staff', 'admin']).
+ * ProtectedRoute checks access rights before rendering children.
+ * - allowedRoles: array of allowed roles (e.g. ['admin'], ['admin', 'staff']).
+ * - If not logged in -> redirect to /login.
+ * - If logged in but role doesn't match -> redirect to /403.
  */
 export default function ProtectedRoute({ children, allowedRoles }) {
   const { user, isLoading } = useAuth();
@@ -20,7 +22,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (!allowedRoles.includes(user.role)) {
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Navigate to="/403" replace />;
   }
 
