@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiClient } from "../lib/apiClient.js";
+import { useAuth } from "../contexts/AuthContext";
 
 function AdminLoginPage() {
   const navigate = useNavigate();
+  const { login, logout } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -16,24 +17,14 @@ function AdminLoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await apiClient.post("/auth/login", {
-        email,
-        password,
-      });
-
-      const loginData = response.data?.data;
-      const user = loginData?.user;
-      const accessToken = loginData?.access_token;
+      const user = await login(email, password);
 
       // Chỉ cho tài khoản Admin tiếp tục vào trang quản lý.
-      if (!accessToken || user?.role !== "admin") {
+      if (user?.role !== "admin") {
+        logout();
         setErrorMessage("This account does not have Admin access.");
         return;
       }
-
-      // Lưu token trong tab hiện tại để apiClient dùng cho request tiếp theo.
-      sessionStorage.setItem("access_token", accessToken);
-      sessionStorage.setItem("admin_user", JSON.stringify(user));
 
       navigate("/admin/products", { replace: true });
     } catch (error) {

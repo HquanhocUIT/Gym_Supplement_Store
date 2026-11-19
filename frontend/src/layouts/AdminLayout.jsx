@@ -2,15 +2,19 @@ import {
   ArrowUpRight,
   Boxes,
   LayoutDashboard,
+  Package,
   Search,
   Settings,
-} from "lucide-react";
-import { BrandMark } from "../components/Brand.jsx";
-import { Navigate, NavLink, Outlet } from "react-router-dom";
+  Users,
+} from 'lucide-react';
+import { NavLink, Outlet } from 'react-router-dom';
+import { BrandMark } from '../components/Brand.jsx';
 
 const navigation = [
-  { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
-  { to: "/admin/products", label: "Products", icon: Boxes },
+  { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true },
+  { to: '/admin/plans', label: 'Membership Plans', icon: Boxes },
+  { to: '/admin/members', label: 'Members', icon: Users },
+  { to: '/admin/products', label: 'Products', icon: Package },
 ];
 
 function NavItems({ mobile = false }) {
@@ -20,7 +24,11 @@ function NavItems({ mobile = false }) {
       to={to}
       end={end}
       className={({ isActive }) =>
-        `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${isActive ? "bg-brand-500 text-ink" : "text-white/65 hover:bg-white/8 hover:text-white"} ${mobile ? "shrink-0" : ""}`
+        [
+          'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition',
+          isActive ? 'bg-brand-500 text-ink' : 'text-white/65 hover:bg-white/8 hover:text-white',
+          mobile ? 'shrink-0' : '',
+        ].join(' ')
       }
     >
       <Icon size={18} aria-hidden="true" />
@@ -30,10 +38,6 @@ function NavItems({ mobile = false }) {
 }
 
 function AdminLayout() {
-  // Chưa có token thì chuyển sang trang đăng nhập.
-  if (!sessionStorage.getItem("access_token")) {
-    return <Navigate to="/admin/login" replace />;
-  }
   return (
     <div className="min-h-screen bg-[#f4f6f3] text-ink lg:flex">
       <aside className="hidden min-h-screen w-64 shrink-0 flex-col bg-night px-5 py-6 lg:flex">
@@ -57,6 +61,7 @@ function AdminLayout() {
           </button>
         </div>
       </aside>
+
       <div className="min-w-0 flex-1">
         <header className="border-b border-line bg-white px-4 py-4 sm:px-6 lg:px-9">
           <div className="flex items-center justify-between gap-4">
@@ -64,8 +69,7 @@ function AdminLayout() {
               <BrandMark />
             </div>
             <p className="hidden text-sm font-semibold text-muted lg:block">
-              Store management <span className="px-2 text-line">/</span>{" "}
-              Overview
+              Store management <span className="px-2 text-line">/</span> Overview
             </p>
             <div className="flex items-center gap-3">
               <button
@@ -95,7 +99,7 @@ function AdminLayout() {
           <Outlet />
         </main>
         <div className="fixed bottom-5 right-5 hidden rounded-full border border-line bg-white px-4 py-2 text-xs font-semibold text-muted shadow-card sm:block">
-          <Settings className="mr-2 inline" size={14} aria-hidden="true" />{" "}
+          <Settings className="mr-2 inline" size={14} aria-hidden="true" />
           Admin preview
         </div>
       </div>
