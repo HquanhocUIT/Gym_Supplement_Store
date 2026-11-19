@@ -9,9 +9,9 @@ async function getProfile(req, res) {
     const userId = req.user.user_id;
 
     const query = `
-      SELECT user_id, email, full_name, phone, role, is_active, created_at
+      SELECT id, email, full_name, role, created_at
       FROM users
-      WHERE user_id = $1
+      WHERE id = $1
     `;
     const result = await pool.query(query, [userId]);
 
@@ -19,7 +19,7 @@ async function getProfile(req, res) {
       return res.status(404).json({
         success: false,
         data: null,
-        error: { code: 'NOT_FOUND', message: 'Không tìm thấy người dùng' },
+        error: { code: 'NOT_FOUND', message: 'User not found' },
       });
     }
 
@@ -33,7 +33,7 @@ async function getProfile(req, res) {
     return res.status(500).json({
       success: false,
       data: null,
-      error: { code: 'SERVER_ERROR', message: err.message },
+      error: { code: 'SERVER_ERROR', message: 'Internal Server Error' },
     });
   }
 }
@@ -47,10 +47,10 @@ async function getMyMemberships(req, res) {
     const userId = req.user.user_id;
 
     const query = `
-      SELECT m.membership_id, m.plan_id, m.start_date, m.end_date, m.status,
+      SELECT m.id, m.plan_id, m.start_date, m.end_date, m.status,
              mp.name AS plan_name, mp.duration_days, mp.price
       FROM memberships m
-      JOIN membership_plans mp ON mp.plan_id = m.plan_id
+      JOIN membership_plans mp ON mp.id = m.plan_id
       WHERE m.user_id = $1
       ORDER BY m.created_at DESC
     `;
@@ -66,7 +66,7 @@ async function getMyMemberships(req, res) {
     return res.status(500).json({
       success: false,
       data: null,
-      error: { code: 'SERVER_ERROR', message: err.message },
+      error: { code: 'SERVER_ERROR', message: 'Internal Server Error' },
     });
   }
 }
@@ -80,11 +80,8 @@ async function getMyCheckins(req, res) {
     const userId = req.user.user_id;
 
     const query = `
-      SELECT c.checkin_id, c.checkin_time, c.method,
-             mp.name AS plan_name
+      SELECT c.id, c.checkin_time
       FROM checkins c
-      LEFT JOIN memberships m ON c.membership_id = m.membership_id
-      LEFT JOIN membership_plans mp ON m.plan_id = mp.plan_id
       WHERE c.user_id = $1
       ORDER BY c.checkin_time DESC
     `;
@@ -100,7 +97,7 @@ async function getMyCheckins(req, res) {
     return res.status(500).json({
       success: false,
       data: null,
-      error: { code: 'SERVER_ERROR', message: err.message },
+      error: { code: 'SERVER_ERROR', message: 'Internal Server Error' },
     });
   }
 }
