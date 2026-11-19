@@ -47,6 +47,7 @@ function App() {
         }
       >
         <Route index element={<MemberDashboardPage />} />
+        <Route path="dashboard" element={<MemberDashboard />} />
       </Route>
 
       {/* Admin routes (requires 'admin' role) */}
@@ -64,7 +65,7 @@ function App() {
         <Route path="members" element={<MemberList />} />
       </Route>
 
-      {/* Staff routes (requires 'staff' role) */}
+      {/* Staff routes (requires 'staff' or 'admin' role) */}
       <Route
         path="/staff"
         element={
@@ -80,21 +81,10 @@ function App() {
         <Route path="renew" element={<MembershipForm />} />
       </Route>
 
-      {/* Member routes (requires 'member' role) */}
-      <Route
-        path="/member/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['member', 'admin', 'staff']}>
-            <MemberDashboard />
-          </ProtectedRoute>
-        }
-      />
-
       {/* 404 */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }
-
 
 export default App;
