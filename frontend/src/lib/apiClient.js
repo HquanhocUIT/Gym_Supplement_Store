@@ -1,68 +1,68 @@
-import axios from 'axios'
-import { getAccessToken } from './authToken.js'
+import axios from 'axios';
+import { getAccessToken } from './authToken.js';
 
-// Dùng một Axios instance để các trang dùng chung địa chỉ API và thời gian chờ.
+// Dùng chung địa chỉ API và thời gian chờ cho các request từ frontend.
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, '') || 'http://localhost:5000/api',
   timeout: 10000,
   headers: { Accept: 'application/json' },
-})
+});
 
-// Gửi JWT nếu người dùng đã đăng nhập để các API riêng tư nhận diện tài khoản.
+// Đính kèm token đăng nhập cho các API cần xác thực.
 apiClient.interceptors.request.use((config) => {
-  const token = getAccessToken()
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  const token = getAccessToken();
+  if (token) {
+    config.headers.Authorization = 'Bearer ' + token;
+  }
 
-  return config
-})
+  return config;
+});
 
-// Đổi lỗi mạng và lỗi HTTP thành thông báo dễ hiển thị trong giao diện.
+// Chuyển lỗi mạng và lỗi HTTP thành thông báo dễ hiển thị.
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Giữ nguyên lỗi hủy để TanStack Query nhận biết request đã bị dừng.
-    if (axios.isCancel(error)) return Promise.reject(error)
+    if (axios.isCancel(error)) return Promise.reject(error);
 
-    let message = error.response?.data?.error?.message
-
+    let message = error.response?.data?.error?.message;
     if (!message) {
       if (error.response) {
-        message = 'API gặp lỗi. Vui lòng thử lại.'
+        message = 'API gặp lỗi. Vui lòng thử lại.';
       } else if (error.code === 'ECONNABORTED') {
-        message = 'API phản hồi quá lâu. Vui lòng thử lại.'
+        message = 'API phản hồi quá lâu. Vui lòng thử lại.';
       } else {
-        message = 'Không kết nối được API. Kiểm tra backend rồi thử lại.'
+        message = 'Không kết nối được API. Kiểm tra backend rồi thử lại.';
       }
     }
 
-    const apiError = new Error(message)
-    apiError.status = error.response?.status || 0
-    apiError.code = error.response?.data?.error?.code || error.code || 'API_ERROR'
-    return Promise.reject(apiError)
+    const apiError = new Error(message);
+    apiError.status = error.response?.status || 0;
+    apiError.code = error.response?.data?.error?.code || error.code || 'API_ERROR';
+    return Promise.reject(apiError);
   },
-)
+);
 
-// Kiểm tra response theo quy ước { success, data, error } của backend.
+// Lấy phần data theo quy ước phản hồi { success, data, error } của backend.
 function getResponseData(response) {
-  const body = response.data
+  const body = response.data;
 
   if (body?.success !== true || !Object.hasOwn(body, 'data')) {
-    const error = new Error(body?.error?.message || 'Phản hồi API không đúng định dạng.')
-    error.status = response.status
-    error.code = body?.error?.code || 'INVALID_RESPONSE'
-    throw error
+    const error = new Error(body?.error?.message || 'Phản hồi API không đúng định dạng.');
+    error.status = response.status;
+    error.code = body?.error?.code || 'INVALID_RESPONSE';
+    throw error;
   }
 
-  return body.data
+  return body.data;
 }
 
-// Gửi request bất kỳ và lấy phần data theo quy ước chung của backend.
+// Gửi các loại request có body như POST, PUT hoặc DELETE.
 export async function requestApiData(method, url, data, config = {}) {
-  const response = await apiClient.request({ method, url, data, ...config })
-  return getResponseData(response)
+  const response = await apiClient.request({ method, url, data, ...config });
+  return getResponseData(response);
 }
 
-// GET dùng chung cho các trang đọc dữ liệu.
+// GET dùng chung cho các trang cần đọc dữ liệu.
 export async function getApiData(url, config = {}) {
-  return requestApiData('get', url, undefined, config)
+  return requestApiData('get', url, undefined, config);
 }

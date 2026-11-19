@@ -5,6 +5,7 @@ import MemberLayout from './layouts/MemberLayout';
 import PublicLayout from './layouts/PublicLayout';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminProductsPage from './pages/AdminProductsPage';
+import AdminLoginPage from './pages/AdminLoginPage';
 import MemberDashboardPage from './pages/MemberDashboardPage';
 import NotFoundPage from './pages/NotFoundPage';
 import StoreHomePage from './pages/StoreHomePage';
@@ -24,12 +25,13 @@ import MemberList from './pages/admin/MemberList';
 function App() {
   return (
     <Routes>
-      {/* Các trang đăng nhập và đăng ký không cần đăng nhập trước. */}
+      {/* Các trang đăng nhập và đăng ký. */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/403" element={<ForbiddenPage />} />
 
-      {/* Các trang công khai của gym và cửa hàng dùng chung thanh điều hướng. */}
+      {/* Trang gym và cửa hàng dành cho khách. */}
       <Route element={<PublicLayout />}>
         <Route index element={<LandingPage />} />
         <Route path="pricing" element={<PricingPage />} />
@@ -41,7 +43,7 @@ function App() {
         <Route path="ui-kit/common" element={<CommonComponentsPage />} />
       </Route>
 
-      {/* Khu vực hội viên chỉ dành cho người đã đăng nhập. */}
+      {/* Khu hội viên yêu cầu đăng nhập. */}
       <Route
         path="/member"
         element={
@@ -54,7 +56,7 @@ function App() {
         <Route path="dashboard" element={<MemberDashboardPage />} />
       </Route>
 
-      {/* Trang quản trị chỉ dành cho admin. */}
+      {/* Các trang quản trị chỉ dành cho admin. */}
       <Route
         path="/admin"
         element={
@@ -69,7 +71,7 @@ function App() {
         <Route path="members" element={<MemberList />} />
       </Route>
 
-      {/* Giữ đường dẫn check-in cho nhân viên; màn hình sẽ được bổ sung ở task riêng. */}
+      {/* Đường dẫn check-in sẽ được hoàn thiện ở task riêng. */}
       <Route
         path="/staff/check-in"
         element={
@@ -82,7 +84,7 @@ function App() {
         }
       />
 
-      {/* Chuyển đường dẫn lạ tới trang 404. */}
+      {/* Các đường dẫn chưa khai báo hiển thị trang 404. */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
