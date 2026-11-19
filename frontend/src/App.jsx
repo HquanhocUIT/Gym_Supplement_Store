@@ -15,6 +15,8 @@ import RegisterPage from './pages/auth/RegisterPage';
 import ForbiddenPage from './pages/ForbiddenPage';
 import LandingPage from './pages/public/LandingPage';
 import PricingPage from './pages/public/PricingPage';
+import PlanManagement from './pages/admin/PlanManagement';
+import MemberList from './pages/admin/MemberList';
 
 function App() {
   return (
@@ -56,6 +58,8 @@ function App() {
       >
         <Route index element={<AdminDashboardPage />} />
         <Route path="products" element={<AdminProductsPage />} />
+        <Route path="plans" element={<PlanManagement />} />
+        <Route path="members" element={<MemberList />} />
       </Route>
 
       {/* Staff routes (requires 'staff' or 'admin' role) */}

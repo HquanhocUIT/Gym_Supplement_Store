@@ -1,11 +1,13 @@
-import { ArrowUpRight, Boxes, LayoutDashboard, Search, Settings } from 'lucide-react'
-import { NavLink, Outlet } from 'react-router-dom'
-import { BrandMark } from '../components/Brand.jsx'
+import { ArrowUpRight, Boxes, LayoutDashboard, Package, Search, Settings, Users } from 'lucide-react';
+import { NavLink, Outlet } from 'react-router-dom';
+import { BrandMark } from '../components/Brand.jsx';
 
 const navigation = [
-  { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true },
-  { to: '/admin/products', label: 'Products', icon: Boxes },
-]
+  { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/admin/plans', label: 'Membership Plans', icon: Boxes },
+  { to: '/admin/members', label: 'Members', icon: Users },
+  { to: '/admin/products', label: 'Products', icon: Package },
+];
 
 function NavItems({ mobile = false }) {
   return navigation.map(({ to, label, icon: Icon, end }) => (
@@ -18,7 +20,7 @@ function NavItems({ mobile = false }) {
       <Icon size={18} aria-hidden="true" />
       {label}
     </NavLink>
-  ))
+  ));
 }
 
 function AdminLayout() {
@@ -40,7 +42,7 @@ function AdminLayout() {
         <header className="border-b border-line bg-white px-4 py-4 sm:px-6 lg:px-9">
           <div className="flex items-center justify-between gap-4">
             <div className="lg:hidden"><BrandMark /></div>
-          <p className="hidden text-sm font-semibold text-muted lg:block">Store management <span className="px-2 text-line">/</span> Overview</p>
+            <p className="hidden text-sm font-semibold text-muted lg:block">Admin management</p>
             <div className="flex items-center gap-3">
               <button className="grid size-10 place-items-center rounded-full border border-line text-muted hover:bg-paper" type="button" aria-label="Search admin pages">
                 <Search size={17} aria-hidden="true" />
@@ -58,7 +60,7 @@ function AdminLayout() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default AdminLayout
+export default AdminLayout;
