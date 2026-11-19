@@ -4,6 +4,7 @@ import { Plus, Trash2, Edit3, Clock, Shield } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
+import Select from '../../components/ui/Select';
 import FormField from '../../components/ui/FormField';
 
 /**
@@ -202,14 +203,13 @@ export default function PlanManagement() {
             </FormField>
 
             <FormField label="Status">
-              <Input
-                type="select"
+              <Select
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
               >
                 <option value="active">Active</option>
                 <option value="hidden">Hidden</option>
-              </Input>
+              </Select>
             </FormField>
 
             {error && <div className="text-sm text-red-600 bg-red-50/50 px-3 py-2 rounded border border-red-100">{error}</div>}

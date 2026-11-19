@@ -70,6 +70,11 @@ jobs:
         env:
           PGPASSWORD: postgres
 
+      - name: Load store schema
+        run: psql -h localhost -U postgres -d postgres -f database/schema/02_store.sql
+        env:
+          PGPASSWORD: postgres
+
       - name: Run backend tests
         working-directory: backend
         env:

@@ -1,0 +1,57 @@
+const orderRepository = require('../repositories/orderRepository');
+
+// Tạo lỗi đầu vào để API trả status và code cụ thể.
+function createServiceError(status, code, message) {
+  const error = new Error(message);
+  error.status = status;
+  error.code = code;
+  return error;
+}
+
+// Kiểm tra user ID lấy từ JWT trước khi gọi repository.
+function parseUserId(value) {
+  const userId = Number(value);
+
+  if (!Number.isSafeInteger(userId) || userId < 1 || userId > 2147483647) {
+    throw createServiceError(400, 'INVALID_USER_ID', 'user_id phải là số nguyên dương.');
+  }
+
+  return userId;
+}
+
+// Chuẩn hóa và kiểm tra thông tin người nhận cùng phương thức COD.
+function validateShipping(input = {}) {
+  // Body rỗng hoặc null sẽ trả lỗi 400 thay vì làm service phát sinh lỗi 500.
+  if (!input || typeof input !== 'object' || Array.isArray(input)) input = {};
+
+  const recipientName = typeof input.recipient_name === 'string' ? input.recipient_name.trim() : '';
+  const recipientPhone = typeof input.recipient_phone === 'string' ? input.recipient_phone.trim() : '';
+  const shippingAddress = typeof input.shipping_address === 'string' ? input.shipping_address.trim() : '';
+  const paymentMethod = typeof input.payment_method === 'string' ? input.payment_method.trim().toLowerCase() : '';
+
+  if (!recipientName || recipientName.length > 255) {
+    throw createServiceError(400, 'INVALID_RECIPIENT_NAME', 'recipient_name là bắt buộc và tối đa 255 ký tự.');
+  }
+
+  if (!recipientPhone || recipientPhone.length > 30) {
+    throw createServiceError(400, 'INVALID_RECIPIENT_PHONE', 'recipient_phone là bắt buộc và tối đa 30 ký tự.');
+  }
+
+  if (!shippingAddress) {
+    throw createServiceError(400, 'INVALID_SHIPPING_ADDRESS', 'shipping_address là bắt buộc.');
+  }
+
+  if (paymentMethod !== 'cod') {
+    throw createServiceError(400, 'UNSUPPORTED_PAYMENT_METHOD', 'Task này chỉ hỗ trợ thanh toán COD.');
+  }
+
+  return { recipientName, recipientPhone, shippingAddress };
+}
+
+// Tạo đơn COD sau khi xác thực người dùng và dữ liệu giao hàng.
+exports.createOrder = (userId, input) => {
+  const parsedUserId = parseUserId(userId);
+  const shipping = validateShipping(input);
+
+  return orderRepository.createCodOrder(parsedUserId, shipping);
+};
