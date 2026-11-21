@@ -1,0 +1,26 @@
+# Render Blueprint for the Gym Supplement Store API.
+# Deploy from the repository root: Render reads this file automatically.
+services:
+  - type: web
+    name: gym-store-api
+    runtime: docker
+    plan: free
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DATABASE_SSL
+        value: "true"
+      # Supabase/PostgreSQL connection string, set manually in the Render dashboard.
+      - key: DATABASE_URL
+        sync: false
+      # Allowed frontend origin, set manually in the Render dashboard.
+      - key: CORS_ORIGIN
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
