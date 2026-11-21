@@ -1,6 +1,7 @@
 import {
   ArrowUpRight,
   Boxes,
+  ChartColumn,
   LayoutDashboard,
   Package,
   Search,
@@ -12,6 +13,7 @@ import { BrandMark } from '../components/Brand.jsx';
 
 const navigation = [
   { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true },
+  { to: '/admin/dashboard', label: 'Dashboard', icon: ChartColumn },
   { to: '/admin/plans', label: 'Membership Plans', icon: Boxes },
   { to: '/admin/members', label: 'Members', icon: Users },
   { to: '/admin/products', label: 'Products', icon: Package },
