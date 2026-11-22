@@ -15,4 +15,5 @@ COPY --chown=node:node src ./src
 USER node
 EXPOSE 5000
 
-CMD ["node", "src/index.js"]
+# Run the API through the package.json start script.
+CMD ["npm", "start"]
