@@ -21,6 +21,7 @@ import LandingPage from './pages/public/LandingPage';
 import PricingPage from './pages/public/PricingPage';
 import PlanManagement from './pages/admin/PlanManagement';
 import MemberList from './pages/admin/MemberList';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import CheckInScreen from './pages/staff/CheckInScreen';
 import MembershipForm from './pages/staff/MembershipForm';
 import MemberDashboard from './pages/member/MemberDashboard';
@@ -69,6 +70,7 @@ function App() {
         }
       >
         <Route index element={<AdminDashboardPage />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="products" element={<AdminProductsPage />} />
         <Route path="plans" element={<PlanManagement />} />
         <Route path="members" element={<MemberList />} />
