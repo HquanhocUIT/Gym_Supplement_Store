@@ -147,11 +147,14 @@ Task 30 implements category, product, variant, and product-image endpoints. Task
 
 | Method | URL | Access | Request (main fields) | Response (success) | Errors |
 |--------|-----|--------|-----------------------|--------------------|--------|
+| GET | `/admin/stats` | Staff / Admin | — | `revenue { today: { store, gym, total }, month: { store, gym, total } }`, `active_members`, `expiring_memberships[]`, `top_products[]`, `low_stock { threshold, items[] }` | 401, 403, 500 |
 | GET | `/dashboard/summary` | Staff / Admin | Query: `from`, `to` (optional) | `net_sales`, `order_count`, `product_count`, `customer_count`, `low_stock_count` | 400, 401, 403, 500 |
 | GET | `/dashboard/recent-orders` | Staff / Admin | Query: `limit` (optional) | `orders [ { id, customer, item_summary, status, total_amount, created_at } ]` | 400, 401, 403, 500 |
 | GET | `/dashboard/inventory` | Staff / Admin | Query: `limit` (optional) | `items [ { variant_id, product_name, flavor, size, stock } ]` | 400, 401, 403, 500 |
 
-Dashboard data is for the admin store overview: sales, orders, products, customers, recent orders, and inventory. The low-stock threshold must be agreed and defined during implementation before returning `low_stock_count`.
+`GET /admin/stats` is implemented in Task 41. Store revenue counts delivered orders; Gym revenue counts completed membership payments. Active members are distinct users with a currently active membership. Memberships expiring within seven days are returned with member and plan details. Top products exclude cancelled orders. Low stock includes variants with stock at or below 5 units.
+
+The `/dashboard/*` endpoints are still design proposals for a later task.
 
 ---
 
@@ -253,4 +256,4 @@ Authorization: Bearer <token>
 
 ---
 
-> Auth and Gym endpoints are documented in Task 16. Task 30 implements the category, product, variant, and image routes listed above. Task 35 implements the cart routes. Task 37 implements COD checkout. Order history and Dashboard routes remain design proposals for later tasks.
+> Auth and Gym endpoints are documented in Task 16. Task 30 implements the category, product, variant, and image routes listed above. Task 35 implements the cart routes. Task 37 implements COD checkout. Task 41 implements `GET /admin/stats`; the other `/dashboard/*` routes remain design proposals.

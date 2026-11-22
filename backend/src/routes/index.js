@@ -10,6 +10,7 @@ const categoryRoutes = require('./categoryRoutes');
 const productRoutes = require('./productRoutes');
 const cartRoutes = require('./cartRoutes');
 const orderRoutes = require('./orderRoutes');
+const statsRoutes = require('./statsRoutes');
 
 router.get('/health', healthController.check);
 // Kiểm tra kết nối PostgreSQL local hoặc Supabase đang được cấu hình.
@@ -28,5 +29,7 @@ router.use('/store/products', productRoutes);
 router.use('/store/cart', cartRoutes);
 // Mount checkout COD dưới /api/store/orders.
 router.use('/store/orders', orderRoutes);
+// Mount API thống kê nội bộ dưới /api/admin/stats.
+router.use('/admin', statsRoutes);
 
 module.exports = router;
