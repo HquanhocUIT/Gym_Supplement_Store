@@ -1,4 +1,16 @@
-const pool = require('../config/db');
+const meRepository = require('../repositories/meRepository');
+
+/**
+ * Lấy user_id của người đang đăng nhập từ JWT.
+ * Chỉ chấp nhận giá trị do middleware xác thực gán vào req.user,
+ * tuyệt đối không đọc user_id từ query hay params để tránh IDOR.
+ * @param {Object} req
+ * @returns {number|null}
+ */
+function getAuthenticatedUserId(req) {
+  const userId = req.user?.user_id;
+  return Number.isInteger(userId) && userId > 0 ? userId : null;
+}
 
 /**
  * Lấy hồ sơ cá nhân của member đang đăng nhập.
@@ -6,16 +18,18 @@ const pool = require('../config/db');
  */
 async function getProfile(req, res) {
   try {
-    const userId = req.user.user_id;
+    const userId = getAuthenticatedUserId(req);
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        data: null,
+        error: { code: 'UNAUTHORIZED', message: 'Missing or invalid authenticated user' },
+      });
+    }
 
-    const query = `
-      SELECT id, email, full_name, role, created_at
-      FROM users
-      WHERE id = $1
-    `;
-    const result = await pool.query(query, [userId]);
+    const profile = await meRepository.getProfileByUserId(userId);
 
-    if (result.rows.length === 0) {
+    if (!profile) {
       return res.status(404).json({
         success: false,
         data: null,
@@ -25,7 +39,7 @@ async function getProfile(req, res) {
 
     return res.status(200).json({
       success: true,
-      data: result.rows[0],
+      data: profile,
       error: null,
     });
   } catch (err) {
@@ -44,21 +58,20 @@ async function getProfile(req, res) {
  */
 async function getMyMemberships(req, res) {
   try {
-    const userId = req.user.user_id;
+    const userId = getAuthenticatedUserId(req);
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        data: null,
+        error: { code: 'UNAUTHORIZED', message: 'Missing or invalid authenticated user' },
+      });
+    }
 
-    const query = `
-      SELECT m.id, m.plan_id, m.start_date, m.end_date, m.status,
-             mp.name AS plan_name, mp.duration_days, mp.price
-      FROM memberships m
-      JOIN membership_plans mp ON mp.id = m.plan_id
-      WHERE m.user_id = $1
-      ORDER BY m.created_at DESC
-    `;
-    const result = await pool.query(query, [userId]);
+    const memberships = await meRepository.getMembershipsByUserId(userId);
 
     return res.status(200).json({
       success: true,
-      data: result.rows,
+      data: memberships,
       error: null,
     });
   } catch (err) {
@@ -77,19 +90,20 @@ async function getMyMemberships(req, res) {
  */
 async function getMyCheckins(req, res) {
   try {
-    const userId = req.user.user_id;
+    const userId = getAuthenticatedUserId(req);
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        data: null,
+        error: { code: 'UNAUTHORIZED', message: 'Missing or invalid authenticated user' },
+      });
+    }
 
-    const query = `
-      SELECT c.id, c.checkin_time
-      FROM checkins c
-      WHERE c.user_id = $1
-      ORDER BY c.checkin_time DESC
-    `;
-    const result = await pool.query(query, [userId]);
+    const checkins = await meRepository.getCheckinsByUserId(userId);
 
     return res.status(200).json({
       success: true,
-      data: result.rows,
+      data: checkins,
       error: null,
     });
   } catch (err) {
