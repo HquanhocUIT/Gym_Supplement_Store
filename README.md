@@ -102,7 +102,7 @@ npm test
 Tài liệu `pg`: [kết nối](https://node-postgres.com/features/connecting),
 [truy vấn có tham số](https://node-postgres.com/features/queries),
 [connection pool](https://node-postgres.com/features/pooling).
-Đặc tả health endpoints nằm trong `openapi.yaml`; Swagger UI thuộc Task 43.
+Swagger UI của các endpoint đang hoạt động nằm tại `/docs/`, hỗ trợ Bearer JWT và gửi request trực tiếp. Đặc tả chính nằm trong `backend/src/docs/openapi.yaml`, có bản JSON công khai tại `/openapi.json` để import vào Postman. Xem danh sách API và quyền truy cập trong `docs/api.md`.
 
 ## Task 8: chạy API và PostgreSQL local bằng Docker
 

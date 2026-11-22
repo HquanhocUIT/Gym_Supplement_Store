@@ -1,0 +1,2733 @@
+# Tài liệu API đang hoạt động; đối chiếu backend/src/routes khi thêm hoặc sửa endpoint.
+# Mật khẩu và token thật chỉ nhập trong Swagger, không lưu trong file.
+openapi: 3.0.3
+info:
+  title: Gym and Supplement Store API
+  version: 0.3.0
+  description: "Tài liệu cho 38 endpoint đang được mount trong backend. Nhấn Try it out để gửi request. Đăng nhập để lấy data.access_token rồi dán token vào Authorize, không thêm chữ Bearer. Đơn vị tiền: VND. Token và mật khẩu thật không được lưu trong tài liệu."
+servers:
+  - url: /
+    description: Cùng máy chủ đang phục vụ Swagger UI
+tags:
+  - name: Health
+    description: Kiểm tra ứng dụng và database.
+  - name: Auth
+    description: Đăng ký và đăng nhập; đăng ký luôn tạo role member.
+  - name: Plans
+    description: Xem gói tập công khai; quản lý gói tập dành cho Admin.
+  - name: Members
+    description: Quản lý hội viên dành cho Admin và Staff.
+  - name: Checkins
+    description: Check-in và danh sách hôm nay dành cho Admin và Staff.
+  - name: Me
+    description: Dữ liệu của chính tài khoản đăng nhập.
+  - name: Categories
+    description: Danh mục sản phẩm; thao tác ghi dành cho Admin.
+  - name: Products
+    description: Sản phẩm, variant, upload ảnh; thao tác ghi dành cho Admin.
+  - name: Cart
+    description: Giỏ hàng của chính tài khoản đăng nhập.
+  - name: Orders
+    description: Checkout COD từ giỏ hàng hiện tại.
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Check API liveness without a database connection
+      responses:
+        "200":
+          $ref: "#/components/responses/Healthy"
+        "500":
+          $ref: "#/components/responses/InternalError"
+      tags:
+        - Health
+      description: "Quyền truy cập: Public."
+      security: []
+  /api/health:
+    get:
+      operationId: getApiHealth
+      summary: API-prefixed alias of the liveness endpoint
+      responses:
+        "200":
+          $ref: "#/components/responses/Healthy"
+        "500":
+          $ref: "#/components/responses/InternalError"
+      tags:
+        - Health
+      description: "Quyền truy cập: Public."
+      security: []
+  /health/db:
+    get:
+      operationId: getDatabaseHealth
+      summary: Check the configured PostgreSQL database with a read-only query
+      responses:
+        "200":
+          $ref: "#/components/responses/DatabaseHealthy"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+      tags:
+        - Health
+      description: "Quyền truy cập: Public."
+      security: []
+  /api/health/db:
+    get:
+      operationId: getApiDatabaseHealth
+      summary: API-prefixed alias of the database health endpoint
+      responses:
+        "200":
+          $ref: "#/components/responses/DatabaseHealthy"
+        "503":
+          $ref: "#/components/responses/DatabaseUnavailable"
+      tags:
+        - Health
+      description: "Quyền truy cập: Public."
+      security: []
+  /api/auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Đăng ký tài khoản hội viên
+      operationId: register
+      description: |-
+        Quyền truy cập: Public.
+
+        Server luôn tạo member và bỏ qua role được gửi từ client.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Đăng ký tài khoản hội viên thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/AuthData"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Đăng nhập
+      operationId: login
+      description: "Quyền truy cập: Public."
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Đăng nhập thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/AuthData"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/plans:
+    get:
+      tags:
+        - Plans
+      summary: Xem các gói tập active
+      operationId: getActivePlans
+      description: "Quyền truy cập: Public."
+      security: []
+      responses:
+        "200":
+          description: Xem các gói tập active thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Plan"
+                  error:
+                    nullable: true
+                    example: null
+        "500":
+          $ref: "#/components/responses/ServerError"
+    post:
+      tags:
+        - Plans
+      summary: Tạo gói tập
+      operationId: createPlan
+      description: "Quyền truy cập: Admin."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlanInput"
+      responses:
+        "201":
+          description: Tạo gói tập thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/Plan"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/plans/{id}:
+    get:
+      tags:
+        - Plans
+      summary: Xem chi tiết gói tập
+      operationId: getPlanById
+      description: "Quyền truy cập: Public."
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Xem chi tiết gói tập thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/Plan"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    put:
+      tags:
+        - Plans
+      summary: Cập nhật gói tập
+      operationId: updatePlan
+      description: |-
+        Quyền truy cập: Admin.
+
+        Chỉ gửi các trường cần đổi. Body không có trường cập nhật cũng trả 404.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlanUpdateInput"
+      responses:
+        "200":
+          description: Cập nhật gói tập thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/Plan"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    delete:
+      tags:
+        - Plans
+      summary: Ẩn gói tập
+      operationId: hidePlan
+      description: |-
+        Quyền truy cập: Admin.
+
+        Xóa mềm: đổi status sang hidden, không xóa bản ghi.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Ẩn gói tập thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/PlanHidden"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/members:
+    get:
+      tags:
+        - Members
+      summary: Xem danh sách hội viên
+      operationId: getMembers
+      description: "Quyền truy cập: Admin / Staff."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          required: false
+          description: Tìm theo tên hoặc email.
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          description: Số trang.
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          description: Số kết quả mỗi trang, tối đa 100.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        "200":
+          description: Xem danh sách hội viên thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/MemberList"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/members/{id}:
+    get:
+      tags:
+        - Members
+      summary: Xem chi tiết hội viên
+      operationId: getMemberById
+      description: "Quyền truy cập: Admin / Staff."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Xem chi tiết hội viên thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/MemberDetail"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/members/{id}/memberships:
+    post:
+      tags:
+        - Members
+      summary: Đăng ký gói tập cho hội viên
+      operationId: createMembership
+      description: |-
+        Quyền truy cập: Admin / Staff.
+
+        id trên URL là ID tài khoản hội viên. Server tự tính end_date từ start_date và duration_days của gói.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MembershipInput"
+      responses:
+        "201":
+          description: Đăng ký gói tập cho hội viên thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/MembershipCreated"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/checkins:
+    post:
+      tags:
+        - Checkins
+      summary: Tạo check-in
+      operationId: createCheckin
+      description: |-
+        Quyền truy cập: Admin / Staff.
+
+        Trả 400 MEMBERSHIP_EXPIRED nếu không có gói active còn hạn theo kiểm tra hiện tại của backend.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckinInput"
+      responses:
+        "201":
+          description: Tạo check-in thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/Checkin"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/checkins/today:
+    get:
+      tags:
+        - Checkins
+      summary: Xem check-in hôm nay
+      operationId: getTodayCheckins
+      description: "Quyền truy cập: Admin / Staff."
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Xem check-in hôm nay thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TodayCheckin"
+                  error:
+                    nullable: true
+                    example: null
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/me/profile:
+    get:
+      tags:
+        - Me
+      summary: Xem hồ sơ của tôi
+      operationId: getMyProfile
+      description: "Quyền truy cập: Authenticated."
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Xem hồ sơ của tôi thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/User"
+                  error:
+                    nullable: true
+                    example: null
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/me/memberships:
+    get:
+      tags:
+        - Me
+      summary: Xem các gói tập của tôi
+      operationId: getMyMemberships
+      description: "Quyền truy cập: Authenticated."
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Xem các gói tập của tôi thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/MyMembership"
+                  error:
+                    nullable: true
+                    example: null
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/me/checkins:
+    get:
+      tags:
+        - Me
+      summary: Xem lịch sử check-in của tôi
+      operationId: getMyCheckins
+      description: "Quyền truy cập: Authenticated."
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Xem lịch sử check-in của tôi thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/MyCheckin"
+                  error:
+                    nullable: true
+                    example: null
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/store/categories:
+    get:
+      tags:
+        - Categories
+      summary: Xem danh mục
+      operationId: listCategories
+      description: "Quyền truy cập: Public."
+      security: []
+      responses:
+        "200":
+          description: Xem danh mục thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Category"
+                  error:
+                    nullable: true
+                    example: null
+        "500":
+          $ref: "#/components/responses/ServerError"
+    post:
+      tags:
+        - Categories
+      summary: Tạo danh mục
+      operationId: createCategory
+      description: "Quyền truy cập: Admin."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryInput"
+      responses:
+        "201":
+          description: Tạo danh mục thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/Category"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/store/categories/{id}:
+    put:
+      tags:
+        - Categories
+      summary: Đổi tên danh mục
+      operationId: updateCategory
+      description: "Quyền truy cập: Admin."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryInput"
+      responses:
+        "200":
+          description: Đổi tên danh mục thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/Category"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    delete:
+      tags:
+        - Categories
+      summary: Xóa danh mục
+      operationId: deleteCategory
+      description: |-
+        Quyền truy cập: Admin.
+
+        Trả 409 nếu danh mục vẫn còn sản phẩm.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Xóa danh mục thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/Category"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/store/products:
+    get:
+      tags:
+        - Products
+      summary: Tìm và lọc sản phẩm
+      operationId: listProducts
+      description: |-
+        Quyền truy cập: Public.
+
+        minPrice phải nhỏ hơn hoặc bằng maxPrice. Bộ lọc giá áp dụng trên cùng một variant; lowest_price vẫn là giá nhỏ nhất của toàn bộ variants của sản phẩm.
+      security: []
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: Tìm theo tên hoặc mô tả.
+          schema:
+            type: string
+            maxLength: 255
+        - name: category
+          in: query
+          required: false
+          description: ID danh mục.
+          schema:
+            type: integer
+            minimum: 1
+        - name: minPrice
+          in: query
+          required: false
+          description: Giá variant tối thiểu.
+          schema:
+            type: number
+            minimum: 0
+        - name: maxPrice
+          in: query
+          required: false
+          description: Giá variant tối đa.
+          schema:
+            type: number
+            minimum: 0
+        - name: sort
+          in: query
+          required: false
+          description: Kiểu sắp xếp.
+          schema:
+            type: string
+            enum:
+              - newest
+              - name_asc
+              - name_desc
+              - price_asc
+              - price_desc
+            default: newest
+        - name: page
+          in: query
+          required: false
+          description: Số trang.
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          description: Số kết quả mỗi trang, tối đa 100.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 12
+      responses:
+        "200":
+          description: Tìm và lọc sản phẩm thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/ProductList"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    post:
+      tags:
+        - Products
+      summary: Tạo sản phẩm
+      operationId: createProduct
+      description: "Quyền truy cập: Admin."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+      responses:
+        "201":
+          description: Tạo sản phẩm thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/Product"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/store/products/{productId}:
+    get:
+      tags:
+        - Products
+      summary: Xem chi tiết sản phẩm
+      operationId: getProduct
+      description: "Quyền truy cập: Public."
+      security: []
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Xem chi tiết sản phẩm thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/ProductDetail"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    put:
+      tags:
+        - Products
+      summary: Cập nhật sản phẩm
+      operationId: updateProduct
+      description: "Quyền truy cập: Admin."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+      responses:
+        "200":
+          description: Cập nhật sản phẩm thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/Product"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    delete:
+      tags:
+        - Products
+      summary: Xóa sản phẩm
+      operationId: deleteProduct
+      description: |-
+        Quyền truy cập: Admin.
+
+        Trả 409 nếu sản phẩm vẫn còn variant.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Xóa sản phẩm thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/Product"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/store/products/{productId}/variants:
+    get:
+      tags:
+        - Products
+      summary: Xem các variant
+      operationId: listVariants
+      description: |-
+        Quyền truy cập: Public.
+
+        Sản phẩm chưa có variant hoặc không tồn tại có thể trả mảng rỗng.
+      security: []
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Xem các variant thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Variant"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    post:
+      tags:
+        - Products
+      summary: Tạo variant
+      operationId: createVariant
+      description: "Quyền truy cập: Admin."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VariantInput"
+      responses:
+        "201":
+          description: Tạo variant thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/Variant"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/store/products/{productId}/variants/{variantId}:
+    put:
+      tags:
+        - Products
+      summary: Cập nhật variant và tồn kho
+      operationId: updateVariant
+      description: |-
+        Quyền truy cập: Admin.
+
+        Variant phải thuộc sản phẩm trên URL. Gửi stock hiện tại nếu muốn giữ số lượng; bỏ stock sẽ đặt thành 0.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+        - name: variantId
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VariantInput"
+      responses:
+        "200":
+          description: Cập nhật variant và tồn kho thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/Variant"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    delete:
+      tags:
+        - Products
+      summary: Xóa variant
+      operationId: deleteVariant
+      description: |-
+        Quyền truy cập: Admin.
+
+        Trả 409 nếu variant đang được tham chiếu bởi giỏ hoặc đơn hàng.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+        - name: variantId
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Xóa variant thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/Variant"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/store/products/{productId}/image:
+    post:
+      tags:
+        - Products
+      summary: Upload ảnh sản phẩm
+      operationId: uploadProductImage
+      description: |-
+        Quyền truy cập: Admin.
+
+        Chọn file ở trường image; JPEG, PNG hoặc WebP, tối đa 5 MB. Server lưu ảnh trên Supabase Storage và cập nhật image_url.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Một ảnh JPEG, PNG hoặc WebP; tối đa 5 MB.
+      responses:
+        "200":
+          description: Upload ảnh sản phẩm thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/Product"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/store/cart:
+    get:
+      tags:
+        - Cart
+      summary: Xem giỏ hàng của tôi
+      operationId: getCart
+      description: |-
+        Quyền truy cập: Authenticated.
+
+        Tự tạo giỏ hàng trống nếu tài khoản chưa có giỏ.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Xem giỏ hàng của tôi thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/Cart"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/store/cart/items:
+    post:
+      tags:
+        - Cart
+      summary: Thêm variant vào giỏ
+      operationId: addCartItem
+      description: |-
+        Quyền truy cập: Authenticated.
+
+        Nếu đã có variant trong giỏ thì cộng số lượng. Trả 409 INSUFFICIENT_STOCK nếu tổng số lượng vượt tồn kho.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CartItemInput"
+      responses:
+        "200":
+          description: Thêm variant vào giỏ thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/CartItem"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/store/cart/items/{itemId}:
+    put:
+      tags:
+        - Cart
+      summary: Đổi số lượng món trong giỏ
+      operationId: updateCartItem
+      description: |-
+        Quyền truy cập: Authenticated.
+
+        itemId là ID món trong giỏ, không phải variant_id. Chỉ cập nhật món thuộc giỏ của chính mình.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuantityInput"
+      responses:
+        "200":
+          description: Đổi số lượng món trong giỏ thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/CartItem"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    delete:
+      tags:
+        - Cart
+      summary: Xóa món khỏi giỏ
+      operationId: deleteCartItem
+      description: "Quyền truy cập: Authenticated."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: ID số nguyên dương; lấy từ API danh sách tương ứng.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Xóa món khỏi giỏ thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/DeletedCartItem"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/store/orders:
+    post:
+      tags:
+        - Orders
+      summary: Checkout và tạo đơn COD
+      operationId: createCodOrder
+      description: |-
+        Quyền truy cập: Authenticated.
+
+        Thao tác này tạo đơn thật từ giỏ hiện tại, trừ kho và dọn giỏ trong cùng transaction. Hội viên có gói active còn trong thời hạn được giảm 10%. Server tự tính tiền; chỉ hỗ trợ COD. Nếu thiếu payment_method thì mặc định cod. Trả 409 khi giỏ trống hoặc không đủ kho.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutInput"
+      responses:
+        "201":
+          description: Checkout và tạo đơn COD thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/CheckoutData"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/ServerError"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      required:
+        - success
+        - data
+        - error
+      properties:
+        success:
+          type: boolean
+          enum:
+            - false
+        data:
+          nullable: true
+          example: null
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        role:
+          type: string
+          enum:
+            - admin
+            - staff
+            - member
+        created_at:
+          type: string
+          format: date-time
+    AuthUser:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          minimum: 1
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        role:
+          type: string
+          enum:
+            - admin
+            - staff
+            - member
+    AuthData:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/AuthUser"
+        access_token:
+          type: string
+          description: JWT nhận được sau đăng nhập; chỉ dán chuỗi token vào Authorize.
+    LoginInput:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@gym.local
+        password:
+          type: string
+          format: password
+          writeOnly: true
+    RegisterInput:
+      type: object
+      required:
+        - email
+        - password
+        - full_name
+      properties:
+        email:
+          type: string
+          format: email
+          example: new-member@example.com
+        password:
+          type: string
+          format: password
+          writeOnly: true
+        full_name:
+          type: string
+          example: Nguyen Van A
+    Plan:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        duration_days:
+          type: integer
+          minimum: 1
+        price:
+          oneOf:
+            - type: string
+              pattern: ^\d+(\.\d+)?$
+            - type: number
+              minimum: 0
+          description: Số tiền VND; PostgreSQL numeric có thể được trả dưới dạng chuỗi.
+        status:
+          type: string
+          enum:
+            - active
+            - hidden
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    PlanInput:
+      type: object
+      required:
+        - name
+        - duration_days
+        - price
+      properties:
+        name:
+          type: string
+          example: Gói tập mẫu
+        duration_days:
+          type: integer
+          minimum: 1
+          example: 30
+        price:
+          type: number
+          minimum: 0
+          example: 500000
+        status:
+          type: string
+          enum:
+            - active
+            - hidden
+          default: active
+    PlanUpdateInput:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Gói tập mẫu
+        duration_days:
+          type: integer
+          minimum: 1
+          example: 30
+        price:
+          type: number
+          minimum: 0
+          example: 500000
+        status:
+          type: string
+          enum:
+            - active
+            - hidden
+          default: active
+    PlanHidden:
+      type: object
+      properties:
+        plan_id:
+          type: integer
+          minimum: 1
+        status:
+          type: string
+          enum:
+            - hidden
+    MembershipHistory:
+      type: object
+      properties:
+        membership_id:
+          type: integer
+          minimum: 1
+        plan_id:
+          type: integer
+          minimum: 1
+        start_date:
+          type: string
+          description: Ngày bắt đầu; driver hiện có thể trả dưới dạng chuỗi ISO date-time.
+        end_date:
+          type: string
+          description: Ngày kết thúc; driver hiện có thể trả dưới dạng chuỗi ISO date-time.
+        status:
+          type: string
+          enum:
+            - active
+            - expired
+            - cancelled
+        plan_name:
+          type: string
+        duration_days:
+          type: integer
+        price:
+          oneOf:
+            - type: string
+              pattern: ^\d+(\.\d+)?$
+            - type: number
+              minimum: 0
+          description: Số tiền VND; PostgreSQL numeric có thể được trả dưới dạng chuỗi.
+    MemberSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        role:
+          type: string
+          enum:
+            - admin
+            - staff
+            - member
+        created_at:
+          type: string
+          format: date-time
+        membership_id:
+          type: integer
+          minimum: 1
+          nullable: true
+        plan_id:
+          type: integer
+          minimum: 1
+          nullable: true
+        start_date:
+          type: string
+          nullable: true
+        end_date:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum:
+            - active
+            - expired
+            - cancelled
+          nullable: true
+        plan_name:
+          type: string
+          nullable: true
+        duration_days:
+          type: integer
+          nullable: true
+    MemberList:
+      type: object
+      properties:
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberSummary"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+    MemberDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        role:
+          type: string
+          enum:
+            - admin
+            - staff
+            - member
+        created_at:
+          type: string
+          format: date-time
+        memberships:
+          type: array
+          items:
+            $ref: "#/components/schemas/MembershipHistory"
+    MembershipCreated:
+      type: object
+      properties:
+        membership_id:
+          type: integer
+          minimum: 1
+        user_id:
+          type: integer
+          minimum: 1
+        plan_id:
+          type: integer
+          minimum: 1
+        start_date:
+          type: string
+        end_date:
+          type: string
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    MembershipInput:
+      type: object
+      required:
+        - plan_id
+        - start_date
+      properties:
+        plan_id:
+          type: integer
+          minimum: 1
+          description: Lấy ID từ GET /api/plans.
+        start_date:
+          type: string
+          format: date
+          example: 2026-12-01
+    CheckinInput:
+      type: object
+      required:
+        - user_id
+      properties:
+        user_id:
+          type: integer
+          minimum: 1
+          description: ID tài khoản hội viên, lấy từ GET /api/members.
+    Checkin:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        user_id:
+          type: integer
+          minimum: 1
+        checkin_time:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    TodayCheckin:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        checkin_time:
+          type: string
+          format: date-time
+        full_name:
+          type: string
+        email:
+          type: string
+          format: email
+    MyMembership:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        plan_id:
+          type: integer
+          minimum: 1
+        start_date:
+          type: string
+        end_date:
+          type: string
+        status:
+          type: string
+        plan_name:
+          type: string
+        duration_days:
+          type: integer
+        price:
+          oneOf:
+            - type: string
+              pattern: ^\d+(\.\d+)?$
+            - type: number
+              minimum: 0
+          description: Số tiền VND; PostgreSQL numeric có thể được trả dưới dạng chuỗi.
+    MyCheckin:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        checkin_time:
+          type: string
+          format: date-time
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    CategoryInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: Danh mục mẫu
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        category_id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        image_url:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ProductSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        category_id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        image_url:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        category_name:
+          type: string
+        lowest_price:
+          oneOf:
+            - type: string
+              pattern: ^\d+(\.\d+)?$
+              nullable: true
+            - type: number
+              minimum: 0
+          description: Số tiền VND; PostgreSQL numeric có thể được trả dưới dạng chuỗi.
+        total_stock:
+          type: integer
+          minimum: 0
+    ProductDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        category_id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        image_url:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        category_name:
+          type: string
+        variants:
+          type: array
+          items:
+            $ref: "#/components/schemas/Variant"
+    ProductList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductSummary"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+    ProductInput:
+      type: object
+      required:
+        - categoryId
+        - name
+      properties:
+        categoryId:
+          type: integer
+          minimum: 1
+          description: ID danh mục; request dùng camelCase categoryId.
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: Whey mẫu
+        description:
+          type: string
+          example: Mô tả sản phẩm
+          nullable: true
+    VariantInput:
+      type: object
+      required:
+        - size
+        - price
+      properties:
+        flavor:
+          type: string
+          maxLength: 100
+          example: Chocolate
+          nullable: true
+        size:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: 1 kg
+        price:
+          type: number
+          minimum: 0
+          example: 750000
+        stock:
+          type: integer
+          minimum: 0
+          default: 0
+          example: 20
+    Variant:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        product_id:
+          type: integer
+          minimum: 1
+        flavor:
+          type: string
+          nullable: true
+        size:
+          type: string
+        price:
+          oneOf:
+            - type: string
+              pattern: ^\d+(\.\d+)?$
+            - type: number
+              minimum: 0
+          description: Số tiền VND; PostgreSQL numeric có thể được trả dưới dạng chuỗi.
+        stock:
+          type: integer
+          minimum: 0
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    CartVariant:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        product_id:
+          type: integer
+          minimum: 1
+        product_name:
+          type: string
+        image_url:
+          type: string
+          nullable: true
+        flavor:
+          type: string
+          nullable: true
+        size:
+          type: string
+        price:
+          oneOf:
+            - type: string
+              pattern: ^\d+(\.\d+)?$
+            - type: number
+              minimum: 0
+          description: Số tiền VND; PostgreSQL numeric có thể được trả dưới dạng chuỗi.
+        stock:
+          type: integer
+          minimum: 0
+    CartItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        quantity:
+          type: integer
+          minimum: 1
+        variant:
+          $ref: "#/components/schemas/CartVariant"
+    Cart:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CartItem"
+        subtotal:
+          oneOf:
+            - type: string
+              pattern: ^\d+(\.\d+)?$
+            - type: number
+              minimum: 0
+          description: Số tiền VND; PostgreSQL numeric có thể được trả dưới dạng chuỗi.
+    CartItemInput:
+      type: object
+      required:
+        - variant_id
+        - quantity
+      properties:
+        variant_id:
+          type: integer
+          minimum: 1
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+          example: 1
+    QuantityInput:
+      type: object
+      required:
+        - quantity
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+          example: 2
+    DeletedCartItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        variant_id:
+          type: integer
+          minimum: 1
+    CheckoutInput:
+      type: object
+      required:
+        - recipient_name
+        - recipient_phone
+        - shipping_address
+      properties:
+        recipient_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: Nguyen Van A
+        recipient_phone:
+          type: string
+          minLength: 1
+          maxLength: 30
+          example: "0900000000"
+        shipping_address:
+          type: string
+          minLength: 1
+          example: Dia chi giao hang mau
+        payment_method:
+          type: string
+          enum:
+            - cod
+          default: cod
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        variant_id:
+          type: integer
+          minimum: 1
+        product_name:
+          type: string
+        variant_description:
+          type: string
+        price:
+          oneOf:
+            - type: string
+              pattern: ^\d+(\.\d+)?$
+            - type: number
+              minimum: 0
+          description: Số tiền VND; PostgreSQL numeric có thể được trả dưới dạng chuỗi.
+        quantity:
+          type: integer
+          minimum: 1
+    CheckoutData:
+      type: object
+      properties:
+        order:
+          type: object
+          properties:
+            id:
+              type: integer
+              minimum: 1
+            user_id:
+              type: integer
+              minimum: 1
+            recipient_name:
+              type: string
+            recipient_phone:
+              type: string
+            shipping_address:
+              type: string
+            subtotal:
+              oneOf:
+                - type: string
+                  pattern: ^\d+(\.\d+)?$
+                - type: number
+                  minimum: 0
+              description: Số tiền VND; PostgreSQL numeric có thể được trả dưới dạng chuỗi.
+            discount_amount:
+              oneOf:
+                - type: string
+                  pattern: ^\d+(\.\d+)?$
+                - type: number
+                  minimum: 0
+              description: Số tiền VND; PostgreSQL numeric có thể được trả dưới dạng chuỗi.
+            total_amount:
+              oneOf:
+                - type: string
+                  pattern: ^\d+(\.\d+)?$
+                - type: number
+                  minimum: 0
+              description: Số tiền VND; PostgreSQL numeric có thể được trả dưới dạng chuỗi.
+            status:
+              type: string
+              enum:
+                - pending
+            created_at:
+              type: string
+              format: date-time
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/OrderItem"
+        payment:
+          type: object
+          properties:
+            id:
+              type: integer
+              minimum: 1
+            user_id:
+              type: integer
+              minimum: 1
+            order_id:
+              type: integer
+              minimum: 1
+            amount:
+              oneOf:
+                - type: string
+                  pattern: ^\d+(\.\d+)?$
+                - type: number
+                  minimum: 0
+              description: Số tiền VND; PostgreSQL numeric có thể được trả dưới dạng chuỗi.
+            payment_method:
+              type: string
+              enum:
+                - cod
+            status:
+              type: string
+              enum:
+                - pending
+            created_at:
+              type: string
+              format: date-time
+  responses:
+    DatabaseHealthy:
+      description: PostgreSQL returned a result from the read-only health query
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - success
+              - data
+              - error
+            properties:
+              success:
+                type: boolean
+                enum:
+                  - true
+              data:
+                type: object
+                required:
+                  - status
+                  - database
+                  - timestamp
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - ok
+                  database:
+                    type: string
+                    enum:
+                      - connected
+                  timestamp:
+                    type: string
+                    format: date-time
+              error:
+                type: object
+                nullable: true
+                example: null
+    DatabaseUnavailable:
+      description: Connection or query failed; connection details are not exposed
+      content:
+        application/json:
+          example:
+            success: false
+            data: null
+            error:
+              code: DATABASE_UNAVAILABLE
+              message: Không thể kết nối database. Kiểm tra cấu hình và thử lại.
+    Healthy:
+      description: API is running; database readiness is not checked
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - success
+              - data
+              - error
+            properties:
+              success:
+                type: boolean
+                enum:
+                  - true
+              data:
+                type: object
+                required:
+                  - status
+                  - timestamp
+                  - uptime
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                  uptime:
+                    type: number
+                    minimum: 0
+              error:
+                type: object
+                nullable: true
+                example: null
+    InternalError:
+      description: Unexpected server error
+      content:
+        application/json:
+          example:
+            success: false
+            data: null
+            error:
+              code: INTERNAL_ERROR
+              message: Internal Server Error
+    BadRequest:
+      description: Dữ liệu hoặc tham số không hợp lệ
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Thiếu token, token không hợp lệ hoặc đã hết hạn
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: Tài khoản không có quyền thực hiện thao tác
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Không tìm thấy dữ liệu
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: Dữ liệu bị trùng, đang được sử dụng, giỏ trống hoặc không đủ tồn kho
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    PayloadTooLarge:
+      description: Ảnh vượt quá giới hạn 5 MB
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ServerError:
+      description: Lỗi máy chủ hoặc cấu hình
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"

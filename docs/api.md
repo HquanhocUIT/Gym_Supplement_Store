@@ -1,256 +1,132 @@
-# API Documentation - Auth, Gym, Store & Dashboard
+# API Documentation - Auth, Gym and Store
 
-> Phase 1 - Design (DB & API). Audience: Quân and Sang (reviewers).
-> Base URL (local): `http://localhost:5000/api`. The deployed host depends on the environment.
-> Auth: Bearer JWT in `Authorization: Bearer <token>` header unless marked Public.
+> Base URL local: `http://localhost:5000`. Swagger UI: `/docs/`. OpenAPI JSON: `/openapi.json`.
+> Đặc tả chính: `backend/src/docs/openapi.yaml`. Bảng dưới phản ánh các route đang được mount trong nhánh hiện tại.
 
-## Conventions
+## Xác thực và cách thử
 
-| Item | Convention |
-|------|------------|
-| Method | HTTP method |
-| URL | Endpoint path relative to base URL |
-| Access | Who can call: Public / Authenticated / Member / Staff / Admin |
-| Request | Main request body fields |
-| Response | Main successful response body |
-| Errors | Common HTTP error codes for this endpoint |
+Gọi `POST /api/auth/login`, lấy `data.access_token`, bấm **Authorize** trong Swagger rồi dán riêng chuỗi token. Backend kiểm tra role trong JWT. Đăng ký công khai luôn tạo `member`.
 
-Role values: `admin`, `staff`, `member`.
+Public không cần token. Authenticated là mọi tài khoản đăng nhập. Các quyền Admin hoặc Admin / Staff được kiểm tra ở middleware của từng route.
 
----
+Response dùng `{ success, data, error }`. Giá trị PostgreSQL numeric thường được trả dưới dạng chuỗi; đơn vị tiền là VND. Chỉ nhập mật khẩu và token trên máy khi thử, không lưu vào đặc tả hoặc collection chia sẻ.
 
-## 1. Auth
+## Health
 
-| Method | URL | Access | Request (main fields) | Response (success) | Errors |
-|--------|-----|--------|-----------------------|--------------------|--------|
-| POST | `/auth/register` | Public | `email`, `password`, `full_name`, `role` | `user { id, email, full_name, role }`, `access_token`, `refresh_token` | 400, 409, 422, 500 |
-| POST | `/auth/login` | Public | `email`, `password` | `access_token`, `refresh_token`, `user { ... }` | 400, 401, 422, 500 |
-| POST | `/auth/logout` | Authenticated | — | `{ success: true }` | 401, 500 |
-| POST | `/auth/refresh` | Public (refresh token) | `refresh_token` | `access_token`, `refresh_token` | 401, 422, 500 |
-| GET | `/auth/me` | Authenticated | — | `user { id, email, full_name, role, created_at }` | 401, 404, 500 |
-| PUT | `/auth/me` | Authenticated | `full_name`, `password` (optional) | `user { ... }` | 400, 401, 409, 422, 500 |
-| POST | `/auth/forgot-password` | Public | `email` | `{ success: true }` | 400, 422, 500 |
-| POST | `/auth/reset-password` | Public (reset token) | `token`, `password` | `{ success: true }` | 400, 401, 422, 500 |
+Kiểm tra ứng dụng và database.
 
-### Auth error codes detail
+| Method | URL | Quyền | Body / query | Response data |
+|---|---|---|---|---|
+| GET | `/health` | Public | — | Healthy |
+| GET | `/api/health` | Public | — | Healthy |
+| GET | `/health/db` | Public | — | DatabaseHealthy |
+| GET | `/api/health/db` | Public | — | DatabaseHealthy |
 
-| Code | Meaning |
-|------|---------|
-| 400 | Bad request (missing/invalid fields) |
-| 401 | Unauthorized (invalid credentials, expired/missing token) |
-| 403 | Forbidden (role not allowed) |
-| 404 | Not found (user not found) |
-| 409 | Conflict (email already registered) |
-| 422 | Unprocessable entity (validation failed) |
-| 500 | Internal server error |
+## Auth
 
----
+Đăng ký và đăng nhập; đăng ký luôn tạo role member.
 
-## 2. Gym
+| Method | URL | Quyền | Body / query | Response data |
+|---|---|---|---|---|
+| POST | `/api/auth/register` | Public | RegisterInput | AuthData |
+| POST | `/api/auth/login` | Public | LoginInput | AuthData |
 
-| Method | URL | Access | Request (main fields) | Response (success) | Errors |
-|--------|-----|--------|-----------------------|--------------------|--------|
-| GET | `/gym/membership-plans` | Public | — | `plans [ { id, name, duration_days, price, status, created_at } ]` | 401, 500 |
-| GET | `/gym/membership-plans/:id` | Public | — | `plan { id, name, duration_days, price, status, created_at }` | 404, 500 |
-| POST | `/gym/membership-plans` | Staff / Admin | `name`, `duration_days`, `price`, `status` | `plan { ... }` | 400, 401, 403, 409, 422, 500 |
-| PUT | `/gym/membership-plans/:id` | Staff / Admin | `name`, `duration_days`, `price`, `status` | `plan { ... }` | 400, 401, 403, 404, 409, 422, 500 |
-| DELETE | `/gym/membership-plans/:id` | Admin | — | `{ success: true }` | 401, 403, 404, 500 |
-| GET | `/gym/memberships` | Authenticated | — | `memberships [ { id, user, plan, start_date, end_date, status } ]` | 401, 500 |
-| GET | `/gym/memberships/:id` | Authenticated | — | `membership { ... }` | 401, 403, 404, 500 |
-| POST | `/gym/memberships` | Member / Staff / Admin | `plan_id`, `start_date`, `end_date` | `membership { ... }` | 400, 401, 403, 404, 409, 422, 500 |
-| PUT | `/gym/memberships/:id` | Staff / Admin | `start_date`, `end_date`, `status` | `membership { ... }` | 400, 401, 403, 404, 422, 500 |
-| DELETE | `/gym/memberships/:id` | Staff / Admin | — | `{ success: true }` | 401, 403, 404, 500 |
-| GET | `/gym/checkins` | Authenticated | — | `checkins [ { id, user, checkin_time } ]` | 401, 500 |
-| POST | `/gym/checkins` | Member / Staff / Admin | `user_id` | `checkin { id, user_id, checkin_time }` | 400, 401, 403, 404, 422, 500 |
-| GET | `/gym/checkins/:id` | Authenticated | — | `checkin { ... }` | 401, 403, 404, 500 |
-| GET | `/gym/members` | Staff / Admin | — | `users [ { id, email, full_name, role } ]` | 401, 403, 500 |
-| GET | `/gym/members/:id` | Staff / Admin | — | `user { id, email, full_name, role, memberships }` | 401, 403, 404, 500 |
+## Plans
 
-### Gym access rules
+Xem gói tập công khai; quản lý gói tập dành cho Admin.
 
-- **Public**: no authentication required (browsing plans).
-- **Authenticated**: any logged-in user (admin, staff, member). A member can only see their own memberships/check-ins; staff/admin see all.
-- **Member**: logged-in user with role `member` (may act on own records).
-- **Staff**: logged-in user with role `staff` or `admin` (can manage plans, memberships, check-ins, members).
-- **Admin**: logged-in user with role `admin` (can delete plans/memberships).
+| Method | URL | Quyền | Body / query | Response data |
+|---|---|---|---|---|
+| GET | `/api/plans` | Public | — | Plan[] |
+| POST | `/api/plans` | Admin | PlanInput | Plan |
+| GET | `/api/plans/{id}` | Public | — | Plan |
+| PUT | `/api/plans/{id}` | Admin | PlanUpdateInput | Plan |
+| DELETE | `/api/plans/{id}` | Admin | — | PlanHidden |
 
-### Gym error codes detail
+## Members
 
-| Code | Meaning |
-|------|---------|
-| 400 | Bad request (missing/invalid fields) |
-| 401 | Unauthorized (missing/expired token) |
-| 403 | Forbidden (role not allowed or accessing another member's data) |
-| 404 | Not found (plan/membership/checkin/user not found) |
-| 409 | Conflict (duplicate plan name, overlapping active membership) |
-| 422 | Unprocessable entity (validation: duration_days > 0, end_date >= start_date, price >= 0) |
-| 500 | Internal server error |
+Quản lý hội viên dành cho Admin và Staff.
 
----
+| Method | URL | Quyền | Body / query | Response data |
+|---|---|---|---|---|
+| GET | `/api/members` | Admin / Staff | `search`, `page`, `limit` | MemberList |
+| GET | `/api/members/{id}` | Admin / Staff | — | MemberDetail |
+| POST | `/api/members/{id}/memberships` | Admin / Staff | MembershipInput | MembershipCreated |
 
-## 3. Store
+## Checkins
 
-Task 30 implements category, product, variant, and product-image endpoints. Task 35 implements authenticated cart endpoints. Task 37 implements COD checkout. The common response envelope is `{ success, data, error }`.
+Check-in và danh sách hôm nay dành cho Admin và Staff.
 
-| Method | URL | Access | Request (main fields) | Response (success) | Errors |
-|--------|-----|--------|-----------------------|--------------------|--------|
-| GET | `/store/categories` | Public | — | `data: category[]` | 500 |
-| POST | `/store/categories` | Admin | `{ name }` | `201`, `data: category` | 400, 401, 403, 409, 500 |
-| PUT | `/store/categories/:id` | Admin | `{ name }` | `200`, `data: category` | 400, 401, 403, 404, 409, 500 |
-| DELETE | `/store/categories/:id` | Admin | — | `200`, `data: deleted category` | 401, 403, 404, 409, 500 |
-| GET | `/store/products` | Public | Query: `q`, `category` (category ID), `minPrice`, `maxPrice`, `sort`, `page`, `limit` (optional) | `data: { items: product[], pagination: { page, limit, total, totalPages } }`; products include `lowest_price` and `total_stock` | 400, 500 |
-| GET | `/store/products/:productId` | Public | — | `data: product` with `category_name` and `variants[]` | 400, 404, 500 |
-| GET | `/store/products/:productId/variants` | Public | — | `data: variant[]` | 400, 500 |
-| POST | `/store/products` | Admin | `{ categoryId, name, description? }` | `201`, `data: product` | 400, 401, 403, 500 |
-| PUT | `/store/products/:productId` | Admin | `{ categoryId, name, description? }` | `200`, `data: product` | 400, 401, 403, 404, 500 |
-| DELETE | `/store/products/:productId` | Admin | — | `200`, `data: deleted product` | 401, 403, 404, 409, 500 |
-| POST | `/store/products/:productId/variants` | Admin | `{ flavor?, size, price, stock? }` | `201`, `data: variant` | 400, 401, 403, 404, 500 |
-| PUT | `/store/products/:productId/variants/:variantId` | Admin | `{ flavor?, size, price, stock }` | `200`, `data: variant` | 400, 401, 403, 404, 500 |
-| DELETE | `/store/products/:productId/variants/:variantId` | Admin | — | `200`, `data: deleted variant` | 401, 403, 404, 409, 500 |
-| POST | `/store/products/:productId/image` | Admin | `multipart/form-data`, file field `image` (JPEG, PNG, or WebP; max 5 MB) | `200`, `data: updated product with image_url` | 400, 401, 403, 404, 413, 500 |
-| GET | `/store/cart` | Authenticated | — | `cart { id, items [ { id, variant, quantity } ], subtotal }` | 401, 500 |
-| POST | `/store/cart/items` | Authenticated | `{ variant_id, quantity }` | `200`, `data: item { id, variant, quantity }` | 400, 401, 404, 409, 500 |
-| PUT | `/store/cart/items/:itemId` | Authenticated | `{ quantity }` | `200`, `data: item { id, variant, quantity }` | 400, 401, 404, 409, 500 |
-| DELETE | `/store/cart/items/:itemId` | Authenticated | — | `200`, `data: { id, variant_id }` | 400, 401, 404, 500 |
-| POST | `/store/orders` | Authenticated | `recipient_name`, `recipient_phone`, `shipping_address`, `payment_method: cod` | `201`, `data: { order { id, items, subtotal, discount_amount, total_amount, status }, payment { id, amount, payment_method, status } }` | 400, 401, 409, 500 |
-| GET | `/store/orders` | Authenticated | Query: `page`, `limit` (optional) | `items [ { id, total_amount, status, created_at } ]`, `page`, `limit`, `total` | 401, 500 |
-| GET | `/store/orders/:id` | Authenticated | — | `order { id, items, subtotal, discount_amount, total_amount, status }` | 401, 403, 404, 500 |
-| PUT | `/store/orders/:id/status` | Staff / Admin | `status` | `order { id, status, updated_at }` | 400, 401, 403, 404, 409, 422, 500 |
+| Method | URL | Quyền | Body / query | Response data |
+|---|---|---|---|---|
+| POST | `/api/checkins` | Admin / Staff | CheckinInput | Checkin |
+| GET | `/api/checkins/today` | Admin / Staff | — | TodayCheckin[] |
 
-### Store access and business rules
+## Me
 
-- Task 30: anyone can browse categories, products, and product variants. Only an authenticated Admin can create, update, or delete categories, products, and variants, or upload product images.
-- Product listing supports keyword, category ID, price range, sorting, and pagination. Sort values are `newest`, `name_asc`, `name_desc`, `price_asc`, and `price_desc`; `limit` defaults to 12 and cannot exceed 100. Product detail includes its variants.
-- A logged-in user can view and manage only their own cart. Adding an existing variant increases its quantity; add and update requests fail with `409 INSUFFICIENT_STOCK` when the requested quantity exceeds current stock.
-- Task 37 checkout supports COD. It locks the cart and variants, checks stock, snapshots item names/prices, reduces stock, creates a pending order and payment, then clears the cart in one transaction. A user with an active membership whose dates include today receives a 10% discount rounded to two decimal places.
-- Staff/admin order access will be implemented with the order-management task.
-- The server checks stock and calculates prices, discounts, and totals during checkout. It creates the order and payment in one transaction.
-- Order status values: `pending`, `confirmed`, `shipping`, `delivered`, `cancelled`.
-- Payment methods: `cod`, `bank_transfer`. Payment status values: `pending`, `completed`.
-- Cart and order quantities must be greater than zero. Variant price and stock cannot be negative.
+Dữ liệu của chính tài khoản đăng nhập.
 
-### Store error codes detail
+| Method | URL | Quyền | Body / query | Response data |
+|---|---|---|---|---|
+| GET | `/api/me/profile` | Authenticated | — | User |
+| GET | `/api/me/memberships` | Authenticated | — | MyMembership[] |
+| GET | `/api/me/checkins` | Authenticated | — | MyCheckin[] |
 
-| Code | Meaning |
-|------|---------|
-| 400 | Bad request (missing or invalid fields) |
-| 401 | Unauthorized (missing or expired token) |
-| 403 | Forbidden (role not allowed or accessing another user's data) |
-| 404 | Not found (category, product, variant, cart item, or order not found) |
-| 409 | Conflict (not enough stock or order cannot change to that status) |
-| 422 | Unprocessable entity (validation failed) |
-| 500 | Internal server error |
+## Categories
 
----
+Danh mục sản phẩm; thao tác ghi dành cho Admin.
 
-## 4. Dashboard
+| Method | URL | Quyền | Body / query | Response data |
+|---|---|---|---|---|
+| GET | `/api/store/categories` | Public | — | Category[] |
+| POST | `/api/store/categories` | Admin | CategoryInput | Category |
+| PUT | `/api/store/categories/{id}` | Admin | CategoryInput | Category |
+| DELETE | `/api/store/categories/{id}` | Admin | — | Category |
 
-| Method | URL | Access | Request (main fields) | Response (success) | Errors |
-|--------|-----|--------|-----------------------|--------------------|--------|
-| GET | `/dashboard/summary` | Staff / Admin | Query: `from`, `to` (optional) | `net_sales`, `order_count`, `product_count`, `customer_count`, `low_stock_count` | 400, 401, 403, 500 |
-| GET | `/dashboard/recent-orders` | Staff / Admin | Query: `limit` (optional) | `orders [ { id, customer, item_summary, status, total_amount, created_at } ]` | 400, 401, 403, 500 |
-| GET | `/dashboard/inventory` | Staff / Admin | Query: `limit` (optional) | `items [ { variant_id, product_name, flavor, size, stock } ]` | 400, 401, 403, 500 |
+## Products
 
-Dashboard data is for the admin store overview: sales, orders, products, customers, recent orders, and inventory. The low-stock threshold must be agreed and defined during implementation before returning `low_stock_count`.
+Sản phẩm, variant, upload ảnh; thao tác ghi dành cho Admin.
 
----
+| Method | URL | Quyền | Body / query | Response data |
+|---|---|---|---|---|
+| GET | `/api/store/products` | Public | `q`, `category`, `minPrice`, `maxPrice`, `sort`, `page`, `limit` | ProductList |
+| POST | `/api/store/products` | Admin | ProductInput | Product |
+| GET | `/api/store/products/{productId}` | Public | — | ProductDetail |
+| PUT | `/api/store/products/{productId}` | Admin | ProductInput | Product |
+| DELETE | `/api/store/products/{productId}` | Admin | — | Product |
+| GET | `/api/store/products/{productId}/variants` | Public | — | Variant[] |
+| POST | `/api/store/products/{productId}/variants` | Admin | VariantInput | Variant |
+| PUT | `/api/store/products/{productId}/variants/{variantId}` | Admin | VariantInput | Variant |
+| DELETE | `/api/store/products/{productId}/variants/{variantId}` | Admin | — | Variant |
+| POST | `/api/store/products/{productId}/image` | Admin | multipart/form-data: image | Product |
 
-## 5. Example payloads
+## Cart
 
-### Register (Admin)
-```http
-POST /auth/register
-Content-Type: application/json
+Giỏ hàng của chính tài khoản đăng nhập.
 
-{
-  "email": "admin@gym.local",
-  "password": "Admin@123456",
-  "full_name": "System Administrator",
-  "role": "admin"
-}
-```
+| Method | URL | Quyền | Body / query | Response data |
+|---|---|---|---|---|
+| GET | `/api/store/cart` | Authenticated | — | Cart |
+| POST | `/api/store/cart/items` | Authenticated | CartItemInput | CartItem |
+| PUT | `/api/store/cart/items/{itemId}` | Authenticated | QuantityInput | CartItem |
+| DELETE | `/api/store/cart/items/{itemId}` | Authenticated | — | DeletedCartItem |
 
-```http
-HTTP/1.1 201 Created
-Content-Type: application/json
+## Orders
 
-{
-  "user": { "id": 1, "email": "admin@gym.local", "full_name": "System Administrator", "role": "admin" },
-  "access_token": "eyJ...",
-  "refresh_token": "eyJ..."
-}
-```
+Checkout COD từ giỏ hàng hiện tại.
 
-### Create membership plan (Staff)
-```http
-POST /gym/membership-plans
-Authorization: Bearer <token>
-Content-Type: application/json
+| Method | URL | Quyền | Body / query | Response data |
+|---|---|---|---|---|
+| POST | `/api/store/orders` | Authenticated | CheckoutInput | CheckoutData |
 
-{
-  "name": "3 Month Pass",
-  "duration_days": 90,
-  "price": 690000,
-  "status": "active"
-}
-```
+## Quy tắc cần chú ý
 
-### Purchase membership (Member)
-```http
-POST /gym/memberships
-Authorization: Bearer <token>
-Content-Type: application/json
+- Tên trường, schema request/response, tham số path/query và mã HTTP chi tiết nằm trong OpenAPI; Swagger hiển thị trực tiếp từ file này.
+- ID hội viên khác ID membership; ID món giỏ hàng khác ID variant. Lấy ID thật từ API danh sách tương ứng.
+- Upload chỉ nhận trường `image`, JPEG/PNG/WebP, tối đa 5 MB. Không cần đưa Supabase secret vào request.
+- Checkout là thao tác ghi thật: tạo đơn, trừ kho, tạo payment pending và dọn giỏ. Hội viên đủ điều kiện nhận giảm 10%.
+- Các route Dashboard, lịch sử đơn và quản lý đơn chưa được mount trên nhánh này nên chưa được mô tả là API hoạt động. Cập nhật tài liệu khi các PR tương ứng được merge.
 
-{
-  "plan_id": 2,
-  "start_date": "2026-11-01",
-  "end_date": "2027-01-31"
-}
-```
+## Postman
 
-### Check in (Member)
-```http
-POST /gym/checkins
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "user_id": 3
-}
-```
-
-### Add an item to the cart (Member)
-```http
-POST /store/cart/items
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "variant_id": 1,
-  "quantity": 2
-}
-```
-
-### Create an order from the cart (Member)
-```http
-POST /store/orders
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "recipient_name": "Alex Nguyen",
-  "recipient_phone": "0900000000",
-  "shipping_address": "District 1, Ho Chi Minh City",
-  "payment_method": "cod"
-}
-```
-
-### Get dashboard summary (Staff)
-```http
-GET /dashboard/summary?from=2026-11-01&to=2026-11-30
-Authorization: Bearer <token>
-```
-
----
-
-> Auth and Gym endpoints are documented in Task 16. Task 30 implements the category, product, variant, and image routes listed above. Task 35 implements the cart routes. Task 37 implements COD checkout. Order history and Dashboard routes remain design proposals for later tasks.
+Collection v2.1 gồm 38 request nằm tại `docs/postman/gym-supplement-store.postman_collection.json`. Bản chia sẻ dùng `baseUrl = http://localhost:5000`, các biến `accessToken` và `password` để trống. Xem `docs/postman/README.md` để cấu hình trên máy cá nhân. Khi cần tạo lại collection, import `/openapi.json` hoặc `backend/src/docs/openapi.yaml` vào Postman rồi xuất và kiểm tra các biến trước khi commit.
