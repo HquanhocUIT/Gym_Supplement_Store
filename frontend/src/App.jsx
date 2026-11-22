@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLayout from './layouts/AdminLayout';
 import MemberLayout from './layouts/MemberLayout';
@@ -28,7 +29,8 @@ import MemberDashboard from './pages/member/MemberDashboard';
 
 function App() {
   return (
-    <Routes>
+    <>
+      <Routes>
       {/* Các trang đăng nhập và đăng ký. */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -76,15 +78,12 @@ function App() {
         <Route path="members" element={<MemberList />} />
       </Route>
 
-      {/* Đường dẫn check-in sẽ được hoàn thiện ở task riêng. */}
+      {/* Staff check-in page (requires staff or admin role). */}
       <Route
         path="/staff/check-in"
         element={
           <ProtectedRoute allowedRoles={['staff', 'admin']}>
-            <div className="p-8 text-center text-ink">
-              <h1 className="text-2xl font-bold">Staff Check-in</h1>
-              <p className="text-muted">The check-in page is not available yet.</p>
-            </div>
+            <CheckInScreen />
           </ProtectedRoute>
         }
       />
@@ -100,6 +99,8 @@ function App() {
       {/* Các đường dẫn chưa khai báo hiển thị trang 404. */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+    </>
   );
 }
 

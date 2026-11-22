@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import axiosClient from '../../api/axiosClient';
-import { Search, User, Clock, Shield } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { Search, Shield, Users } from 'lucide-react';
 import Input from '../../components/ui/Input';
+import Skeleton from '../../components/common/Skeleton';
+import EmptyState from '../../components/common/EmptyState';
 
 /**
  * MemberList - Admin page to manage members.
@@ -22,10 +25,6 @@ export default function MemberList() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    fetchMembers();
-  }, []);
-
   async function fetchMembers() {
     try {
       const response = await axiosClient.get('/members');
@@ -36,10 +35,15 @@ export default function MemberList() {
       }
     } catch {
       setMembers(MOCK_MEMBERS);
+      toast.error('Có lỗi xảy ra!');
     } finally {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    fetchMembers();
+  }, []);
 
   const filteredMembers = members.filter((m) =>
     m.full_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -59,73 +63,73 @@ export default function MemberList() {
       pending: 'bg-[#d97706]/10 text-[#d97706]',
     };
     return (
-      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${variants[status] || 'bg-[#6a8a66]/10 text-[#6a8a66]'}`}>
+      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${variants[status] || 'bg-[#6a8a66]/10 text-[#6a8a66]'}`}>
         <Shield size={12} />
         {status}
       </span>
     );
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f4f6f3]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#84cc16]"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#f4f6f3]">
       <div className="px-4 py-6 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-ink">Members</h1>
             <p className="text-sm text-muted">Manage gym members and their membership plans.</p>
           </div>
-          <div className="relative w-full sm:w-80">
+          <div className="relative w-full md:w-80">
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             <Input
+              className="pl-10"
               placeholder="Search by name or email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
             />
           </div>
         </div>
 
         <div className="rounded-xl border border-[#e3e9e1] bg-white shadow-card">
-          <div className="overflow-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-[#e3e9e1] bg-[#f4f6f3]">
-                  <th className="px-4 py-3 text-sm font-semibold text-muted">Name</th>
-                  <th className="px-4 py-3 text-sm font-semibold text-muted">Email</th>
-                  <th className="px-4 py-3 text-sm font-semibold text-muted">Current Plan</th>
-                  <th className="px-4 py-3 text-sm font-semibold text-muted">Start Date</th>
-                  <th className="px-4 py-3 text-sm font-semibold text-muted">Expiry Date</th>
-                  <th className="px-4 py-3 text-sm font-semibold text-muted">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#e3e9e1]">
-                {filteredMembers.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-muted">No members found.</td>
+          {loading ? (
+            <div className="space-y-3 p-5" aria-label="Loading members">
+              {[0, 1, 2, 3, 4].map((item) => (
+                <Skeleton className="h-12 w-full" key={item} />
+              ))}
+            </div>
+          ) : filteredMembers.length === 0 ? (
+            <EmptyState
+              description={search ? 'Không tìm thấy hội viên phù hợp với từ khóa.' : 'Danh sách hội viên sẽ xuất hiện khi có dữ liệu.'}
+              icon={Users}
+              title="Chưa có dữ liệu"
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[820px] border-collapse text-left">
+                <thead>
+                  <tr className="border-b border-[#e3e9e1] bg-[#f4f6f3]">
+                    <th className="px-4 py-3 text-sm font-semibold text-muted">Name</th>
+                    <th className="px-4 py-3 text-sm font-semibold text-muted">Email</th>
+                    <th className="px-4 py-3 text-sm font-semibold text-muted">Current Plan</th>
+                    <th className="px-4 py-3 text-sm font-semibold text-muted">Start Date</th>
+                    <th className="px-4 py-3 text-sm font-semibold text-muted">Expiry Date</th>
+                    <th className="px-4 py-3 text-sm font-semibold text-muted">Status</th>
                   </tr>
-                ) : (
-                  filteredMembers.map((m) => (
-                    <tr key={m.id} className="hover:bg-[#f4f6f3]/50 transition-colors">
-                      <td className="px-4 py-3 text-sm text-ink font-medium">{m.full_name}</td>
+                </thead>
+                <tbody className="divide-y divide-[#e3e9e1]">
+                  {filteredMembers.map((m) => (
+                    <tr key={m.id} className="transition-colors hover:bg-[#f4f6f3]/50">
+                      <td className="px-4 py-3 text-sm font-medium text-ink">{m.full_name}</td>
                       <td className="px-4 py-3 text-sm text-muted">{m.email}</td>
                       <td className="px-4 py-3 text-sm text-ink">{m.plan_name || '-'}</td>
                       <td className="px-4 py-3 text-sm text-muted">{formatDate(m.start_date)}</td>
                       <td className="px-4 py-3 text-sm text-muted">{formatDate(m.end_date)}</td>
                       <td className="px-4 py-3 text-sm">{statusBadge(m.status)}</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>

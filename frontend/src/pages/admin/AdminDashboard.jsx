@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import axiosClient from '../../api/axiosClient';
+import toast from 'react-hot-toast';
 import { Eyebrow } from '../../components/Brand.jsx';
 import {
   AlertTriangle,
@@ -7,6 +8,7 @@ import {
   CalendarClock,
   CircleDollarSign,
   Clock,
+  PackageOpen,
   PackageX,
   RefreshCw,
   Users,
@@ -171,7 +173,10 @@ function EmptyRow({ colSpan, message }) {
   return (
     <tr>
       <td className="px-5 py-10 text-center text-sm text-white/40 sm:px-6" colSpan={colSpan}>
-        {message}
+        <div className="flex flex-col items-center gap-2">
+          <PackageOpen size={24} aria-hidden="true" />
+          <span>{message}</span>
+        </div>
       </td>
     </tr>
   );
@@ -197,6 +202,7 @@ export default function AdminDashboard() {
         if (cancelled) return;
         setStats(MOCK_STATS);
         setIsDemo(true);
+        toast.error('Có lỗi xảy ra!');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -365,7 +371,7 @@ export default function AdminDashboard() {
               </thead>
               <tbody>
                 {data.expiringPlans.length === 0 ? (
-                  <EmptyRow colSpan={4} message="No memberships expiring soon." />
+                  <EmptyRow colSpan={4} message="Chưa có dữ liệu" />
                 ) : (
                   data.expiringPlans.map((plan) => {
                     const daysLeft = Number(plan.daysLeft ?? plan.days_left ?? 0);
@@ -422,7 +428,7 @@ export default function AdminDashboard() {
               </thead>
               <tbody>
                 {data.lowStockProducts.length === 0 ? (
-                  <EmptyRow colSpan={4} message="Inventory levels are healthy." />
+                  <EmptyRow colSpan={4} message="Chưa có dữ liệu" />
                 ) : (
                   data.lowStockProducts.map((product) => {
                     const stock = Number(product.stock ?? product.quantity ?? 0);
