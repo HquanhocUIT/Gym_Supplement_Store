@@ -16,6 +16,9 @@ services:
         value: 5000
       - key: DATABASE_SSL
         value: "true"
+      # Chỉ kết nối PostgreSQL dùng CA này. File nằm trong image của backend.
+      - key: DATABASE_SSL_CA_PATH
+        value: /app/supabase-root.crt
       # Supabase/PostgreSQL connection string, set manually in the Render dashboard.
       - key: DATABASE_URL
         sync: false
