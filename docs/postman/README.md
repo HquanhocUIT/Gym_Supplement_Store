@@ -1,6 +1,6 @@
 # Postman collection
 
-Import `gym-supplement-store.postman_collection.json` vào Postman. File dùng định dạng Collection v2.1 và chứa 38 request theo đặc tả `backend/src/docs/openapi.yaml`.
+Import `gym-supplement-store.postman_collection.json` vào Postman. File dùng định dạng Collection v2.1 và chứa 39 request theo đặc tả `backend/src/docs/openapi.yaml`.
 
 ## Cấu hình trên máy của bạn
 

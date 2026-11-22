@@ -10898,6 +10898,46 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Xem thống kê dashboard",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "stats"
+              ]
+            },
+            "description": "Quyền truy cập: Admin / Staff. Doanh thu hôm nay và trong tháng tính theo múi giờ phiên database. Store tính đơn delivered theo updated_at; Gym tính payment membership completed theo updated_at. Active members đếm user duy nhất có gói active trong thời hạn. Gói sắp hết hạn: từ hôm nay đến 7 ngày tới. Top 5 sản phẩm theo tổng số lượng trong đơn không bị cancelled. Tồn kho thấp: stock <= 5, gồm hết hàng."
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "variable": [

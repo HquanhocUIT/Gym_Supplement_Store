@@ -119,14 +119,22 @@ Checkout COD từ giỏ hàng hiện tại.
 |---|---|---|---|---|
 | POST | `/api/store/orders` | Authenticated | CheckoutInput | CheckoutData |
 
+## Dashboard
+
+| Method | URL | Quyền | Response data |
+|---|---|---|---|
+| GET | `/api/admin/stats` | Admin / Staff | AdminStats |
+
+Trả doanh thu hôm nay/tháng của Gym và Store, số hội viên active, gói sắp hết hạn trong 7 ngày, top 5 sản phẩm và variant tồn kho <= 5. Chi tiết quy tắc tính nằm trong Swagger.
+
 ## Quy tắc cần chú ý
 
 - Tên trường, schema request/response, tham số path/query và mã HTTP chi tiết nằm trong OpenAPI; Swagger hiển thị trực tiếp từ file này.
 - ID hội viên khác ID membership; ID món giỏ hàng khác ID variant. Lấy ID thật từ API danh sách tương ứng.
 - Upload chỉ nhận trường `image`, JPEG/PNG/WebP, tối đa 5 MB. Không cần đưa Supabase secret vào request.
 - Checkout là thao tác ghi thật: tạo đơn, trừ kho, tạo payment pending và dọn giỏ. Hội viên đủ điều kiện nhận giảm 10%.
-- Các route Dashboard, lịch sử đơn và quản lý đơn chưa được mount trên nhánh này nên chưa được mô tả là API hoạt động. Cập nhật tài liệu khi các PR tương ứng được merge.
+- Các route lịch sử đơn và quản lý đơn chưa được mount trên nhánh này nên chưa được mô tả là API hoạt động. Cập nhật tài liệu khi các PR tương ứng được merge.
 
 ## Postman
 
-Collection v2.1 gồm 38 request nằm tại `docs/postman/gym-supplement-store.postman_collection.json`. Bản chia sẻ dùng `baseUrl = http://localhost:5000`, các biến `accessToken` và `password` để trống. Xem `docs/postman/README.md` để cấu hình trên máy cá nhân. Khi cần tạo lại collection, import `/openapi.json` hoặc `backend/src/docs/openapi.yaml` vào Postman rồi xuất và kiểm tra các biến trước khi commit.
+Collection v2.1 gồm 39 request nằm tại `docs/postman/gym-supplement-store.postman_collection.json`. Bản chia sẻ dùng `baseUrl = http://localhost:5000`, các biến `accessToken` và `password` để trống. Xem `docs/postman/README.md` để cấu hình trên máy cá nhân. Khi cần tạo lại collection, import `/openapi.json` hoặc `backend/src/docs/openapi.yaml` vào Postman rồi xuất và kiểm tra các biến trước khi commit.
