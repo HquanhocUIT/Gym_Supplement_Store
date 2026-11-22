@@ -20,6 +20,8 @@ Gọi `/api/health/db`, sau đó xem Render service → Logs và tìm dòng `[da
 
 ## Chứng chỉ trên Render
 
-Trong Environment → Secret Files, thêm file `supabase-ca.crt` chứa CA tải từ Database Settings của Supabase. Đặt `DATABASE_SSL=true`, `DATABASE_SSL_CA_PATH=/etc/secrets/supabase-ca.crt`, rồi Save and deploy. Không dùng đường dẫn Windows trên Render và không tắt xác thực chứng chỉ.
+Docker tải Supabase Root 2021 CA từ Supabase khi build, kiểm tra SHA-256 và đặt file tại `/app/supabase-root.crt`. Blueprint đặt `DATABASE_SSL=true` và `DATABASE_SSL_CA_PATH=/app/supabase-root.crt`. Khi Supabase đổi CA, xác minh chứng chỉ mới từ Database Settings rồi cập nhật URL và SHA-256 trong Dockerfile.
+
+Nếu service đang chạy bản cũ, đồng bộ nhánh `main` mà Blueprint theo dõi rồi kiểm tra bản deploy mới đã Live. Trong Environment, kiểm tra `DATABASE_SSL_CA_PATH` khớp đường dẫn trong image. Gọi `/api/health/db` để xác nhận HTTP 200 và `database: "connected"`.
 
 URI Session pooler không có tham số SSL vì code quản lý SSL bằng các biến riêng. Không đưa `.env`, URI có mật khẩu hoặc file chứng chỉ vào PR.
