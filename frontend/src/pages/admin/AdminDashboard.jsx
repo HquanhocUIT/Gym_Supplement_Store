@@ -52,18 +52,18 @@ const MOCK_STATS = {
   ],
 };
 
-const currencyFormatter = new Intl.NumberFormat('vi-VN', {
+const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'VND',
   maximumFractionDigits: 0,
 });
 
-const compactFormatter = new Intl.NumberFormat('vi-VN', {
+const compactFormatter = new Intl.NumberFormat('en-US', {
   notation: 'compact',
   maximumFractionDigits: 1,
 });
 
-const dateFormatter = new Intl.DateTimeFormat('vi-VN', {
+const dateFormatter = new Intl.DateTimeFormat('en-US', {
   day: '2-digit',
   month: '2-digit',
   year: 'numeric',
@@ -202,7 +202,7 @@ export default function AdminDashboard() {
         if (cancelled) return;
         setStats(MOCK_STATS);
         setIsDemo(true);
-        toast.error('Có lỗi xảy ra!');
+        toast.error('Something went wrong. Please try again.');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -228,21 +228,21 @@ export default function AdminDashboard() {
       },
       {
         label: 'Active members',
-        value: new Intl.NumberFormat('vi-VN').format(data.activeMembers),
+        value: new Intl.NumberFormat('en-US').format(data.activeMembers),
         hint: 'Memberships currently valid',
         icon: Users,
         accent: '#38bdf8',
       },
       {
         label: 'Expiring soon',
-        value: new Intl.NumberFormat('vi-VN').format(data.expiringPlans.length),
+        value: new Intl.NumberFormat('en-US').format(data.expiringPlans.length),
         hint: 'Plans ending within 14 days',
         icon: CalendarClock,
         accent: '#fbbf24',
       },
       {
         label: 'Low stock',
-        value: new Intl.NumberFormat('vi-VN').format(data.lowStockProducts.length),
+        value: new Intl.NumberFormat('en-US').format(data.lowStockProducts.length),
         hint: 'Products below reorder level',
         icon: PackageX,
         accent: '#f87171',
@@ -371,7 +371,7 @@ export default function AdminDashboard() {
               </thead>
               <tbody>
                 {data.expiringPlans.length === 0 ? (
-                  <EmptyRow colSpan={4} message="Chưa có dữ liệu" />
+                  <EmptyRow colSpan={4} message="No data yet" />
                 ) : (
                   data.expiringPlans.map((plan) => {
                     const daysLeft = Number(plan.daysLeft ?? plan.days_left ?? 0);
@@ -428,7 +428,7 @@ export default function AdminDashboard() {
               </thead>
               <tbody>
                 {data.lowStockProducts.length === 0 ? (
-                  <EmptyRow colSpan={4} message="Chưa có dữ liệu" />
+                  <EmptyRow colSpan={4} message="No data yet" />
                 ) : (
                   data.lowStockProducts.map((product) => {
                     const stock = Number(product.stock ?? product.quantity ?? 0);

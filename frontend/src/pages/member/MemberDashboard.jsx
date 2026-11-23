@@ -31,7 +31,7 @@ export default function MemberDashboard() {
       if (checkinsRes.data?.data && Array.isArray(checkinsRes.data.data))
         setCheckins(checkinsRes.data.data);
     } catch {
-      toast.error('Có lỗi xảy ra!');
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -43,7 +43,7 @@ export default function MemberDashboard() {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('vi-VN');
+    return new Date(dateStr).toLocaleDateString('en-US');
   };
 
   const getActiveMembership = () => {
@@ -90,7 +90,7 @@ export default function MemberDashboard() {
             <Shield size={32} className="text-[#9aca42]" />
             <div>
               <h2 className="text-lg font-bold text-ink">Current Membership</h2>
-              <p className="text-sm text-muted">{active ? active.plan_name : 'Chưa có dữ liệu'}</p>
+              <p className="text-sm text-muted">{active ? active.plan_name : 'No data yet'}</p>
             </div>
           </div>
 
@@ -114,9 +114,9 @@ export default function MemberDashboard() {
           ) : (
             <div className="border-t border-[#e3e9e1] pt-2">
               <EmptyState
-                description="Bạn chưa có gói tập đang hoạt động. Liên hệ quầy lễ tân để gia hạn."
+                description="You have no active membership. Contact reception to renew."
                 icon={Shield}
-                title="Chưa có dữ liệu"
+                title="No data yet"
               />
             </div>
           )}
@@ -130,9 +130,9 @@ export default function MemberDashboard() {
 
           {checkins.length === 0 ? (
             <EmptyState
-              description="Lịch sử check-in của bạn sẽ xuất hiện tại đây."
+              description="Your check-in history will appear here."
               icon={CalendarClock}
-              title="Chưa có dữ liệu"
+              title="No data yet"
             />
           ) : (
             <div className="overflow-x-auto">

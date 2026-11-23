@@ -27,7 +27,7 @@ export default function CheckInScreen() {
     e.preventDefault();
 
     if (!isUserIdValid) {
-      toast.error('Có lỗi xảy ra!');
+      toast.error('Something went wrong. Please try again.');
       return;
     }
 
@@ -36,12 +36,12 @@ export default function CheckInScreen() {
       await axiosClient.post('/checkins', {
         user_id: numericUserId,
       });
-      toast.success('Thành công!');
+      toast.success('Saved successfully.');
       setUserId('');
       // Refresh today's check-in list after a successful check-in
       await fetchTodayCheckins();
     } catch {
-      toast.error('Có lỗi xảy ra!');
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -56,7 +56,7 @@ export default function CheckInScreen() {
       }
     } catch {
       setCheckins([]);
-      toast.error('Có lỗi xảy ra!');
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setLoadingCheckins(false);
     }
@@ -94,7 +94,7 @@ export default function CheckInScreen() {
                 onChange={(e) => setUserId(e.target.value)}
               />
               {userId !== '' && !isUserIdValid && (
-                <p className="text-xs text-red-600">User ID phải là số nguyên dương.</p>
+                <p className="text-xs text-red-600">User ID must be a positive integer.</p>
               )}
             </div>
             <div>
@@ -120,9 +120,9 @@ export default function CheckInScreen() {
             </div>
           ) : checkins.length === 0 ? (
             <EmptyState
-              description="Các lượt check-in hôm nay sẽ xuất hiện tại đây."
+              description="Check-ins for today will appear here."
               icon={CheckCircle}
-              title="Chưa có dữ liệu"
+              title="No data yet"
             />
           ) : (
             <div className="overflow-x-auto">

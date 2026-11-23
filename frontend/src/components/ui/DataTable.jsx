@@ -58,7 +58,7 @@ export default function DataTable({
                   <div className="flex items-center gap-1">
                     {col.label}
                     {col.sortable && sortKey === col.key && (
-                      <span className="text-[#84cc16]">{sortDir === 'asc' ? '↑' : '↓'}</span>
+                      <span className="text-brand-700">{sortDir === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </div>
                 </th>
@@ -69,7 +69,7 @@ export default function DataTable({
             {pagedData.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-6 py-12 text-center text-gray-500">
-                  Không có dữ liệu
+                  No data available
                 </td>
               </tr>
             ) : (
@@ -94,14 +94,14 @@ export default function DataTable({
       {totalPages > 1 && (
         <div className="flex items-center justify-between text-sm px-2">
           <span className="text-gray-500">
-            Trang {page} / {totalPages} — Tổng {sortedData.length} bản ghi
+            Page {page} / {totalPages} — Total {sortedData.length} records
           </span>
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
-              Trước
+              Previous
             </Button>
             <Button size="sm" variant="outline" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
-              Sau
+              Next
             </Button>
           </div>
         </div>

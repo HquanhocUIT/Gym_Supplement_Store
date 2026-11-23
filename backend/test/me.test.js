@@ -1,3 +1,4 @@
+const { randomUUID } = require('node:crypto');
 const assert = require('node:assert/strict');
 const { once } = require('node:events');
 const { after, before, describe, test } = require('node:test');
@@ -24,7 +25,8 @@ let server;
 let baseUrl;
 
 // Tạo tên riêng cho dữ liệu của mỗi lần chạy test.
-const suffix = Date.now();
+// UUID tránh trùng email khi nhiều file test khởi chạy cùng mili giây.
+const suffix = randomUUID();
 const adminEmail = `admin-${suffix}@example.com`;
 const memberEmail = `member-${suffix}@example.com`;
 const noPlanEmail = `noplan-${suffix}@example.com`;

@@ -1,3 +1,4 @@
+import Input from "../components/ui/Input";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -28,7 +29,7 @@ function AdminLoginPage() {
 
       navigate("/admin/products", { replace: true });
     } catch (error) {
-      setErrorMessage(error.message);
+      setErrorMessage(error.response?.data?.error?.message || error.message);
     } finally {
       setIsLoading(false);
     }
@@ -70,7 +71,7 @@ function AdminLoginPage() {
             >
               Password
             </label>
-            <input
+            <Input
               id="admin-password"
               className="min-h-11 w-full rounded-lg border border-line px-3 text-sm"
               type="password"

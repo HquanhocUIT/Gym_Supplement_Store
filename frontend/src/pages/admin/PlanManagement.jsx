@@ -45,14 +45,14 @@ export default function PlanManagement() {
       }
     } catch {
       setPlans(MOCK_PLANS);
-      toast.error('Có lỗi xảy ra!');
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   }
 
   const formatPrice = (price) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(price);
 
   const formatDuration = (days) => {
     if (days >= 365) return '1 year';
@@ -85,7 +85,7 @@ export default function PlanManagement() {
     e.preventDefault();
 
     if (!isFormValid) {
-      toast.error('Có lỗi xảy ra!');
+      toast.error('Something went wrong. Please try again.');
       return;
     }
 
@@ -107,10 +107,10 @@ export default function PlanManagement() {
         });
       }
       setModalOpen(false);
-      toast.success('Thành công!');
+      toast.success('Saved successfully.');
       await fetchPlans();
     } catch {
-      toast.error('Có lỗi xảy ra!');
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -120,10 +120,10 @@ export default function PlanManagement() {
     if (!window.confirm('Are you sure you want to delete this plan?')) return;
     try {
       await axiosClient.delete(`/plans/${id}`);
-      toast.success('Thành công!');
+      toast.success('Saved successfully.');
       await fetchPlans();
     } catch {
-      toast.error('Có lỗi xảy ra!');
+      toast.error('Something went wrong. Please try again.');
     }
   }
 
@@ -150,9 +150,9 @@ export default function PlanManagement() {
           ) : plans.length === 0 ? (
             <EmptyState
               action={<Button onClick={openCreateModal}><Plus size={18} /> Add Plan</Button>}
-              description="Thêm gói tập đầu tiên để hội viên có thể đăng ký."
+              description="Add your first plan so members can sign up."
               icon={Boxes}
-              title="Chưa có dữ liệu"
+              title="No data yet"
             />
           ) : (
             <div className="overflow-x-auto">
@@ -245,7 +245,7 @@ export default function PlanManagement() {
 
             {!isFormValid && (
               <p className="text-xs text-red-600">
-                Vui lòng nhập tên, thời hạn lớn hơn 0 và giá không âm.
+                Enter a name, a positive duration and a non-negative price.
               </p>
             )}
 

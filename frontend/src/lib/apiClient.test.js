@@ -26,18 +26,18 @@ describe('API client', () => {
 
   it('vẫn báo lỗi nếu HTTP 200 nhưng success là false', async () => {
     apiClient.defaults.adapter = vi.fn().mockResolvedValue(response({ success: false, data: null, error: { code: 'INVALID_INPUT', message: 'Dữ liệu không hợp lệ' } }))
-    await expect(getApiData('/health')).rejects.toMatchObject({ code: 'INVALID_INPUT', message: 'Dữ liệu không hợp lệ' })
+    await expect(getApiData('/health')).rejects.toMatchObject({ code: 'INVALID_INPUT', message: 'Something went wrong. Please try again.' })
   })
 
   it('giữ thông báo và mã lỗi HTTP của backend', async () => {
     const errorResponse = response({ success: false, data: null, error: { code: 'NOT_FOUND', message: 'Không tìm thấy dữ liệu' } }, 404)
     apiClient.defaults.adapter = vi.fn().mockRejectedValue(new AxiosError('Request failed', 'ERR_BAD_REQUEST', undefined, undefined, errorResponse))
-    await expect(getApiData('/missing')).rejects.toMatchObject({ status: 404, code: 'NOT_FOUND', message: 'Không tìm thấy dữ liệu' })
+    await expect(getApiData('/missing')).rejects.toMatchObject({ status: 404, code: 'NOT_FOUND', message: 'The requested item could not be found.' })
   })
 
   it('đưa ra thông báo dễ hiểu khi backend chưa chạy', async () => {
     apiClient.defaults.adapter = vi.fn().mockRejectedValue(new AxiosError('Network Error', 'ERR_NETWORK'))
-    await expect(getApiData('/health')).rejects.toMatchObject({ status: 0, message: 'Không kết nối được API. Kiểm tra backend rồi thử lại.' })
+    await expect(getApiData('/health')).rejects.toMatchObject({ status: 0, message: 'Unable to connect. Please check your connection and try again.' })
   })
 
   it('giữ nguyên lỗi hủy request cho TanStack Query', async () => {

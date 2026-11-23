@@ -10,26 +10,26 @@ ON CONFLICT (name) DO NOTHING;
 -- Thêm 20 sản phẩm mẫu, chia đều cho bốn danh mục.
 WITH sample_products (category_name, product_name, description) AS (
   VALUES
-    ('Whey Protein', 'Daily Whey', 'Whey protein dùng hằng ngày'),
+    ('Whey Protein', 'Daily Whey', 'Whey protein for daily use'),
     ('Whey Protein', 'Whey Isolate', 'Whey isolate'),
     ('Whey Protein', 'Whey Concentrate', 'Whey concentrate'),
-    ('Whey Protein', 'Whey Blend', 'Hỗn hợp whey protein'),
-    ('Whey Protein', 'Whey Recovery', 'Protein dùng sau buổi tập'),
+    ('Whey Protein', 'Whey Blend', 'A blend of whey proteins'),
+    ('Whey Protein', 'Whey Recovery', 'Protein for post-workout recovery'),
     ('Creatine', 'Pure Creatine', 'Creatine monohydrate'),
-    ('Creatine', 'Creatine Micronized', 'Creatine dạng bột mịn'),
-    ('Creatine', 'Creatine Daily', 'Creatine dùng hằng ngày'),
-    ('Creatine', 'Creatine Performance', 'Creatine hỗ trợ tập luyện'),
-    ('Creatine', 'Creatine Strength', 'Creatine dạng bột'),
-    ('Pre-workout', 'Pre-workout Energy', 'Pre-workout trước buổi tập'),
-    ('Pre-workout', 'Pre-workout Focus', 'Pre-workout hỗ trợ tập trung'),
-    ('Pre-workout', 'Pre-workout Pump', 'Pre-workout dùng trước khi tập'),
-    ('Pre-workout', 'Pre-workout Light', 'Pre-workout hương trái cây'),
-    ('Pre-workout', 'Pre-workout Training', 'Pre-workout cho buổi tập'),
-    ('Gym Accessories', 'Lifting Strap Basic', 'Dây kéo hỗ trợ tập tạ'),
-    ('Gym Accessories', 'Lifting Strap Padded', 'Dây kéo có đệm'),
-    ('Gym Accessories', 'Lifting Belt Basic', 'Đai lưng tập tạ cơ bản'),
-    ('Gym Accessories', 'Lifting Belt Wide', 'Đai lưng tập tạ bản rộng'),
-    ('Gym Accessories', 'Lifting Belt Adjustable', 'Đai lưng có thể điều chỉnh')
+    ('Creatine', 'Creatine Micronized', 'Finely milled creatine powder'),
+    ('Creatine', 'Creatine Daily', 'Creatine for daily use'),
+    ('Creatine', 'Creatine Performance', 'Creatine for training support'),
+    ('Creatine', 'Creatine Strength', 'Creatine powder'),
+    ('Pre-workout', 'Pre-workout Energy', 'Pre-workout for your training session'),
+    ('Pre-workout', 'Pre-workout Focus', 'Pre-workout for focus'),
+    ('Pre-workout', 'Pre-workout Pump', 'Pre-workout supplement'),
+    ('Pre-workout', 'Pre-workout Light', 'Fruit-flavoured pre-workout'),
+    ('Pre-workout', 'Pre-workout Training', 'Pre-workout for training'),
+    ('Gym Accessories', 'Lifting Strap Basic', 'Lifting straps for weight training'),
+    ('Gym Accessories', 'Lifting Strap Padded', 'Padded lifting straps'),
+    ('Gym Accessories', 'Lifting Belt Basic', 'Basic weightlifting belt'),
+    ('Gym Accessories', 'Lifting Belt Wide', 'Wide weightlifting belt'),
+    ('Gym Accessories', 'Lifting Belt Adjustable', 'Adjustable weightlifting belt')
 )
 INSERT INTO products (category_id, name, description)
 SELECT c.id, s.product_name, s.description

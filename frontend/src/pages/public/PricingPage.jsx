@@ -79,7 +79,7 @@ export default function PricingPage() {
   }, []);
 
   const formatPrice = (price) =>
-    new Intl.NumberFormat('vi-VN', {
+    new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'VND',
     }).format(price);

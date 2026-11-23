@@ -25,7 +25,7 @@ export default function MembershipForm() {
       }
     } catch {
       setPlans([]);
-      toast.error('Có lỗi xảy ra!');
+      toast.error('Something went wrong. Please try again.');
     }
   }
 
@@ -42,7 +42,7 @@ export default function MembershipForm() {
     e.preventDefault();
 
     if (!isFormValid) {
-      toast.error('Có lỗi xảy ra!');
+      toast.error('Something went wrong. Please try again.');
       return;
     }
 
@@ -52,11 +52,11 @@ export default function MembershipForm() {
         plan_id: Number(planId),
         start_date: startDate,
       });
-      toast.success('Thành công!');
+      toast.success('Saved successfully.');
       setPlanId('');
       setStartDate('');
     } catch {
-      toast.error('Có lỗi xảy ra!');
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -102,7 +102,7 @@ export default function MembershipForm() {
                   <option value="">Select a plan</option>
                   {plans.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name} - {p.duration_days} days - {p.price.toLocaleString('vi-VN')} VND
+                      {p.name} - {p.duration_days} days - {p.price.toLocaleString('en-US')} VND
                     </option>
                   ))}
                 </select>
@@ -124,7 +124,7 @@ export default function MembershipForm() {
 
             {!isFormValid && (
               <p className="text-xs text-red-600">
-                Vui lòng nhập Member ID hợp lệ, chọn gói tập và ngày bắt đầu.
+                Enter a valid member ID, then select a plan and start date.
               </p>
             )}
 
