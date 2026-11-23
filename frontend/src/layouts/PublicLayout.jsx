@@ -37,7 +37,7 @@ function PublicLayout() {
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-4 sm:px-6 lg:px-8">
           <BrandMark />
           <nav
-            className="order-3 flex w-full items-center gap-5 overflow-x-auto whitespace-nowrap text-sm font-semibold text-ink-soft sm:order-none sm:w-auto sm:gap-7"
+            className="order-3 flex w-full min-w-0 flex-wrap items-center gap-x-5 gap-y-1 text-sm font-semibold text-ink-soft lg:order-none lg:w-auto lg:gap-7 [&>a]:inline-flex [&>a]:min-h-11 [&>a]:items-center"
             aria-label="Store navigation"
           >
             <NavLink
@@ -64,16 +64,16 @@ function PublicLayout() {
           </nav>
           <div className="flex items-center gap-2">
             <Link
-              className="grid size-10 place-items-center rounded-full text-ink-soft transition hover:bg-paper hover:text-ink"
+              className="grid size-11 place-items-center rounded-full text-ink-soft transition hover:bg-paper hover:text-ink"
               to="/shop"
               aria-label="Search products"
             >
               <Search size={19} aria-hidden="true" />
             </Link>
             <Link
-              className="relative grid size-10 place-items-center rounded-full text-ink-soft transition hover:bg-paper hover:text-ink"
+              className="relative grid size-11 place-items-center rounded-full text-ink-soft transition hover:bg-paper hover:text-ink"
               to="/cart"
-              aria-label="Shopping cart"
+              aria-label={`Giỏ hàng, ${cartCount} sản phẩm`}
             >
               <ShoppingBag size={19} aria-hidden="true" />
               {cartCount > 0 && (
@@ -86,8 +86,9 @@ function PublicLayout() {
               )}
             </Link>
             <Link
-              className="inline-flex min-h-10 items-center gap-2 rounded-full bg-ink px-4 text-sm font-bold text-white transition hover:bg-brand-700"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-ink px-4 text-sm font-bold text-white transition hover:bg-brand-700"
               to={hasToken ? '/member' : '/login'}
+              aria-label={hasToken ? 'My account' : 'Sign in'}
             >
               <CircleUserRound size={16} aria-hidden="true" />
               <span className="hidden sm:inline">{hasToken ? 'My account' : 'Sign in'}</span>
@@ -96,7 +97,7 @@ function PublicLayout() {
           </div>
         </div>
       </header>
-      <main>
+      <main className="min-w-0 break-words">
         <Outlet />
       </main>
       <footer className="border-t border-line bg-surface">

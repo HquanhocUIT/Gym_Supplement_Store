@@ -89,6 +89,11 @@ function StoreShopPage() {
 
   const products = productsQuery.data?.items || []
   const pagination = productsQuery.data?.pagination
+  // Dòng thống kê phản ánh cả lỗi và khoảng giá chưa hợp lệ.
+  let resultStatus = 'Đang tải sản phẩm…'
+  if (priceRangeInvalid) resultStatus = 'Khoảng giá chưa hợp lệ'
+  else if (productsQuery.isError) resultStatus = 'Chưa tải được sản phẩm'
+  else if (pagination) resultStatus = `${pagination.total} sản phẩm`
 
   // Xóa bộ lọc giúp quay lại toàn bộ danh mục sản phẩm.
   function clearFilters() {
@@ -112,13 +117,14 @@ function StoreShopPage() {
           </p>
         </div>
         <p className="text-sm font-semibold text-ink-soft" aria-live="polite">
-          {pagination ? `${pagination.total} sản phẩm` : 'Đang tải sản phẩm…'}
+          {resultStatus}
         </p>
       </header>
 
       {/* Thanh tìm kiếm và bộ lọc trên cả màn hình lớn lẫn điện thoại. */}
       <section className="rounded-card border border-line bg-white p-4 shadow-card sm:p-5" aria-label="Tìm kiếm và lọc sản phẩm">
-        <div className="grid gap-4 lg:grid-cols-[minmax(16rem,1.4fr)_repeat(4,minmax(9rem,1fr))]">
+        {/* Chia lại số cột theo màn hình để bộ lọc không tràn ở tablet. */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,1fr))]">
           <label className="relative block">
             <span className="mb-2 block text-xs font-bold text-ink-soft">Tìm sản phẩm</span>
             <Search className="pointer-events-none absolute left-3 top-[2.65rem] text-muted" size={17} aria-hidden="true" />
@@ -131,7 +137,7 @@ function StoreShopPage() {
               aria-label="Tìm theo tên sản phẩm"
             />
             {search && (
-              <button className="absolute right-2 top-[2.35rem] grid size-8 place-items-center rounded-lg text-muted hover:bg-paper hover:text-ink" type="button" onClick={() => { setSearch(''); setPage(1) }} aria-label="Xóa từ khóa tìm kiếm">
+              <button className="absolute right-0 top-6 grid size-11 place-items-center rounded-lg text-muted hover:bg-paper hover:text-ink" type="button" onClick={() => { setSearch(''); setPage(1) }} aria-label="Xóa từ khóa tìm kiếm">
                 <X size={16} aria-hidden="true" />
               </button>
             )}
@@ -175,6 +181,14 @@ function StoreShopPage() {
         </div>
       </section>
 
+      {/* Danh mục lỗi có nút tải lại riêng để người mua tiếp tục lọc. */}
+      {categoriesQuery.isError && (
+        <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-red-700" role="alert">
+          <p>Chưa tải được danh mục.</p>
+          <button className="min-h-11 rounded-lg px-3 font-bold underline" type="button" onClick={() => categoriesQuery.refetch()}>Tải lại danh mục</button>
+        </div>
+      )}
+
       {/* Báo lỗi khoảng giá ngay cạnh bộ lọc trước khi hiển thị lỗi từ API. */}
       {priceRangeInvalid && (
         <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
@@ -207,7 +221,7 @@ function StoreShopPage() {
           <>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {products.map((product) => (
-                <article className="group rounded-card border border-line bg-white p-3 transition hover:-translate-y-1 hover:shadow-card" key={product.id}>
+                <article className="group min-w-0 break-words rounded-card border border-line bg-white p-3 transition motion-safe:hover:-translate-y-1 hover:shadow-card" key={product.id}>
                   <Link className="block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-700" to={`/product/${product.id}`} aria-label={`Xem chi tiết ${product.name}`}>
                     <ProductImage product={product} />
                     <div className="px-1 pb-2 pt-4">
