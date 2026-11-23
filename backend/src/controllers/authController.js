@@ -5,6 +5,19 @@ const { findUserByEmail, createUser } = require('../repositories/authRepository'
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
+// Định dạng email tối thiểu: có ký tự trước @, tên miền và phần mở rộng.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Chuẩn hóa email: chỉ nhận chuỗi và bỏ khoảng trắng hai đầu.
+function normalizeEmail(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+// Kiểm tra email có đúng định dạng cơ bản hay không.
+function isValidEmail(email) {
+  return EMAIL_PATTERN.test(email);
+}
+
 // Kiểm tra cấu hình; trả false để controller dừng khi thiếu secret.
 function requireJwtSecret(res) {
   if (!JWT_SECRET) {
@@ -23,20 +36,31 @@ function requireJwtSecret(res) {
   return true;
 }
 
+// Trả lỗi 400 thống nhất cho dữ liệu đầu vào không hợp lệ.
+function sendValidationError(res, message) {
+  return res.status(400).json({
+    success: false,
+    data: null,
+    error: { code: 'VALIDATION_ERROR', message },
+  });
+}
+
 /**
  * Đăng ký tài khoản mới (mặc định role = member).
  * POST /api/auth/register
  */
 async function register(req, res) {
   try {
-    const { email, password, full_name } = req.body;
+    const email = normalizeEmail(req.body?.email);
+    const password = typeof req.body?.password === 'string' ? req.body.password : '';
+    const fullName = typeof req.body?.full_name === 'string' ? req.body.full_name.trim() : '';
 
-    if (!email || !password || !full_name) {
-      return res.status(400).json({
-        success: false,
-        data: null,
-        error: { code: 'VALIDATION_ERROR', message: 'email, password and full_name are required' },
-      });
+    if (!email || !password || !fullName) {
+      return sendValidationError(res, 'email, password and full_name are required');
+    }
+
+    if (!isValidEmail(email)) {
+      return sendValidationError(res, 'Email không đúng định dạng');
     }
 
     if (!requireJwtSecret(res)) return;
@@ -53,7 +77,7 @@ async function register(req, res) {
     const passwordHash = await bcrypt.hash(password, 10);
     const userRole = 'member';
 
-    const user = await createUser(email, passwordHash, full_name, userRole);
+    const user = await createUser(email, passwordHash, fullName, userRole);
 
     const token = jwt.sign(
       { user_id: user.id, role: user.role },
@@ -79,7 +103,7 @@ async function register(req, res) {
     return res.status(500).json({
       success: false,
       data: null,
-      error: { code: 'SERVER_ERROR', message: err.message },
+      error: { code: 'SERVER_ERROR', message: 'Internal Server Error' },
     });
   }
 }
@@ -90,14 +114,15 @@ async function register(req, res) {
  */
 async function login(req, res) {
   try {
-    const { email, password } = req.body;
+    const email = normalizeEmail(req.body?.email);
+    const password = typeof req.body?.password === 'string' ? req.body.password : '';
 
     if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        data: null,
-        error: { code: 'VALIDATION_ERROR', message: 'email and password are required' },
-      });
+      return sendValidationError(res, 'email and password are required');
+    }
+
+    if (!isValidEmail(email)) {
+      return sendValidationError(res, 'Email không đúng định dạng');
     }
 
     const user = await findUserByEmail(email);
@@ -119,8 +144,6 @@ async function login(req, res) {
     }
 
     if (!requireJwtSecret(res)) return;
-
-    console.log('Login user role:', user.role);
 
     const token = jwt.sign(
       { user_id: user.id, role: user.role },
@@ -146,7 +169,7 @@ async function login(req, res) {
     return res.status(500).json({
       success: false,
       data: null,
-      error: { code: 'SERVER_ERROR', message: err.message },
+      error: { code: 'SERVER_ERROR', message: 'Internal Server Error' },
     });
   }
 }
