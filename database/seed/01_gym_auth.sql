@@ -41,7 +41,8 @@ WHERE user_id IN (SELECT id FROM users WHERE email IN (
 ));
 
 INSERT INTO memberships (user_id, plan_id, start_date, end_date, status)
-SELECT u.id, p.id, m.start_date, m.end_date, m.status
+-- VALUES suy luận chuỗi là text, cần ép kiểu trước khi ghi vào cột ngày.
+SELECT u.id, p.id, m.start_date::date, m.end_date::date, m.status
 FROM (VALUES
   ('member@gym.local',        '1 Month Pass',  '2026-11-01', '2026-11-30', 'active'),
   ('alice.nguyen@gmail.com',  '3 Month Pass',  '2026-10-15', '2027-01-15', 'active'),
@@ -65,7 +66,8 @@ WHERE user_id IN (SELECT id FROM users WHERE email IN (
 ));
 
 INSERT INTO checkins (user_id, checkin_time)
-SELECT u.id, c.checkin_time
+-- Chuyển chuỗi có múi giờ thành thời điểm check-in.
+SELECT u.id, c.checkin_time::timestamptz
 FROM (VALUES
   ('member@gym.local',        '2026-11-01 06:30:00+07'),
   ('member@gym.local',        '2026-11-03 07:00:00+07'),

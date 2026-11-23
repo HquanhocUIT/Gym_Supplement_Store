@@ -12,6 +12,7 @@ import StoreHomePage from './pages/StoreHomePage';
 import StoreShopPage from './pages/StoreShopPage';
 import StoreProductDetailPage from './pages/StoreProductDetailPage';
 import StoreCartPage from './pages/StoreCartPage';
+import StoreCheckoutPage from './pages/StoreCheckoutPage';
 import UiKit from './pages/UiKit';
 import CommonComponentsPage from './pages/CommonComponentsPage';
 import LoginPage from './pages/auth/LoginPage';
@@ -43,6 +44,7 @@ function App() {
         <Route path="shop" element={<StoreShopPage />} />
         <Route path="product/:productId" element={<StoreProductDetailPage />} />
         <Route path="cart" element={<StoreCartPage />} />
+        <Route path="checkout" element={<StoreCheckoutPage />} />
         <Route path="ui-kit" element={<UiKit />} />
         <Route path="ui-kit/common" element={<CommonComponentsPage />} />
       </Route>
@@ -76,15 +78,12 @@ function App() {
         <Route path="members" element={<MemberList />} />
       </Route>
 
-      {/* Đường dẫn check-in sẽ được hoàn thiện ở task riêng. */}
+      {/* Nhân viên và admin dùng màn hình check-in hiện có. */}
       <Route
         path="/staff/check-in"
         element={
           <ProtectedRoute allowedRoles={['staff', 'admin']}>
-            <div className="p-8 text-center text-ink">
-              <h1 className="text-2xl font-bold">Staff Check-in</h1>
-              <p className="text-muted">The check-in page is not available yet.</p>
-            </div>
+            <CheckInScreen />
           </ProtectedRoute>
         }
       />

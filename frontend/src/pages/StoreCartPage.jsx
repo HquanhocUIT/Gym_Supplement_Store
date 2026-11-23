@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, CircleAlert, Minus, Package, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { Skeleton } from '../components/common/index.js'
 import { Eyebrow } from '../components/Brand.jsx'
 import { login } from '../lib/authApi.js'
 import { clearAccessToken, getAccessToken, saveAccessToken } from '../lib/authToken.js'
@@ -148,7 +149,11 @@ function StoreCartPage() {
           </form>
         </section>
       ) : cartQuery.isPending ? (
-        <div className="mt-8 rounded-card border border-line bg-white p-6 text-sm text-ink-soft" role="status">Đang tải giỏ hàng…</div>
+        <div className="mt-8 space-y-4 rounded-card border border-line bg-white p-6" role="status" aria-label="Đang tải giỏ hàng">
+          <span className="sr-only">Đang tải giỏ hàng…</span>
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
+        </div>
       ) : cartQuery.isError ? (
         <section className="mt-8 rounded-card border border-line bg-white p-6 text-center">
           <EmptyCartError error={cartQuery.error} onSignOut={handleSignOut} onRetry={() => cartQuery.refetch()} />
@@ -161,8 +166,8 @@ function StoreCartPage() {
           <Link className={`${buttonClass} mt-5 bg-ink text-white hover:bg-brand-700`} to="/shop">Khám phá sản phẩm</Link>
         </section>
       ) : (
-        <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <section className="overflow-hidden rounded-card border border-line bg-white" aria-label="Sản phẩm trong giỏ hàng" aria-busy={mutationPending}>
+        <div className="mt-8 grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <section className="min-w-0 overflow-hidden rounded-card border border-line bg-white" aria-label="Sản phẩm trong giỏ hàng" aria-busy={mutationPending}>
             <ul className="divide-y divide-line">
               {items.map((item) => {
                 const variant = item.variant
@@ -177,7 +182,7 @@ function StoreCartPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
-                          <h2 className="font-display text-base font-extrabold text-ink">{variant.product_name}</h2>
+                          <h2 className="break-words font-display text-base font-extrabold text-ink">{variant.product_name}</h2>
                           <p className="mt-1 text-sm text-ink-soft">{variantName || `Phiên bản ${variant.id}`}</p>
                         </div>
                         <p className="font-bold text-ink">{formatPrice(variant.price)}</p>
@@ -187,17 +192,17 @@ function StoreCartPage() {
                       </p>
                       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                         <div className="inline-flex min-h-11 items-center rounded-xl border border-line" aria-label={`Số lượng ${variant.product_name}`}>
-                          <button className="grid size-10 place-items-center rounded-l-xl text-ink-soft transition hover:bg-paper disabled:opacity-40" type="button" aria-label={`Giảm số lượng ${variant.product_name}`} disabled={quantity <= 1 || mutationPending} onClick={() => updateMutation.mutate({ itemId: item.id, quantity: quantity - 1 })}>
+                          <button className="grid size-11 place-items-center rounded-l-xl text-ink-soft transition hover:bg-paper disabled:opacity-40" type="button" aria-label={`Giảm số lượng ${variant.product_name}`} disabled={quantity <= 1 || mutationPending} onClick={() => updateMutation.mutate({ itemId: item.id, quantity: quantity - 1 })}>
                             <Minus size={15} aria-hidden="true" />
                           </button>
                           <output className="min-w-9 text-center text-sm font-bold" aria-live="polite">{quantity}</output>
-                          <button className="grid size-10 place-items-center rounded-r-xl text-ink-soft transition hover:bg-paper disabled:opacity-40" type="button" aria-label={`Tăng số lượng ${variant.product_name}`} disabled={quantity >= stock || mutationPending} onClick={() => updateMutation.mutate({ itemId: item.id, quantity: quantity + 1 })}>
+                          <button className="grid size-11 place-items-center rounded-r-xl text-ink-soft transition hover:bg-paper disabled:opacity-40" type="button" aria-label={`Tăng số lượng ${variant.product_name}`} disabled={quantity >= stock || mutationPending} onClick={() => updateMutation.mutate({ itemId: item.id, quantity: quantity + 1 })}>
                             <Plus size={15} aria-hidden="true" />
                           </button>
                         </div>
                         <div className="flex items-center gap-4">
                           <p className="text-sm font-extrabold text-ink">{formatPrice(Number(variant.price) * quantity)}</p>
-                          <button className="grid size-10 place-items-center rounded-xl text-muted transition hover:bg-red-50 hover:text-red-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700" type="button" aria-label={`Xóa ${variant.product_name} khỏi giỏ`} disabled={mutationPending} onClick={() => deleteMutation.mutate(item.id)}>
+                          <button className="grid size-11 place-items-center rounded-xl text-muted transition hover:bg-red-50 hover:text-red-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700" type="button" aria-label={`Xóa ${variant.product_name} khỏi giỏ`} disabled={mutationPending} onClick={() => deleteMutation.mutate(item.id)}>
                             <Trash2 size={17} aria-hidden="true" />
                           </button>
                         </div>
@@ -222,7 +227,14 @@ function StoreCartPage() {
                 <span>Tổng tạm tính</span>
                 <span>{formatPrice(cart.subtotal)}</span>
               </div>
-              <p className="mt-3 inline-flex items-start gap-2 text-xs leading-5 text-ink-soft"><CircleAlert className="mt-0.5 shrink-0 text-brand-700" size={15} aria-hidden="true" /> Tiếp tục mua sắm; bước thanh toán sẽ được bổ sung sau.</p>
+              {/* Chặn checkout khi giỏ đang cập nhật hoặc số lượng vượt tồn kho. */}
+              {items.some((item) => Number(item.quantity) > Number(item.variant.stock)) ? (
+                <p className="mt-3 text-sm text-red-700" role="alert">Điều chỉnh số lượng theo tồn kho trước khi thanh toán.</p>
+              ) : mutationPending || cartQuery.isFetching ? (
+                <button className={`${buttonClass} mt-4 w-full bg-ink text-white`} type="button" disabled>Đang cập nhật giỏ…</button>
+              ) : (
+                <Link className={`${buttonClass} mt-4 w-full bg-ink text-white hover:bg-brand-700`} to="/checkout">Tiến hành thanh toán</Link>
+              )}
             </div>
             <Link className={`${buttonClass} mt-5 w-full border border-line bg-white text-ink hover:bg-paper`} to="/shop">Quay lại cửa hàng</Link>
           </aside>
