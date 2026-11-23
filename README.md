@@ -1,268 +1,463 @@
-# Gym and Supplement Store Management System
+# Gym & Supplement Store Management System
 
-**Group 28** — MSIS207.R11.CTTT
+A full-stack **gym management and supplement e-commerce** platform for managing memberships, gym check-ins, supplement products, carts, and orders in one place. The system combines a membership management back office with a public online store, giving gym owners a single dashboard for both recurring memberships and product sales.
 
-## Thành viên
-| Vai trò | Họ tên | MSSV | Module |
-|---|---|---|---|
-| Người 1 | Nguyễn Đình Sang | [24521521] | Auth + Gym |
-| Người 2 | Nguyễn Phan Hoàng Quân | [24521446] | Store |
+**Course:** MSIS207.R11.CTTT — **Group 28**
+
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-22+-339933?logo=nodedotjs&logoColor=white)
+![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)
+
+---
+
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Key Features](#key-features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Getting Started (Local)](#getting-started-local)
+- [Demo Accounts](#demo-accounts)
+- [Live URLs](#live-urls)
+- [API Documentation](#api-documentation)
+- [Testing](#testing)
+- [Project Structure](#project-structure)
+- [Security Notes](#security-notes)
+- [Team](#team)
+
+---
+
+## Introduction
+
+**Gym & Supplement Store Management System** is a monorepo web application built for a fitness business that sells gym memberships and sports supplements. It serves three roles:
+
+- **Admin** — manages membership plans, members, products, categories, inventory, and business statistics.
+- **Staff** — looks up members, renews memberships, and records gym check-ins.
+- **Member** — views their membership, check-in history, and shops for supplements online.
+
+The backend exposes a documented REST API, while the frontend provides a responsive React interface for the public store, the member portal, and the admin dashboard.
+
+---
+
+## Key Features
+
+### Gym Management
+
+- JWT authentication with role-based access control (`admin`, `staff`, `member`).
+- Membership plan management (create, update, soft delete, public pricing).
+- Member directory with search and membership status.
+- Membership renewal and expiry tracking.
+- Gym check-in recording and daily check-in list.
+- Member self-service endpoints for profile, memberships, and check-in history.
+
+### Supplement Store
+
+- Product categories and products with multiple variants (size, flavor, price, stock).
+- Product image upload backed by Supabase Storage.
+- Product search, filtering, sorting, and pagination.
+- Shopping cart for authenticated users.
+- Cash-on-delivery checkout with stock deduction and membership discount.
+- Public storefront with product detail pages.
+
+### Dashboard & UX
+
+- Admin dashboard with revenue, active members, expiring memberships, and low-stock alerts.
+- Responsive layouts for mobile, tablet, and desktop.
+- Loading skeletons, empty states, and toast notifications.
+- Consistent `{ success, data, error }` API response contract.
+
+---
 
 ## Tech Stack
-- **Frontend:** React + Vite + Tailwind CSS
-- **Backend:** Node.js + Express + `pg` (node-postgres), SQL có tham số
-- **Database:** PostgreSQL local hoặc PostgreSQL trên Supabase
-- **Database client:** pgAdmin để quản lý PostgreSQL và chạy SQL
-- **Deploy:** Vercel (FE), Render (BE)
-- **Container:** Docker
 
-## Cấu trúc thư mục
+| Layer | Technology |
+| --- | --- |
+| **Frontend** | React 19, Vite 8, Tailwind CSS 4, React Router 7, Axios, TanStack Query, React Hook Form, Zod, Recharts, Lucide React, React Hot Toast |
+| **Backend** | Node.js 22+, Express 5, `pg` (node-postgres), JSON Web Token, bcryptjs, Helmet, express-rate-limit, Multer, Swagger UI Express |
+| **Database** | PostgreSQL 18 (Supabase in the cloud, or local PostgreSQL / Docker) |
+| **Storage** | Supabase Storage (product images) |
+| **DevOps** | GitHub Actions, Docker, Vercel (frontend), Render (backend) |
+| **Documentation** | OpenAPI 3 / Swagger UI, Postman collection, DBML ERD |
+
+---
+
+## Architecture
+
+This repository is a **monorepo** with three main workspaces:
 
 ```text
-frontend/   React + Vite client
-backend/    Express API using pg and PostgreSQL
-database/   SQL schema, seed và migrations theo các task database
-docs/       ERD and project documentation
-.github/    Issue and pull request templates
+Gym-Supplement-Store/
+├── frontend/          React + Vite single-page application
+├── backend/           Express REST API
+├── database/          PostgreSQL schema and seed scripts
+├── docs/              API docs, ERD, Postman collection, screenshots
+├── ci/                CI helper scripts
+├── docker-compose.yml Local API + PostgreSQL stack
+├── render.yaml        Render deployment blueprint
+└── README.md
 ```
 
-## Chạy backend (Task 3)
+### Request Flow
 
-Yêu cầu Node.js 22 trở lên. Từ thư mục dự án:
+```text
+React (Vite)
+   │  Axios + JWT
+   ▼
+Express routes
+   ▼
+Controllers  →  Services  →  Repositories  →  PostgreSQL (pg Pool)
+```
 
-```powershell
+- **Routes** define URLs, HTTP methods, and role guards.
+- **Controllers** validate input and shape HTTP responses.
+- **Services** hold business rules such as checkout and membership eligibility.
+- **Repositories** contain parameterized SQL and are the only layer that talks to the database.
+- **Middlewares** handle JWT authentication, authorization, rate limiting, uploads, and errors.
+
+The frontend is a static SPA that talks to the backend through `VITE_API_URL`. The backend is stateless and can run on Render, Docker, or any Node.js host.
+
+---
+
+## Getting Started (Local)
+
+### Prerequisites
+
+- **Node.js 22 or newer** and npm
+- **PostgreSQL 18** (local, Docker, or a Supabase project)
+- Git
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/LingSeanCoder/Gym-Supplement-Store.git
+cd Gym-Supplement-Store
+```
+
+### 2. Install dependencies
+
+```bash
+# Backend
 cd backend
-npm ci
-if (!(Test-Path .env)) { Copy-Item .env.example .env }
-npm run dev
+npm install
+
+# Frontend (from the repository root)
+cd ../frontend
+npm install
 ```
 
-Nếu đã có `backend/.env`, giữ file hiện tại và bổ sung các biến còn thiếu từ
-`.env.example`. Backend ưu tiên biến môi trường của tiến trình, sau đó
-`backend/.env`, cuối cùng `.env` ở thư mục gốc để tương thích cấu hình cũ.
-File cấu hình được tìm theo vị trí mã nguồn, không phụ thuộc thư mục chạy lệnh.
+### 3. Create environment files
 
-Kiểm tra API bằng trình duyệt hoặc PowerShell:
+Copy the example files and fill in your own values. **Never commit real secrets.**
 
-```powershell
-Invoke-RestMethod http://localhost:5000/health
-Invoke-RestMethod http://localhost:5000/api/health
+```bash
+# Backend
+cd backend
+cp .env.example .env
+
+# Frontend
+cd ../frontend
+cp .env.example .env
 ```
 
-Cả hai URL trả HTTP 200 với dạng:
+On Windows PowerShell, use `Copy-Item .env.example .env` instead of `cp`.
 
-```json
-{
-  "success": true,
-  "data": { "status": "ok", "timestamp": "...", "uptime": 0 },
-  "error": null
-}
-```
-
-Health endpoint chỉ kiểm tra API còn chạy, nên không yêu cầu database đã được
-tạo hay kết nối thành công. Dùng `/health/db` hoặc `/api/health/db` để kiểm tra
-database thật theo hướng dẫn Task 7 bên dưới.
-
-### PostgreSQL local và pgAdmin
-
-1. Khởi động PostgreSQL. Trong pgAdmin, kết nối server local qua host `localhost`,
-   port `5432`, tài khoản PostgreSQL của bạn (thường là `postgres`).
-2. Tạo database `gym_supplement_store` nếu chưa có, rồi đặt `PGHOST`, `PGPORT`,
-   `PGDATABASE`, `PGUSER`, `PGPASSWORD` tương ứng trong `backend/.env`.
-3. Để `DATABASE_URL` trống khi dùng các biến `PG*`. Nếu có `DATABASE_URL`, Pool
-   sẽ ưu tiên URL đó. Không commit thông tin kết nối thật.
-
-Backend dùng `pg` để truy cập PostgreSQL; pgAdmin là công cụ quản lý database.
-Task 3 chưa tạo bảng hoặc seed; hai phần đó thực hiện ở Task 14–15 sau khi chốt ERD.
-
-### Cấu trúc backend
-
-```text
-src/index.js        Start HTTP server and close the Pool on shutdown
-src/app.js          Express middleware and route registration
-src/config/         Environment configuration and shared pg Pool
-src/routes/         URLs and HTTP methods
-src/controllers/    HTTP requests and responses
-src/services/       Business rules
-src/repositories/   Parameterized SQL and database access
-src/middlewares/    Shared error handling
-```
-
-Các API dùng dạng `{ success, data, error }`; route không tồn tại trả JSON 404,
-JSON không hợp lệ trả 400, lỗi nội bộ trả thông báo chung.
-`CORS_ORIGIN` mặc định là `http://localhost:5173`.
-
-`npm run dev` dùng chế độ watch có sẵn của Node.js. Chạy production bằng `npm start`.
-Chạy kiểm tra backend từ thư mục `backend/`:
-
-```powershell
-npm test
-```
-
-Tài liệu `pg`: [kết nối](https://node-postgres.com/features/connecting),
-[truy vấn có tham số](https://node-postgres.com/features/queries),
-[connection pool](https://node-postgres.com/features/pooling).
-Swagger UI của các endpoint đang hoạt động nằm tại `/docs/`, hỗ trợ Bearer JWT và gửi request trực tiếp. Đặc tả chính nằm trong `backend/src/docs/openapi.yaml`, có bản JSON công khai tại `/openapi.json` để import vào Postman. Xem danh sách API và quyền truy cập trong `docs/api.md`.
-
-## Task 8: chạy API và PostgreSQL local bằng Docker
-
-Yêu cầu Docker Desktop đang chạy. Từ thư mục gốc của dự án, bảo đảm `.env` có
-`PGUSER`, `PGDATABASE` và `PGPASSWORD`. Nếu chưa có `.env`, copy từ `.env.example`
-và tự điền `PGPASSWORD`; không commit file `.env`.
-
-```powershell
-docker compose up --build -d
-docker compose ps
-Invoke-RestMethod http://localhost:5000/health
-Invoke-RestMethod http://localhost:5000/api/health/db
-```
-
-Compose chạy hai service:
-
-- `api`: backend Express, mặc định tại `http://localhost:5000`.
-- `db`: PostgreSQL 18 local trong container, mở `localhost:5433` cho pgAdmin;
-  trong mạng Docker, API kết nối `db:5432`.
-
-Compose dùng `PGUSER`, `PGDATABASE` và `PGPASSWORD` từ `.env` gốc cho database
-Docker. Nó đặt riêng `DATABASE_URL` rỗng và `DATABASE_SSL=false` cho API trong
-container, nên không dùng connection string Supabase trong `.env`. Backend chạy
-trực tiếp bằng `npm run dev` vẫn dùng cấu hình `.env` như Task 7.
-
-Nếu cổng đang bận, đặt `DOCKER_API_PORT` hoặc `DOCKER_DB_PORT` trong `.env`, rồi
-chạy lại Compose. Ví dụ `DOCKER_API_PORT=5001` thì truy cập
-`http://localhost:5001/api/health/db`. Các cổng này chỉ mở trên máy local.
-
-Để kết nối pgAdmin tới database Docker, đăng ký server mới với host `localhost`,
-port `5433` (hoặc `DOCKER_DB_PORT`), maintenance database là giá trị `PGDATABASE`,
-username là `PGUSER` và password là `PGPASSWORD` trong `.env` gốc. Đây là database
-Docker riêng, không phải database local cài trên máy hay Supabase.
-
-```powershell
-docker compose logs -f api
-docker compose down
-```
-
-`docker compose down` dừng và xóa container/network nhưng giữ volume `postgres_data`.
-PostgreSQL chỉ chạy các file SQL trong `database/schema/` lúc volume được khởi tạo
-lần đầu. Hiện thư mục chưa có schema vì Task 14–15 chưa thực hiện; thêm SQL sau đó
-không tự áp dụng vào volume đã tồn tại. Đổi `PGPASSWORD`, `PGUSER` hay `PGDATABASE`
-trong `.env` cũng không tự cập nhật database đã khởi tạo.
-
-## Task 7: kết nối Supabase bằng pg
-
-Supabase là database riêng trên cloud. Đổi kết nối không tự chuyển bảng hay dữ
-liệu từ PostgreSQL local lên Supabase; schema và seed vẫn thực hiện ở Task 14–15.
-
-### Tạo project và lấy thông tin kết nối
-
-1. Mở [Supabase Dashboard](https://supabase.com/dashboard), chọn **New project**,
-   đặt tên project, chọn region và tự lưu mật khẩu database của project.
-2. Khi project sẵn sàng, mở **Connect → Session pooler**, lấy URI và các tham số.
-   Session pooler dùng port 5432 và phù hợp cho máy local/pgAdmin dùng IPv4.
-3. Thay phần mật khẩu trong URI bằng mật khẩu database Supabase. Nếu mật khẩu có
-   ký tự đặc biệt, URL-encode phần mật khẩu trước khi đặt vào URI.
-
-Mật khẩu Supabase và mật khẩu PostgreSQL local có thể khác nhau. Điền trực tiếp
-trên máy; không gửi URI có mật khẩu qua chat, issue hoặc PR.
-
-### Cấu hình backend
-
-Sửa file `.env` đang dùng: `backend/.env` được ưu tiên hơn `.env` ở thư mục gốc.
-Giữ các biến khác và cập nhật ba biến sau:
+#### Backend `.env`
 
 ```dotenv
-# Tự dán URI Supabase đã điền mật khẩu vào đây trên máy.
-DATABASE_URL=
+PORT=5000
+CORS_ORIGIN=http://localhost:5173
+
+# Supabase connection (recommended for cloud)
+DATABASE_URL=postgresql://postgres.<project-ref>:<password>@<host>:5432/postgres
 DATABASE_SSL=true
 DATABASE_SSL_CA_PATH=
+
+# Local PostgreSQL alternative: leave DATABASE_URL empty and use PG* variables
+PGHOST=localhost
+PGPORT=5432
+PGDATABASE=gym_supplement_store
+PGUSER=postgres
+PGPASSWORD=
+
+JWT_SECRET=replace_with_a_long_random_secret
+JWT_EXPIRES_IN=7d
+
+# Supabase Storage (product images)
+SUPABASE_URL=
+SUPABASE_SECRET_KEY=
+SUPABASE_STORAGE_BUCKET=product-images
 ```
 
-- `DATABASE_URL` dùng URI từ Connect, không thêm `ssl`, `sslmode`, `sslcert`,
-  `sslkey`, `sslrootcert` hoặc `sslnegotiation` vào URL. Cấu hình SSL nằm ở hai
-  biến riêng để tránh URL ghi đè tùy chọn xác thực chứng chỉ của `pg`.
-- `DATABASE_SSL=true` bật TLS và xác thực chứng chỉ server. Nếu cần CA riêng,
-  tải chứng chỉ chính thức từ Database Settings, lưu trong `backend/certs/`,
-  rồi đặt `DATABASE_SSL_CA_PATH=certs/ten-chung-chi.crt`. Đường dẫn tuyệt đối cũng
-  được hỗ trợ. Thư mục này được Git bỏ qua; không tắt xác thực chứng chỉ để bỏ lỗi.
-- Muốn quay lại local: để `DATABASE_URL` trống và `DATABASE_SSL=false`; Pool sẽ
-  dùng lại các biến `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD` đã có.
+> **Important:** Do not add `sslmode`, `ssl`, or other SSL parameters to `DATABASE_URL`. SSL is controlled by `DATABASE_SSL` and `DATABASE_SSL_CA_PATH` so the backend can validate certificates correctly.
 
-Khởi động lại backend sau khi thay `.env`:
+#### Frontend `.env`
 
-```powershell
+```dotenv
+VITE_API_URL=http://localhost:5000/api
+```
+
+### 4. Run the SQL schema and seed data
+
+The project uses plain SQL scripts in `database/` — there is no separate migration framework.
+
+Run the files **in this order** in the **Supabase SQL Editor** (or with `psql`):
+
+| Order | File | Purpose |
+| --- | --- | --- |
+| 1 | `database/schema/01_auth_gym.sql` | Users, membership plans, memberships, check-ins |
+| 2 | `database/schema/02_store.sql` | Categories, products, variants, cart, orders, payments |
+| 3 | `database/seed/01_gym_auth.sql` | Demo accounts, membership plans, memberships, check-ins |
+| 4 | `database/seed/02_store.sql` | Demo categories, products, and variants |
+
+The seed scripts are idempotent and safe to re-run. With `psql`:
+
+```bash
+psql "postgresql://USER:PASSWORD@HOST:5432/postgres" -f database/schema/01_auth_gym.sql
+psql "postgresql://USER:PASSWORD@HOST:5432/postgres" -f database/schema/02_store.sql
+psql "postgresql://USER:PASSWORD@HOST:5432/postgres" -f database/seed/01_gym_auth.sql
+psql "postgresql://USER:PASSWORD@HOST:5432/postgres" -f database/seed/02_store.sql
+```
+
+Verify the connection after seeding:
+
+```bash
+curl http://localhost:5000/health/db
+```
+
+Expected: HTTP `200` with `"database": "connected"`.
+
+### 5. Start the backend
+
+```bash
 cd backend
 npm run dev
 ```
 
-Khi deploy Render ở task sau, đặt URI pooler và các biến SSL trong môi trường
-của service. Session pooler phù hợp cho Express chạy lâu; nếu chọn Transaction
-pooler thì dùng URI port 6543 từ Connect và không dùng prepared statement có
-`name`. Các transaction luôn dùng cùng một client và release trong `finally`.
+The API runs at **http://localhost:5000**. Liveness check:
 
-### Kết nối bằng pgAdmin
-
-Trong pgAdmin, chuột phải **Servers → Register → Server** và đặt tên, ví dụ
-`Gym Supabase`. Điền thông tin từ **Connect → Session pooler → View parameters**:
-
-| Trường | Giá trị |
-| --- | --- |
-| Host name/address | Host Session pooler trong Dashboard |
-| Port | `5432` |
-| Maintenance database | `postgres` |
-| Username | Username pooler trong Dashboard, thường có project ref sau `postgres.` |
-| Password | Mật khẩu database của project Supabase |
-
-Ở Parameters/SSL, chọn SSL mode `verify-full` và chọn Root certificate tải từ
-Database Settings. Tên tab có thể khác giữa các phiên bản pgAdmin. Sau khi lưu,
-mở Query Tool trên database `postgres` và chạy truy vấn chỉ đọc:
-
-```sql
-SELECT NOW() AS checked_at;
+```bash
+curl http://localhost:5000/health
 ```
 
-### Kiểm tra kết nối qua API
+### 6. Start the frontend
 
-```powershell
-Invoke-RestMethod http://localhost:5000/api/health/db
-```
-
-Thành công trả HTTP 200:
-
-```json
-{
-  "success": true,
-  "data": { "status": "ok", "database": "connected", "timestamp": "..." },
-  "error": null
-}
-```
-
-Nếu kết nối/truy vấn lỗi, API trả HTTP 503 với code `DATABASE_UNAVAILABLE`, không
-đưa URL hay mật khẩu vào response. `/health` và `/api/health` vẫn chỉ kiểm tra
-tiến trình API. Health database giới hạn chờ kết nối và truy vấn ở 5 giây mỗi bước;
-không dùng kết quả local để kết luận đã kết nối Supabase.
-
-Chạy `npm test` trong `backend/` để kiểm tra response và cấu hình SSL. Bộ test
-không cần Supabase; việc xác nhận cloud thực tế cần project và URI thật trên máy.
-Minh chứng do thành viên tự chụp khi thao tác pgAdmin và health API; không commit
-file screenshot hoặc chụp nội dung `.env`.
-
-Tài liệu chính thức: [kết nối Supabase](https://supabase.com/docs/guides/database/connecting-to-postgres),
-[pgAdmin với Supabase](https://supabase.com/docs/guides/database/pgadmin),
-[SSL trong pg](https://node-postgres.com/features/ssl).
-
-## Chạy frontend
+Open a second terminal:
 
 ```bash
 cd frontend
-npm install
 npm run dev
 ```
 
-Vite hiển thị ứng dụng tại `http://localhost:5173`. Các route mẫu:
+The app runs at **http://localhost:5173**.
 
-- `/`: cửa hàng công khai
-- `/admin`: dashboard quản trị
-- `/admin/products`: danh sách sản phẩm mẫu
-- `/member`: dashboard thành viên
-- `/ui-kit`: component dùng chung của Task 5
-- `/ui-kit/common`: trang kiểm tra API client, trạng thái, phân trang và chọn ảnh của Task 6
+### Optional: Docker Compose
+
+To run the API and a local PostgreSQL database together:
+
+```bash
+docker compose up --build -d
+docker compose ps
+```
+
+- API: `http://localhost:5000`
+- PostgreSQL: `localhost:5433` (host port, configurable via `DOCKER_DB_PORT`)
+
+Docker Compose mounts `database/schema/` into PostgreSQL's initialization directory, so the schema runs automatically on a **fresh** database volume. Run the seed files manually afterward with pgAdmin or `psql` if you need demo data. See `docs/decisions.md` and the comments in `docker-compose.yml` for details.
+
+---
+
+## Demo Accounts
+
+The seed file `database/seed/01_gym_auth.sql` creates the following accounts:
+
+| Role | Email | Password |
+| --- | --- | --- |
+| **Admin** | `admin@gym.local` | `Admin@123456` |
+| **Staff** | `staff@gym.local` | `Staff@123456` |
+| **Member** | `member@gym.local` | `Member@123456` |
+
+Additional demo members (`alice.nguyen@gmail.com`, `bob.tran@gmail.com`, etc.) use the password `Member@123456`.
+
+> These credentials are for local development and demonstrations only. Change or remove them before exposing the system to real users.
+
+---
+
+## Live URLs
+
+**Frontend URL:** _To be added after deployment_
+
+**Backend URL:** _To be added after deployment_
+
+---
+
+## API Documentation
+
+Interactive API documentation is available through **Swagger UI**:
+
+- **Swagger UI:** `http://localhost:5000/docs/`
+- **OpenAPI JSON:** `http://localhost:5000/openapi.json`
+- **OpenAPI source:** `backend/src/docs/openapi.yaml`
+- **Endpoint reference:** `docs/api.md`
+- **Postman collection:** `docs/postman/gym-supplement-store.postman_collection.json`
+
+### Authentication in Swagger
+
+1. Call `POST /api/auth/login` with a demo account.
+2. Copy `data.access_token` from the response.
+3. Click **Authorize** in Swagger UI and paste the token.
+4. Protected endpoints now include the `Bearer` token automatically.
+
+### Main Endpoint Groups
+
+| Group | Base Path | Access |
+| --- | --- | --- |
+| Health | `/health`, `/api/health` | Public |
+| Auth | `/api/auth` | Public |
+| Membership plans | `/api/plans` | Public read, Admin write |
+| Members | `/api/members` | Admin / Staff |
+| Check-ins | `/api/checkins` | Admin / Staff |
+| Current user | `/api/me` | Authenticated |
+| Categories | `/api/store/categories` | Public read, Admin write |
+| Products | `/api/store/products` | Public read, Admin write |
+| Cart | `/api/store/cart` | Authenticated |
+| Orders | `/api/store/orders` | Authenticated |
+| Dashboard stats | `/api/admin/stats` | Admin / Staff |
+
+All responses follow the same contract:
+
+```json
+{
+  "success": true,
+  "data": {},
+  "error": null
+}
+```
+
+---
+
+## Testing
+
+### Backend
+
+```bash
+cd backend
+npm test
+```
+
+Some tests connect to PostgreSQL and require a **disposable test database**:
+
+```bash
+# PowerShell
+$env:TEST_DATABASE_URL = "postgresql://postgres:password@localhost:5432/gym_supplement_store_test"
+npm test
+```
+
+```bash
+# Bash
+TEST_DATABASE_URL="postgresql://postgres:password@localhost:5432/gym_supplement_store_test" npm test
+```
+
+The database-backed tests expect a local PostgreSQL instance because they set `DATABASE_SSL=false`. Database-free tests such as the health and configuration checks run without `TEST_DATABASE_URL`.
+
+### Frontend
+
+```bash
+cd frontend
+npm test        # Vitest
+npm run lint    # Oxlint
+npm run build   # Production build
+```
+
+### Health checks
+
+```bash
+curl http://localhost:5000/health      # API process
+curl http://localhost:5000/health/db   # PostgreSQL connectivity
+```
+
+After deploying, follow `docs/smoke-test.md` for a five-step verification checklist.
+
+---
+
+## Project Structure
+
+```text
+frontend/
+├── src/
+│   ├── api/            Axios client and API helpers
+│   ├── components/     Reusable UI, common, and layout components
+│   ├── contexts/       Authentication context
+│   ├── layouts/        Public, Admin, and Member layouts
+│   ├── pages/          Route pages (public, auth, admin, staff, member)
+│   └── App.jsx         Route definitions
+└── package.json
+
+backend/
+├── src/
+│   ├── config/         Environment and PostgreSQL pool configuration
+│   ├── controllers/    HTTP request/response handling
+│   ├── docs/           OpenAPI specification
+│   ├── middlewares/    Auth, authorization, uploads, rate limiting, errors
+│   ├── repositories/   Parameterized SQL queries
+│   ├── routes/         API route definitions
+│   ├── services/       Business logic
+│   ├── app.js          Express application setup
+│   └── index.js        HTTP server entry point
+├── test/               Node.js test runner suites
+├── Dockerfile
+└── package.json
+
+database/
+├── schema/             Table definitions (auth/gym and store)
+└── seed/               Demo data
+
+docs/
+├── api.md              Endpoint reference
+├── decisions.md        Architecture decisions
+├── erd/                DBML, SVG, and PNG entity-relationship diagrams
+├── postman/            Postman collection and setup guide
+├── screenshots/        UI screenshots
+└── smoke-test.md       Post-deployment checklist
+```
+
+---
+
+## Security Notes
+
+The backend applies baseline hardening:
+
+- **Helmet** for secure HTTP headers and Content Security Policy.
+- **Rate limiting** on `POST /api/auth/login` — 5 attempts per 15 minutes per IP.
+- **JWT authentication** with role-based authorization.
+- **Input validation** for required fields, email format, positive prices, and valid statuses.
+- **Ownership checks** on `/api/me/*` — personal data is always queried by the `user_id` from the JWT, never from query parameters.
+- **Parameterized SQL** through `pg` to prevent SQL injection.
+- **Generic error responses** so database details and stack traces are not exposed to clients.
+
+Operational recommendations:
+
+- Use a long, random `JWT_SECRET` and rotate it if leaked.
+- Keep `.env` files out of version control.
+- Use Supabase SSL (`DATABASE_SSL=true`) in production.
+- Restrict `CORS_ORIGIN` to the deployed frontend URL.
+- Change or remove demo accounts before going live.
+
+---
+
+## Team
+
+| Role | Full Name | Student ID | Module |
+| --- | --- | --- | --- |
+| Member 1 | Nguyễn Đình Sang | 24521521 | Auth + Gym |
+| Member 2 | Nguyễn Phan Hoàng Quân | 24521446 | Store |
+
+**Course:** MSIS207.R11.CTTT — Group 28
+
+---
+
+## License
+
+This project was developed for academic purposes as part of the MSIS207.R11.CTTT course. Third-party libraries remain under their respective licenses.
