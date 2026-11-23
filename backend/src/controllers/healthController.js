@@ -1,4 +1,5 @@
 const healthService = require('../services/healthService');
+const { getDatabaseErrorCode } = require('../services/databaseDiagnostics');
 
 // Health thông thường vẫn hoạt động ngay cả khi database mất kết nối.
 exports.check = (req, res) => {
@@ -15,7 +16,9 @@ exports.checkDatabase = async (req, res) => {
   try {
     const data = await healthService.getDatabaseStatus();
     res.status(200).json({ success: true, data, error: null });
-  } catch {
+  } catch (error) {
+    // Log nội bộ chỉ chứa mã lỗi đã lọc để chẩn đoán Render, không chứa secret.
+    console.error('[database-health]', getDatabaseErrorCode(error));
     res.status(503).json({
       success: false,
       data: null,

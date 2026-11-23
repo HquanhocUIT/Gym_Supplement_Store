@@ -62,8 +62,9 @@ for (const route of ['/health/db', '/api/health/db']) {
 }
 
 test('lỗi database trả 503, không lộ thông tin kết nối và không làm hỏng health thường', async (t) => {
+  const log = t.mock.method(console, 'error', () => {});
   t.mock.method(healthRepository, 'checkConnection', async () => {
-    throw new Error('Chi tiết kết nối riêng tư không được đưa vào response');
+    throw Object.assign(new Error('Chi tiết kết nối riêng tư không được đưa vào response'), { code: '28P01' });
   });
   const response = await fetch(`${baseUrl}/api/health/db`);
   assert.equal(response.status, 503);
@@ -73,6 +74,7 @@ test('lỗi database trả 503, không lộ thông tin kết nối và không l�
     data: null,
     error: { code: 'DATABASE_UNAVAILABLE', message: 'Không thể kết nối database. Kiểm tra cấu hình và thử lại.' },
   });
+  assert.deepEqual(log.mock.calls[0].arguments, ['[database-health]', '28P01']);
   const health = await fetch(`${baseUrl}/health`);
   assert.equal(health.status, 200);
 });

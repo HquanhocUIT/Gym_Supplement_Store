@@ -13,6 +13,7 @@ import StoreHomePage from './pages/StoreHomePage';
 import StoreShopPage from './pages/StoreShopPage';
 import StoreProductDetailPage from './pages/StoreProductDetailPage';
 import StoreCartPage from './pages/StoreCartPage';
+import StoreCheckoutPage from './pages/StoreCheckoutPage';
 import UiKit from './pages/UiKit';
 import CommonComponentsPage from './pages/CommonComponentsPage';
 import LoginPage from './pages/auth/LoginPage';
@@ -45,6 +46,7 @@ function App() {
         <Route path="shop" element={<StoreShopPage />} />
         <Route path="product/:productId" element={<StoreProductDetailPage />} />
         <Route path="cart" element={<StoreCartPage />} />
+        <Route path="checkout" element={<StoreCheckoutPage />} />
         <Route path="ui-kit" element={<UiKit />} />
         <Route path="ui-kit/common" element={<CommonComponentsPage />} />
       </Route>
@@ -78,7 +80,7 @@ function App() {
         <Route path="members" element={<MemberList />} />
       </Route>
 
-      {/* Staff check-in page (requires staff or admin role). */}
+      {/* Nhân viên và admin dùng màn hình check-in hiện có. */}
       <Route
         path="/staff/check-in"
         element={

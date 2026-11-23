@@ -83,14 +83,14 @@ function ProductDetailContent({ product }) {
 
   return (
     // Chi tiết, ảnh, lựa chọn phiên bản và thông tin mua hàng.
-    <main className="mt-6 grid items-start gap-8 lg:grid-cols-2 lg:gap-14">
+    <div className="mt-6 grid grid-cols-1 items-start gap-8 lg:grid-cols-2 lg:gap-14">
       <div className="rounded-card border border-line bg-white p-3 shadow-card sm:p-5">
         <ProductImage product={product} />
       </div>
 
-      <section className="pt-1 sm:pt-3" aria-labelledby="product-title">
+      <section className="min-w-0 pt-1 sm:pt-3" aria-labelledby="product-title">
         <Eyebrow>{product.category_name || 'Sản phẩm'}</Eyebrow>
-        <h1 id="product-title" className="mt-3 font-display text-3xl font-extrabold leading-tight tracking-[-0.055em] text-ink sm:text-4xl lg:text-5xl">
+        <h1 id="product-title" className="mt-3 break-words font-display text-3xl font-extrabold leading-tight tracking-[-0.055em] text-ink sm:text-4xl lg:text-5xl">
           {product.name}
         </h1>
         <p className="mt-5 whitespace-pre-line text-sm leading-7 text-ink-soft sm:text-base">
@@ -106,6 +106,8 @@ function ProductDetailContent({ product }) {
                 className={`${inputClass} mt-2`}
                 value={selectedVariant ? String(selectedVariant.id) : ''}
                 onChange={(event) => {
+                  // Xóa lỗi của lựa chọn cũ khi người mua đổi phiên bản.
+                  addToCartMutation.reset()
                   setSelectedVariantId(event.target.value)
                   setQuantity(1)
                   setCartMessage('')
@@ -164,7 +166,7 @@ function ProductDetailContent({ product }) {
 
         <p className="mt-4 text-xs leading-5 text-muted">Giá và tồn kho thay đổi theo phiên bản bạn chọn.</p>
       </section>
-    </main>
+    </div>
   )
 }
 
@@ -202,7 +204,7 @@ function StoreProductDetailPage() {
       ) : productQuery.isError ? (
         // Có nút quay lại và tải lại khi API gặp lỗi hoặc không tìm thấy sản phẩm.
         <div className="mt-6 rounded-card border border-line bg-white p-6 text-center">
-          <EmptyState icon={CircleAlert} title="Chưa tải được sản phẩm" description={productQuery.error.message} />
+          <EmptyState icon={CircleAlert} title={productQuery.error.status === 404 ? 'Không tìm thấy sản phẩm' : 'Chưa tải được sản phẩm'} description={productQuery.error.message} />
           <div className="mt-2 flex flex-wrap justify-center gap-3">
             <button className={`${buttonClass} bg-ink text-white hover:bg-brand-700`} type="button" onClick={() => productQuery.refetch()}>Thử tải lại</button>
             <Link className={`${buttonClass} border border-line bg-white text-ink hover:bg-paper`} to="/shop">Về cửa hàng</Link>
