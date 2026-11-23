@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import axiosClient from '../../api/axiosClient';
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { CheckCircle, Clock } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import Skeleton from '../../components/common/Skeleton';
+import EmptyState from '../../components/common/EmptyState';
 
 /**
  * CheckInScreen - Staff page to check in a member.
@@ -12,34 +15,40 @@ import Input from '../../components/ui/Input';
 export default function CheckInScreen() {
   const [userId, setUserId] = useState('');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null); // { type: 'success' | 'error', message: string }
   const [checkins, setCheckins] = useState([]);
+  const [loadingCheckins, setLoadingCheckins] = useState(true);
+
+  // Only allow positive integer IDs before enabling the submit button.
+  const numericUserId = Number(userId);
+  const isUserIdValid =
+    userId !== '' && Number.isInteger(numericUserId) && numericUserId > 0;
 
   async function handleCheckIn(e) {
     e.preventDefault();
+
+    if (!isUserIdValid) {
+      toast.error('Có lỗi xảy ra!');
+      return;
+    }
+
     setLoading(true);
-    setResult(null);
     try {
-      const response = await axiosClient.post('/checkins', {
-        user_id: Number(userId),
+      await axiosClient.post('/checkins', {
+        user_id: numericUserId,
       });
-      setResult({
-        type: 'success',
-        message: response.data?.data?.message || 'Check-in successful.',
-      });
+      toast.success('Thành công!');
+      setUserId('');
       // Refresh today's check-in list after a successful check-in
       await fetchTodayCheckins();
-    } catch (err) {
-      setResult({
-        type: 'error',
-        message: 'Check-in failed.',
-      });
+    } catch {
+      toast.error('Có lỗi xảy ra!');
     } finally {
       setLoading(false);
     }
   }
 
   async function fetchTodayCheckins() {
+    setLoadingCheckins(true);
     try {
       const response = await axiosClient.get('/checkins/today');
       if (response.data?.data && Array.isArray(response.data.data)) {
@@ -47,6 +56,9 @@ export default function CheckInScreen() {
       }
     } catch {
       setCheckins([]);
+      toast.error('Có lỗi xảy ra!');
+    } finally {
+      setLoadingCheckins(false);
     }
   }
 
@@ -58,7 +70,7 @@ export default function CheckInScreen() {
   return (
     <div className="min-h-screen bg-[#f4f6f3]">
       <div className="px-4 py-6 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-ink">Check-in</h1>
             <p className="text-sm text-muted">Record member gym entry.</p>
@@ -66,69 +78,72 @@ export default function CheckInScreen() {
         </div>
 
         {/* Check-in Form */}
-        <div className="rounded-xl border border-[#e3e9e1] bg-white shadow-card p-6 mb-8">
-          <form onSubmit={handleCheckIn} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-ink">User ID</label>
-                <Input
-                  type="number"
-                  required
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
-                />
-              </div>
-              <div className="flex items-end">
-                <Button type="submit" loading={loading}>
-                  <Clock size={18} /> Check-in
-                </Button>
-              </div>
+        <div className="mb-8 rounded-xl border border-[#e3e9e1] bg-white p-6 shadow-card">
+          <form className="flex flex-col gap-4 md:flex-row md:items-end" onSubmit={handleCheckIn}>
+            <div className="w-full space-y-2 md:max-w-xs">
+              <label className="block text-sm font-semibold text-ink" htmlFor="checkin-user-id">
+                User ID
+              </label>
+              <Input
+                error={userId !== '' && !isUserIdValid}
+                id="checkin-user-id"
+                min={1}
+                required
+                type="number"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+              />
+              {userId !== '' && !isUserIdValid && (
+                <p className="text-xs text-red-600">User ID phải là số nguyên dương.</p>
+              )}
+            </div>
+            <div>
+              <Button disabled={!isUserIdValid} loading={loading} type="submit">
+                <Clock size={18} /> Check-in
+              </Button>
             </div>
           </form>
-
-          {/* Result */}
-          {result && (
-            <div className={`mt-4 p-4 rounded-lg flex items-center gap-3 ${
-              result.type === 'success'
-                ? 'bg-[#9aca42]/10 border border-[#9aca42]/30 text-[#9aca42]'
-                : 'bg-[#ef4444]/10 border border-[#ef4444]/30 text-[#ef4444]'
-            }`}>
-              {result.type === 'success' ? <CheckCircle size={20} /> : <XCircle size={20} />}
-              <span className="text-sm font-medium">{result.message}</span>
-            </div>
-          )}
         </div>
 
         {/* Today's Check-ins Table */}
         <div className="rounded-xl border border-[#e3e9e1] bg-white shadow-card">
-          <div className="px-6 py-4 border-b border-[#e3e9e1] flex justify-between items-center">
-            <h2 className="text-lg font-bold text-ink">Today's Check-ins</h2>
+          <div className="flex items-center justify-between border-b border-[#e3e9e1] px-6 py-4">
+            <h2 className="text-lg font-bold text-ink">Today&apos;s Check-ins</h2>
             <span className="text-sm font-medium text-muted">{checkins.length} check-ins</span>
           </div>
-          <div className="overflow-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-[#e3e9e1] bg-[#f4f6f3]">
-                  <th className="px-4 py-3 text-sm font-semibold text-muted">User ID</th>
-                  <th className="px-4 py-3 text-sm font-semibold text-muted">Time</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#e3e9e1]">
-                {checkins.length === 0 ? (
-                  <tr>
-                    <td colSpan={2} className="px-4 py-8 text-center text-muted">No check-ins today.</td>
+
+          {loadingCheckins ? (
+            <div className="space-y-3 p-5" aria-label="Loading check-ins">
+              {[0, 1, 2].map((item) => (
+                <Skeleton className="h-10 w-full" key={item} />
+              ))}
+            </div>
+          ) : checkins.length === 0 ? (
+            <EmptyState
+              description="Các lượt check-in hôm nay sẽ xuất hiện tại đây."
+              icon={CheckCircle}
+              title="Chưa có dữ liệu"
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[420px] border-collapse text-left">
+                <thead>
+                  <tr className="border-b border-[#e3e9e1] bg-[#f4f6f3]">
+                    <th className="px-4 py-3 text-sm font-semibold text-muted">User ID</th>
+                    <th className="px-4 py-3 text-sm font-semibold text-muted">Time</th>
                   </tr>
-                ) : (
-                  checkins.map((c) => (
-                    <tr key={c.id} className="hover:bg-[#f4f6f3]/50 transition-colors">
+                </thead>
+                <tbody className="divide-y divide-[#e3e9e1]">
+                  {checkins.map((c) => (
+                    <tr key={c.id} className="transition-colors hover:bg-[#f4f6f3]/50">
                       <td className="px-4 py-3 text-sm text-ink">{c.user_id}</td>
                       <td className="px-4 py-3 text-sm text-muted">{c.checkin_time}</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import axiosClient from '../../api/axiosClient';
-import { User, Shield, Clock } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { User } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import Select from '../../components/ui/Select';
 
 /**
  * MembershipForm - Staff page to renew a member's plan.
@@ -16,11 +16,6 @@ export default function MembershipForm() {
   const [startDate, setStartDate] = useState('');
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null); // { type: 'success' | 'error', message: string }
-
-  useEffect(() => {
-    fetchPlans();
-  }, []);
 
   async function fetchPlans() {
     try {
@@ -30,27 +25,38 @@ export default function MembershipForm() {
       }
     } catch {
       setPlans([]);
+      toast.error('Có lỗi xảy ra!');
     }
   }
 
+  useEffect(() => {
+    fetchPlans();
+  }, []);
+
+  const numericMemberId = Number(memberId);
+  const isMemberIdValid =
+    memberId !== '' && Number.isInteger(numericMemberId) && numericMemberId > 0;
+  const isFormValid = isMemberIdValid && planId !== '' && startDate !== '';
+
   async function handleSubmit(e) {
     e.preventDefault();
+
+    if (!isFormValid) {
+      toast.error('Có lỗi xảy ra!');
+      return;
+    }
+
     setLoading(true);
-    setResult(null);
     try {
-      await axiosClient.post(`/members/${Number(memberId)}/memberships`, {
+      await axiosClient.post(`/members/${numericMemberId}/memberships`, {
         plan_id: Number(planId),
         start_date: startDate,
       });
-      setResult({
-        type: 'success',
-        message: 'Membership renewed successfully.',
-      });
-    } catch (err) {
-      setResult({
-        type: 'error',
-        message: err.message || 'Failed to renew membership.',
-      });
+      toast.success('Thành công!');
+      setPlanId('');
+      setStartDate('');
+    } catch {
+      toast.error('Có lỗi xảy ra!');
     } finally {
       setLoading(false);
     }
@@ -61,28 +67,37 @@ export default function MembershipForm() {
       <div className="px-4 py-6 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-ink">Renew Membership</h1>
-          <p className="text-sm text-muted">Renew a member's gym membership plan.</p>
+          <p className="text-sm text-muted">Renew a member&apos;s gym membership plan.</p>
         </div>
 
-        <div className="rounded-xl border border-[#e3e9e1] bg-white shadow-card p-6 max-w-2xl">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-ink">Member ID</label>
+        <div className="max-w-2xl rounded-xl border border-[#e3e9e1] bg-white p-6 shadow-card">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="flex flex-col gap-4 md:flex-row md:items-end">
+              <div className="w-full space-y-2 md:flex-1">
+                <label className="block text-sm font-semibold text-ink" htmlFor="renew-member-id">
+                  Member ID
+                </label>
                 <Input
-                  type="number"
+                  error={memberId !== '' && !isMemberIdValid}
+                  id="renew-member-id"
+                  min={1}
                   required
+                  type="number"
                   value={memberId}
                   onChange={(e) => setMemberId(e.target.value)}
                 />
               </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-ink">Plan</label>
+
+              <div className="w-full space-y-2 md:flex-1">
+                <label className="block text-sm font-semibold text-ink" htmlFor="renew-plan">
+                  Plan
+                </label>
                 <select
                   required
                   value={planId}
                   onChange={(e) => setPlanId(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#3a4a3e] rounded-lg text-sm bg-white text-ink focus:outline-none focus:ring-2 focus:ring-[#84cc16]"
+                  className="w-full rounded-lg border border-[#3a4a3e] bg-white px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-[#84cc16]"
+                  id="renew-plan"
                 >
                   <option value="">Select a plan</option>
                   {plans.map((p) => (
@@ -92,30 +107,29 @@ export default function MembershipForm() {
                   ))}
                 </select>
               </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-ink">Start Date</label>
+
+              <div className="w-full space-y-2 md:flex-1">
+                <label className="block text-sm font-semibold text-ink" htmlFor="renew-start-date">
+                  Start Date
+                </label>
                 <Input
-                  type="date"
+                  id="renew-start-date"
                   required
+                  type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                 />
               </div>
             </div>
 
-            {result && (
-              <div className={`p-4 rounded-lg flex items-center gap-3 ${
-                result.type === 'success'
-                  ? 'bg-[#9aca42]/10 border border-[#9aca42]/30 text-[#9aca42]'
-                  : 'bg-[#ef4444]/10 border border-[#ef4444]/30 text-[#ef4444]'
-              }`}>
-                {result.type === 'success' ? <Shield size={20} /> : <Clock size={20} />}
-                <span className="text-sm font-medium">{result.message}</span>
-              </div>
+            {!isFormValid && (
+              <p className="text-xs text-red-600">
+                Vui lòng nhập Member ID hợp lệ, chọn gói tập và ngày bắt đầu.
+              </p>
             )}
 
             <div className="flex justify-end pt-4">
-              <Button type="submit" loading={loading}>
+              <Button disabled={!isFormValid} loading={loading} type="submit">
                 <User size={18} /> Confirm Renewal
               </Button>
             </div>

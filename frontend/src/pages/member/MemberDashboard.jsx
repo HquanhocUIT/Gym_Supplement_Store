@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import axiosClient from '../../api/axiosClient';
-import { Shield, Clock } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { CalendarClock, Shield } from 'lucide-react';
+import Skeleton from '../../components/common/Skeleton';
+import EmptyState from '../../components/common/EmptyState';
 
 /**
  * MemberDashboard - Member portal page.
@@ -13,10 +16,6 @@ export default function MemberDashboard() {
   const [memberships, setMemberships] = useState([]);
   const [checkins, setCheckins] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadData();
-  }, []);
 
   async function loadData() {
     try {
@@ -32,11 +31,15 @@ export default function MemberDashboard() {
       if (checkinsRes.data?.data && Array.isArray(checkinsRes.data.data))
         setCheckins(checkinsRes.data.data);
     } catch {
-      // Keep empty states
+      toast.error('Có lỗi xảy ra!');
     } finally {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
@@ -52,8 +55,16 @@ export default function MemberDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f4f6f3]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#84cc16]"></div>
+      <div className="min-h-screen bg-[#f4f6f3]">
+        <div className="space-y-6 px-4 py-6 sm:px-6 lg:px-8" aria-label="Loading dashboard">
+          <Skeleton className="h-8 w-48" />
+          <div className="rounded-xl border border-[#e3e9e1] bg-white p-6 shadow-card">
+            <Skeleton className="h-24 w-full" />
+          </div>
+          <div className="rounded-xl border border-[#e3e9e1] bg-white p-6 shadow-card">
+            <Skeleton className="h-40 w-full" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -64,69 +75,83 @@ export default function MemberDashboard() {
     <div className="min-h-screen bg-[#f4f6f3]">
       <div className="px-4 py-6 sm:px-6 lg:px-8">
         {/* Welcome Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-ink">My Dashboard</h1>
-          <p className="text-sm text-muted">
-            Welcome back, {user?.full_name || 'Member'}.
-          </p>
+        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-ink">My Dashboard</h1>
+            <p className="text-sm text-muted">
+              Welcome back, {user?.full_name || 'Member'}.
+            </p>
+          </div>
         </div>
 
         {/* Current Plan Card */}
-        <div className="rounded-xl border border-[#e3e9e1] bg-white shadow-card p-6 mb-8">
-          <div className="flex items-center gap-4 mb-4">
+        <div className="mb-8 rounded-xl border border-[#e3e9e1] bg-white p-6 shadow-card">
+          <div className="mb-4 flex items-center gap-4">
             <Shield size={32} className="text-[#9aca42]" />
             <div>
               <h2 className="text-lg font-bold text-ink">Current Membership</h2>
-              <p className="text-sm text-muted">{active ? active.plan_name : 'No active plan'}</p>
+              <p className="text-sm text-muted">{active ? active.plan_name : 'Chưa có dữ liệu'}</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-[#e3e9e1] pt-4">
-            <div className="text-center">
-              <p className="text-sm text-muted">Start Date</p>
-              <p className="text-sm font-semibold text-ink">{active ? formatDate(active.start_date) : '-'}</p>
+
+          {active ? (
+            <div className="grid grid-cols-1 gap-4 border-t border-[#e3e9e1] pt-4 sm:grid-cols-3">
+              <div className="text-center">
+                <p className="text-sm text-muted">Start Date</p>
+                <p className="text-sm font-semibold text-ink">{formatDate(active.start_date)}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-muted">Expiry Date</p>
+                <p className="text-sm font-semibold text-[#9aca42]">{formatDate(active.end_date)}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-muted">Status</p>
+                <span className="text-sm font-semibold text-[#9aca42]">
+                  {active.status.toUpperCase()}
+                </span>
+              </div>
             </div>
-            <div className="text-center">
-              <p className="text-sm text-muted">Expiry Date</p>
-              <p className={`text-sm font-semibold ${active ? 'text-[#9aca42]' : 'text-[#ef4444]'}`}>
-                {active ? formatDate(active.end_date) : 'N/A'}
-              </p>
+          ) : (
+            <div className="border-t border-[#e3e9e1] pt-2">
+              <EmptyState
+                description="Bạn chưa có gói tập đang hoạt động. Liên hệ quầy lễ tân để gia hạn."
+                icon={Shield}
+                title="Chưa có dữ liệu"
+              />
             </div>
-            <div className="text-center">
-              <p className="text-sm text-muted">Status</p>
-              <span className={`text-sm font-semibold ${active ? 'text-[#9aca42]' : 'text-[#ef4444]'}`}>
-                {active ? active.status.toUpperCase() : 'INACTIVE'}
-              </span>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Check-in History */}
         <div className="rounded-xl border border-[#e3e9e1] bg-white shadow-card">
-          <div className="px-6 py-4 border-b border-[#e3e9e1]">
+          <div className="border-b border-[#e3e9e1] px-6 py-4">
             <h2 className="text-lg font-bold text-ink">Check-in History</h2>
           </div>
-          <div className="overflow-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-[#e3e9e1] bg-[#f4f6f3]">
-                  <th className="px-4 py-3 text-sm font-semibold text-muted">Time</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#e3e9e1]">
-                {checkins.length === 0 ? (
-                  <tr>
-                    <td colSpan={1} className="px-4 py-8 text-center text-muted">No check-ins yet.</td>
+
+          {checkins.length === 0 ? (
+            <EmptyState
+              description="Lịch sử check-in của bạn sẽ xuất hiện tại đây."
+              icon={CalendarClock}
+              title="Chưa có dữ liệu"
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[360px] border-collapse text-left">
+                <thead>
+                  <tr className="border-b border-[#e3e9e1] bg-[#f4f6f3]">
+                    <th className="px-4 py-3 text-sm font-semibold text-muted">Time</th>
                   </tr>
-                ) : (
-                  checkins.map((c) => (
-                    <tr key={c.id} className="hover:bg-[#f4f6f3]/50 transition-colors">
+                </thead>
+                <tbody className="divide-y divide-[#e3e9e1]">
+                  {checkins.map((c) => (
+                    <tr key={c.id} className="transition-colors hover:bg-[#f4f6f3]/50">
                       <td className="px-4 py-3 text-sm text-ink">{c.checkin_time}</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>

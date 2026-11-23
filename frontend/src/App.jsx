@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLayout from './layouts/AdminLayout';
 import MemberLayout from './layouts/MemberLayout';
@@ -29,7 +30,8 @@ import MemberDashboard from './pages/member/MemberDashboard';
 
 function App() {
   return (
-    <Routes>
+    <>
+      <Routes>
       {/* Các trang đăng nhập và đăng ký. */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -99,6 +101,8 @@ function App() {
       {/* Các đường dẫn chưa khai báo hiển thị trang 404. */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+    </>
   );
 }
 
