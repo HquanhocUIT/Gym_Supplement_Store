@@ -271,6 +271,8 @@ Docker Compose mounts `database/schema/` into PostgreSQL's initialization direct
 
 ## Demo Accounts
 
+Deployment does not create these accounts automatically. For the first production administrator, follow [Production accounts](docs/production-accounts.md) and choose your own password.
+
 The seed file `database/seed/01_gym_auth.sql` creates the following accounts:
 
 | Role | Email | Password |

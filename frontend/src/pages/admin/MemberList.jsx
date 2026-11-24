@@ -35,7 +35,7 @@ export default function MemberList() {
       }
     } catch {
       setMembers(MOCK_MEMBERS);
-      toast.error('Có lỗi xảy ra!');
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -52,7 +52,7 @@ export default function MemberList() {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('vi-VN');
+    return new Date(dateStr).toLocaleDateString('en-US');
   };
 
   const statusBadge = (status) => {
@@ -98,9 +98,9 @@ export default function MemberList() {
             </div>
           ) : filteredMembers.length === 0 ? (
             <EmptyState
-              description={search ? 'Không tìm thấy hội viên phù hợp với từ khóa.' : 'Danh sách hội viên sẽ xuất hiện khi có dữ liệu.'}
+              description={search ? 'No members match your search.' : 'Members will appear here when available.'}
               icon={Users}
-              title="Chưa có dữ liệu"
+              title="No data yet"
             />
           ) : (
             <div className="overflow-x-auto">

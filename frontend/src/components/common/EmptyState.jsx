@@ -2,7 +2,7 @@ import { PackageOpen } from 'lucide-react'
 
 // Hiển thị lý do chưa có dữ liệu và hành động tiếp theo nếu trang có cung cấp.
 export default function EmptyState({
-  title = 'Chưa có dữ liệu',
+  title = 'No data yet',
   description,
   icon: Icon = PackageOpen,
   action,

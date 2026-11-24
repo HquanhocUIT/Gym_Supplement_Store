@@ -21,18 +21,18 @@ function ImageForm({ onChange = () => {} }) {
 it('phân trang không cho đi lùi ở trang đầu và đi tiếp ở trang cuối', () => {
   const onPageChange = vi.fn()
   const { rerender } = render(<Pagination page={1} pageSize={4} total={12} onPageChange={onPageChange} />)
-  expect(screen.getByRole('button', { name: 'Trang trước' }).disabled).toBe(true)
-  fireEvent.click(screen.getByRole('button', { name: 'Trang sau' }))
+  expect(screen.getByRole('button', { name: 'Previous page' }).disabled).toBe(true)
+  fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
   expect(onPageChange).toHaveBeenCalledWith(2)
 
   rerender(<Pagination page={3} pageSize={4} total={12} onPageChange={onPageChange} />)
-  expect(screen.getByRole('button', { name: 'Trang sau' }).disabled).toBe(true)
-  expect(screen.getByRole('button', { name: 'Trang 3' }).getAttribute('aria-current')).toBe('page')
+  expect(screen.getByRole('button', { name: 'Next page' }).disabled).toBe(true)
+  expect(screen.getByRole('button', { name: 'Page 3' }).getAttribute('aria-current')).toBe('page')
 })
 
 it('vô hiệu hóa phân trang khi danh sách rỗng', () => {
   render(<Pagination page={1} total={0} onPageChange={vi.fn()} />)
-  expect(screen.getByText('0–0 / 0 kết quả')).toBeTruthy()
+  expect(screen.getByText('0–0 / 0 results')).toBeTruthy()
   expect(screen.getAllByRole('button').every((button) => button.disabled)).toBe(true)
 })
 
@@ -46,11 +46,11 @@ it('chọn ảnh hợp lệ, xem trước rồi xóa và giải phóng URL', asy
   render(<ImageForm onChange={onChange} />)
   const file = new File(['ảnh mẫu'], 'whey.png', { type: 'image/png' })
 
-  fireEvent.change(screen.getByLabelText('Ảnh sản phẩm'), { target: { files: [file] } })
+  fireEvent.change(screen.getByLabelText('Product image'), { target: { files: [file] } })
   expect(onChange).toHaveBeenCalledWith(file)
-  await waitFor(() => expect(screen.getByAltText('Xem trước ảnh sản phẩm đã chọn').getAttribute('src')).toBe('blob:preview'))
+  await waitFor(() => expect(screen.getByAltText('Selected product image preview').getAttribute('src')).toBe('blob:preview'))
 
-  fireEvent.click(screen.getByRole('button', { name: 'Xóa ảnh' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Remove image' }))
   expect(onChange).toHaveBeenLastCalledWith(null)
   await waitFor(() => expect(screen.queryByRole('img')).toBeNull())
   expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:preview')
@@ -59,12 +59,12 @@ it('chọn ảnh hợp lệ, xem trước rồi xóa và giải phóng URL', asy
 it('từ chối file sai định dạng và giữ lại ảnh hợp lệ trước đó', async () => {
   const onChange = vi.fn()
   render(<ImageForm onChange={onChange} />)
-  const input = screen.getByLabelText('Ảnh sản phẩm')
+  const input = screen.getByLabelText('Product image')
   const image = new File(['ảnh'], 'whey.png', { type: 'image/png' })
   fireEvent.change(input, { target: { files: [image] } })
 
   fireEvent.change(input, { target: { files: [new File(['text'], 'notes.txt', { type: 'text/plain' })] } })
-  expect(screen.getByRole('alert').textContent).toContain('Chỉ chấp nhận ảnh JPG, PNG hoặc WebP.')
+  expect(screen.getByRole('alert').textContent).toContain('Only JPG, PNG or WebP images are supported.')
   expect(onChange).toHaveBeenCalledTimes(1)
   expect(screen.getByRole('img')).toBeTruthy()
 })
@@ -72,15 +72,15 @@ it('từ chối file sai định dạng và giữ lại ảnh hợp lệ trướ
 it('từ chối ảnh rỗng và ảnh vượt dung lượng cho phép', () => {
   const onChange = vi.fn()
   render(<ImageUploader onChange={onChange} maxSizeMB={1} />)
-  const input = screen.getByLabelText('Ảnh sản phẩm')
+  const input = screen.getByLabelText('Product image')
 
   fireEvent.change(input, { target: { files: [new File([], 'empty.png', { type: 'image/png' })] } })
-  expect(screen.getByRole('alert').textContent).toContain('không quá 1 MB')
+  expect(screen.getByRole('alert').textContent).toContain('no larger than 1 MB')
 
   const largeFile = new File([new Uint8Array(1024 * 1024 + 1)], 'large.png', { type: 'image/png' })
   fireEvent.change(input, { target: { files: [largeFile] } })
   expect(onChange).not.toHaveBeenCalled()
-  expect(screen.getByRole('alert').textContent).toContain('không quá 1 MB')
+  expect(screen.getByRole('alert').textContent).toContain('no larger than 1 MB')
 })
 
 it('giải phóng URL khi rời trang', async () => {

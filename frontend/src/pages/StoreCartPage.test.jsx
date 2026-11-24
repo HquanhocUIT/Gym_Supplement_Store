@@ -84,16 +84,16 @@ it('đăng nhập, tải giỏ và đồng bộ số lượng mới lên header'
 
   const { client } = renderCart()
   fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'member@example.test' } })
-  fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: 'test-password' } })
-  fireEvent.click(screen.getByRole('button', { name: 'Đăng nhập' }))
+  fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'test-password' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
 
   expect(await screen.findByText('Daily Whey')).toBeTruthy()
-  expect(screen.getByRole('link', { name: 'Giỏ hàng, 2 sản phẩm' })).toBeTruthy()
+  expect(screen.getByRole('link', { name: 'Shopping cart, 2 items' })).toBeTruthy()
   expect(requests.find((request) => request.url === '/store/cart')?.authorization).toBe('Bearer test-jwt')
 
-  fireEvent.click(screen.getByRole('button', { name: 'Tăng số lượng Daily Whey' }))
-  await waitFor(() => expect(screen.getByText('3 sản phẩm trong giỏ')).toBeTruthy())
-  expect(screen.getByRole('link', { name: 'Giỏ hàng, 3 sản phẩm' })).toBeTruthy()
+  fireEvent.click(screen.getByRole('button', { name: 'Increase quantity Daily Whey' }))
+  await waitFor(() => expect(screen.getByText('3 items in your cart')).toBeTruthy())
+  expect(screen.getByRole('link', { name: 'Shopping cart, 3 items' })).toBeTruthy()
   expect(requests.some((request) => request.method === 'put' && request.url === '/store/cart/items/12')).toBe(true)
 
   client.clear()
@@ -118,9 +118,9 @@ it('xóa món và báo trạng thái giỏ trống', async () => {
 
   const { client } = renderCart()
   expect(await screen.findByText('Daily Whey')).toBeTruthy()
-  fireEvent.click(screen.getByRole('button', { name: 'Xóa Daily Whey khỏi giỏ' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Remove Daily Whey from cart' }))
 
-  expect(await screen.findByText('Giỏ hàng đang trống')).toBeTruthy()
-  await waitFor(() => expect(screen.getByRole('link', { name: 'Giỏ hàng, 0 sản phẩm' })).toBeTruthy())
+  expect(await screen.findByText('Your cart is empty')).toBeTruthy()
+  await waitFor(() => expect(screen.getByRole('link', { name: 'Shopping cart, 0 items' })).toBeTruthy())
   client.clear()
 })

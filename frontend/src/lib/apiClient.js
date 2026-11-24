@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getAccessToken } from './authToken.js';
+import { englishApiMessage } from './apiError.js';
 
 // Dùng chung địa chỉ API và thời gian chờ cho các request từ frontend.
 export const apiClient = axios.create({
@@ -27,15 +28,15 @@ apiClient.interceptors.response.use(
     let message = error.response?.data?.error?.message;
     if (!message) {
       if (error.response) {
-        message = 'API gặp lỗi. Vui lòng thử lại.';
+        message = 'Something went wrong. Please try again.';
       } else if (error.code === 'ECONNABORTED') {
-        message = 'API phản hồi quá lâu. Vui lòng thử lại.';
+        message = 'The server is taking too long. Please try again.';
       } else {
-        message = 'Không kết nối được API. Kiểm tra backend rồi thử lại.';
+        message = 'Unable to connect. Please check your connection and try again.';
       }
     }
 
-    const apiError = new Error(message);
+    const apiError = new Error(englishApiMessage(message, error.response?.data?.error?.code, error.response?.status));
     apiError.status = error.response?.status || 0;
     apiError.code = error.response?.data?.error?.code || error.code || 'API_ERROR';
     return Promise.reject(apiError);
@@ -47,7 +48,7 @@ function getResponseData(response) {
   const body = response.data;
 
   if (body?.success !== true || !Object.hasOwn(body, 'data')) {
-    const error = new Error(body?.error?.message || 'Phản hồi API không đúng định dạng.');
+    const error = new Error(body?.error?.message ? englishApiMessage(body.error.message, body.error.code, response.status) : 'The server returned an unexpected response.');
     error.status = response.status;
     error.code = body?.error?.code || 'INVALID_RESPONSE';
     throw error;

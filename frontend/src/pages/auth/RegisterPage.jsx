@@ -26,14 +26,14 @@ export default function RegisterPage() {
       await register(email, password, full_name);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Registration failed.');
+      setError(err.response?.data?.error?.message || err.message || 'Unable to create your account. Please try again.');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f4f6f3]">
+    <div className="min-h-screen flex items-center justify-center bg-paper px-4 py-10">
       <div className="w-full max-w-md space-y-6 p-8 bg-white rounded-xl shadow-card">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-ink">Register</h1>
@@ -42,21 +42,25 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="text-sm text-red-600 bg-red-50/50 px-3 py-2 rounded border border-red-100">
+            <div className="text-sm text-red-700 bg-red-50 px-3 py-3 rounded-lg border border-red-200" role="alert">
               {error}
             </div>
           )}
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-ink">Full name</label>
+            <label htmlFor="register-name" className="block text-sm font-semibold text-ink">Full name</label>
             <Input
+              id="register-name"
+              autoComplete="name"
               required
               value={full_name}
               onChange={(e) => setFullName(e.target.value)}
             />
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-ink">Email</label>
+            <label htmlFor="register-email" className="block text-sm font-semibold text-ink">Email</label>
             <Input
+              id="register-email"
+              autoComplete="email"
               type="email"
               required
               value={email}
@@ -64,8 +68,10 @@ export default function RegisterPage() {
             />
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-ink">Password</label>
+            <label htmlFor="register-password" className="block text-sm font-semibold text-ink">Password</label>
             <Input
+              id="register-password"
+              autoComplete="new-password"
               type="password"
               required
               value={password}
@@ -79,7 +85,7 @@ export default function RegisterPage() {
 
         <p className="text-center text-sm text-muted">
           Already have an account?{' '}
-          <Link to="/login" className="text-[#84cc16] font-medium hover:underline">
+          <Link to="/login" className="text-brand-700 font-medium hover:underline">
             Login now
           </Link>
         </p>

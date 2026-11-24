@@ -21,17 +21,19 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
-      navigate('/');
+      const user = await login(email, password);
+      // Chuyển tới khu vực phù hợp sau khi backend xác nhận quyền tài khoản.
+      const home = { admin: '/admin/dashboard', staff: '/staff/check-in', member: '/member/dashboard' };
+      navigate(home[user.role] || '/', { replace: true });
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Invalid email or password.');
+      setError(err.response?.data?.error?.message || err.message || 'Unable to sign in. Please try again.');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f4f6f3]">
+    <div className="min-h-screen flex items-center justify-center bg-paper px-4 py-10">
       <div className="w-full max-w-md space-y-6 p-8 bg-white rounded-xl shadow-card">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-ink">Login</h1>
@@ -40,13 +42,15 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="text-sm text-red-600 bg-red-50/50 px-3 py-2 rounded border border-red-100">
+            <div className="text-sm text-red-700 bg-red-50 px-3 py-3 rounded-lg border border-red-200" role="alert">
               {error}
             </div>
           )}
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-ink">Email</label>
+            <label htmlFor="login-email" className="block text-sm font-semibold text-ink">Email</label>
             <Input
+              id="login-email"
+              autoComplete="email"
               type="email"
               required
               value={email}
@@ -54,8 +58,10 @@ export default function LoginPage() {
             />
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-ink">Password</label>
+            <label htmlFor="login-password" className="block text-sm font-semibold text-ink">Password</label>
             <Input
+              id="login-password"
+              autoComplete="current-password"
               type="password"
               required
               value={password}
@@ -68,9 +74,9 @@ export default function LoginPage() {
         </form>
 
         <p className="text-center text-sm text-muted">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-[#84cc16] font-medium hover:underline">
-            Register now
+          New here?{' '}
+          <Link to="/register" className="text-brand-700 font-medium hover:underline">
+            Create an account
           </Link>
         </p>
       </div>

@@ -30,9 +30,6 @@ function PublicLayout() {
 
   return (
     <div className="min-h-screen bg-paper">
-      <div className="bg-night px-4 py-2 text-center text-[11px] font-semibold tracking-wide text-white sm:text-xs">
-        TRAIN SMARTER. FEEL STRONGER. FREE SHIPPING ON ORDERS OVER $75.
-      </div>
       <header className="border-b border-line bg-surface">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-4 sm:px-6 lg:px-8">
           <BrandMark />
@@ -73,7 +70,7 @@ function PublicLayout() {
             <Link
               className="relative grid size-11 place-items-center rounded-full text-ink-soft transition hover:bg-paper hover:text-ink"
               to="/cart"
-              aria-label={`Giỏ hàng, ${cartCount} sản phẩm`}
+              aria-label={`Shopping cart, ${cartCount} items`}
             >
               <ShoppingBag size={19} aria-hidden="true" />
               {cartCount > 0 && (
@@ -103,12 +100,11 @@ function PublicLayout() {
       <footer className="border-t border-line bg-surface">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <BrandMark />
-          <p>Good training starts with a plan. Form &amp; Fuel is a project preview.</p>
           <Link
             className="inline-flex items-center gap-1 font-semibold text-ink hover:text-brand-700"
             to="/admin"
           >
-            Admin preview <ArrowUpRight size={15} aria-hidden="true" />
+            Administration <ArrowUpRight size={15} aria-hidden="true" />
           </Link>
         </div>
       </footer>

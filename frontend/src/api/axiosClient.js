@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { getAccessToken } from '../lib/authToken';
+import { englishApiMessage } from '../lib/apiError';
 
 /**
  * Axios instance used throughout the frontend.
@@ -17,7 +19,7 @@ export const axiosClient = axios.create({
  */
 axiosClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -27,3 +29,19 @@ axiosClient.interceptors.request.use(
 );
 
 export default axiosClient;
+
+// Giữ cấu trúc Axios để các trang Gym hiện tại vẫn đọc được lỗi từ response.
+axiosClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const apiError = error.response?.data?.error;
+    const message = error.code === 'ECONNABORTED'
+      ? 'The server is taking too long. Please try again.'
+      : error.response
+        ? englishApiMessage(apiError?.message, apiError?.code, error.response.status)
+        : 'Unable to connect. Please check your connection and try again.';
+    error.message = message;
+    if (apiError) apiError.message = message;
+    return Promise.reject(error);
+  },
+);

@@ -22,11 +22,11 @@ export default function UiKit() {
 
   const columns = [
     { key: 'id', label: 'ID', sortable: true },
-    { key: 'name', label: 'Tên sản phẩm', sortable: true },
-    { key: 'price', label: 'Giá', sortable: true, render: (r) => <span className="font-medium text-gray-900">{r.price.toLocaleString('vi-VN')}đ</span> },
-    { key: 'stock', label: 'Tồn kho', sortable: true, render: (r) => (
+    { key: 'name', label: 'Product name', sortable: true },
+    { key: 'price', label: 'Price', sortable: true, render: (r) => <span className="font-medium text-gray-900">{r.price.toLocaleString('en-US')} VND</span> },
+    { key: 'stock', label: 'Stock', sortable: true, render: (r) => (
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${r.stock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-        {r.stock} cái
+        {r.stock} items
       </span>
     )},
   ];
@@ -35,7 +35,7 @@ export default function UiKit() {
     <div className="p-8 space-y-12 max-w-6xl mx-auto text-left">
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">UI Kit Demo</h1>
-        <p className="text-gray-500">Thư viện component dùng chung của nhóm 28.</p>
+        <p className="text-gray-500">Shared component library.</p>
         {/* Liên kết sang trang minh chứng các component của Task 6. */}
         <Link className="mt-4 inline-flex min-h-11 items-center font-semibold text-brand-700 underline underline-offset-4" to="/ui-kit/common">Xem Common components →</Link>
       </div>
@@ -58,21 +58,21 @@ export default function UiKit() {
       <section>
         <h2 className="text-xl font-semibold mb-4 border-b pb-2">Form Elements</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
-          <FormField label="Tên sản phẩm" required hint="Nhập tên hiển thị">
+          <FormField label="Product name" required hint="Enter a display name">
             <Input placeholder="VD: Whey Protein..." />
           </FormField>
-          <FormField label="Email" required error="Email không hợp lệ">
+          <FormField label="Email" required error="Invalid email address">
             <Input placeholder="email@example.com" error />
           </FormField>
-          <FormField label="Danh mục">
+          <FormField label="Category">
             <Select>
-              <option value="">Chọn danh mục</option>
+              <option value="">Choose a category</option>
               <option>Whey Protein</option>
               <option>Creatine</option>
             </Select>
           </FormField>
-          <FormField label="Ghi chú">
-            <Textarea placeholder="Nhập ghi chú..." />
+          <FormField label="Notes">
+            <Textarea placeholder="Enter notes…" />
           </FormField>
         </div>
       </section>
@@ -81,33 +81,33 @@ export default function UiKit() {
       <section>
         <h2 className="text-xl font-semibold mb-4 border-b pb-2">Overlays</h2>
         <div className="flex gap-3">
-          <Button onClick={() => setModalOpen(true)}>Mở Modal</Button>
-          <Button variant="danger" onClick={() => setConfirmOpen(true)}>Mở Confirm Xóa</Button>
+          <Button onClick={() => setModalOpen(true)}>Open modal</Button>
+          <Button variant="danger" onClick={() => setConfirmOpen(true)}>Open delete confirmation</Button>
         </div>
         <Modal 
           isOpen={modalOpen} 
           onClose={() => setModalOpen(false)} 
-          title="Chi tiết sản phẩm"
+          title="Product details"
           footer={
             <>
-              <Button variant="outline" onClick={() => setModalOpen(false)}>Đóng</Button>
-              <Button onClick={() => setModalOpen(false)}>Lưu lại</Button>
+              <Button variant="outline" onClick={() => setModalOpen(false)}>Close</Button>
+              <Button onClick={() => setModalOpen(false)}>Save</Button>
             </>
           }
         >
-          <p>Đây là nội dung bên trong Modal. Bạn có thể đặt form hoặc thông tin chi tiết ở đây.</p>
+          <p>Use this dialog for a form or detailed information.</p>
         </Modal>
         <ConfirmDialog
           isOpen={confirmOpen}
           onClose={() => setConfirmOpen(false)}
-          onConfirm={() => { alert('Đã xác nhận xóa!'); setConfirmOpen(false); }}
-          message="Bạn có chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn tác."
+          onConfirm={() => { alert('Deletion confirmed.'); setConfirmOpen(false); }}
+          message="Delete this product? This action cannot be undone."
         />
       </section>
 
       {/* DataTable */}
       <section>
-        <h2 className="text-xl font-semibold mb-4 border-b pb-2">DataTable (Phân trang & Sắp xếp)</h2>
+        <h2 className="text-xl font-semibold mb-4 border-b pb-2">Data table (pagination and sorting)</h2>
         <DataTable columns={columns} data={demoData} pageSize={5} />
       </section>
     </div>
