@@ -10,12 +10,14 @@ import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Eyebrow } from "../components/Brand.jsx";
 import ImageUploader from "../components/common/ImageUploader.jsx";
+import Pagination from "../components/common/Pagination.jsx";
 import Modal from "../components/ui/Modal.jsx";
 import useApiQuery from "../hooks/useApiQuery.js";
 import { apiClient, getApiData } from "../lib/apiClient.js";
 
 // Cảnh báo tồn kho thấp khi tổng số lượng không quá 20.
 const LOW_STOCK_THRESHOLD = 20;
+const PAGE_SIZE = 12;
 
 function AdminProductsPage() {
   // Theo dõi trạng thái mở hoặc đóng form thêm sản phẩm.
@@ -27,6 +29,7 @@ function AdminProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [page, setPage] = useState(1);
 
   // Theo dõi sản phẩm đang mở phần chi tiết variant.
   const [expandedProductId, setExpandedProductId] = useState(null);
@@ -50,14 +53,25 @@ function AdminProductsPage() {
 
   // Lấy danh sách sản phẩm từ API.
   const {
-    data: products = [],
+    data: productPage,
     isLoading,
+    isFetching,
     isError,
     error,
   } = useApiQuery({
     queryKey: ["store-products"],
     url: "/store/products",
+    params: {
+      q: searchTerm.trim() || undefined,
+      category: selectedCategory || undefined,
+      page,
+      limit: PAGE_SIZE,
+    },
   });
+
+  // API catalog trả về { items, pagination }; chỉ items mới là mảng sản phẩm.
+  const products = productPage?.items ?? [];
+  const pagination = productPage?.pagination;
 
   // Lấy danh sách danh mục để điền vào bộ lọc và form.
   const {
@@ -79,17 +93,8 @@ function AdminProductsPage() {
     })),
   });
 
-  // Chỉ hiển thị sản phẩm khớp từ khóa và danh mục đã chọn.
-  const visibleProducts = products.filter((product) => {
-    const matchesSearch = `${product.name} ${product.description || ""}`
-      .toLowerCase()
-      .includes(searchTerm.trim().toLowerCase());
-
-    const matchesCategory =
-      !selectedCategory || String(product.category_id) === selectedCategory;
-
-    return matchesSearch && matchesCategory;
-  });
+  // Backend lọc trên toàn bộ danh mục trước khi phân trang.
+  const visibleProducts = products;
 
   // Cập nhật một trường trong variant của form tạo sản phẩm.
   function updateVariantField(index, field, value) {
@@ -169,6 +174,7 @@ function AdminProductsPage() {
       }
 
       // Tải lại danh sách sản phẩm sau khi lưu thành công.
+      setPage(1);
       await queryClient.invalidateQueries({
         queryKey: ["store-products"],
       });
@@ -306,7 +312,10 @@ function AdminProductsPage() {
               placeholder="Search products"
               type="search"
               value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
+              onChange={(event) => {
+                setSearchTerm(event.target.value);
+                setPage(1);
+              }}
             />
           </label>
 
@@ -333,7 +342,10 @@ function AdminProductsPage() {
                   id="category-filter"
                   className="min-h-10 w-full rounded-lg border border-line bg-white px-2 text-sm"
                   value={selectedCategory}
-                  onChange={(event) => setSelectedCategory(event.target.value)}
+                  onChange={(event) => {
+                    setSelectedCategory(event.target.value);
+                    setPage(1);
+                  }}
                   disabled={isCategoriesLoading}
                 >
                   <option value="">All categories</option>
@@ -355,7 +367,7 @@ function AdminProductsPage() {
         </div>
 
         {/* Bảng sản phẩm */}
-        <div className="overflow-x-auto">
+        <div className="relative overflow-x-auto">
           <table className="w-full min-w-[760px] text-left text-sm">
             <thead className="bg-paper/70 text-[10px] font-bold uppercase tracking-wider text-muted">
               <tr>
@@ -628,9 +640,17 @@ function AdminProductsPage() {
           </table>
         </div>
 
-        {/* Số sản phẩm đang hiển thị */}
+        {/* Dùng tổng số sản phẩm từ API để truy cập được các trang còn lại. */}
         <div className="border-t border-line px-5 py-4 text-xs text-muted">
-          Showing {visibleProducts.length} of {products.length} products
+          {pagination && !isError && (
+            <Pagination
+              page={pagination.page}
+              pageSize={pagination.limit}
+              total={pagination.total}
+              onPageChange={setPage}
+              disabled={isFetching}
+            />
+          )}
         </div>
       </section>
 
