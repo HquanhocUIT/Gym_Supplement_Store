@@ -1,54 +1,28 @@
-import { useState, useEffect } from 'react';
-import axiosClient from '../../api/axiosClient';
-import toast from 'react-hot-toast';
 import { Search, Shield, Users } from 'lucide-react';
 import Input from '../../components/ui/Input';
 import Skeleton from '../../components/common/Skeleton';
 import EmptyState from '../../components/common/EmptyState';
+import Pagination from '../../components/common/Pagination';
+import useApiQuery from '../../hooks/useApiQuery';
+import useCatalogSearchParams from '../../hooks/useCatalogSearchParams';
+import { useAuth } from '../../contexts/AuthContext';
 
 /**
  * MemberList - Admin page to manage members.
  * Calls GET /members to list members.
  * Includes search by name or email.
- * Uses mock data fallback if API fails.
+ * Search và phân trang lưu trong URL để Back/Forward khôi phục được danh sách.
  */
-const MOCK_MEMBERS = [
-  { id: 1, email: 'member@example.com', full_name: 'Nguyen Van A', plan_name: '3 Month Pass', start_date: '2026-10-15', end_date: '2027-01-15', status: 'active' },
-  { id: 2, email: 'member2@example.com', full_name: 'Tran Thi B', plan_name: '6 Month Pass', start_date: '2026-09-01', end_date: '2027-03-01', status: 'active' },
-  { id: 3, email: 'member3@example.com', full_name: 'Le Van C', plan_name: '1 Year Pass', start_date: '2026-06-01', end_date: '2027-06-01', status: 'active' },
-  { id: 4, email: 'member4@example.com', full_name: 'Pham Thi D', plan_name: '1 Month Pass', start_date: '2026-09-01', end_date: '2026-09-30', status: 'expired' },
-  { id: 5, email: 'member5@example.com', full_name: 'Hoang Van E', plan_name: '3 Month Pass', start_date: '2026-10-01', end_date: '2026-12-31', status: 'active' },
-];
-
 export default function MemberList() {
-  const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-
-  async function fetchMembers() {
-    try {
-      const response = await axiosClient.get('/members');
-      if (response.data?.data && Array.isArray(response.data.data)) {
-        setMembers(response.data.data);
-      } else {
-        setMembers(MOCK_MEMBERS);
-      }
-    } catch {
-      setMembers(MOCK_MEMBERS);
-      toast.error('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchMembers();
-  }, []);
-
-  const filteredMembers = members.filter((m) =>
-    m.full_name.toLowerCase().includes(search.toLowerCase()) ||
-    m.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const { user } = useAuth();
+  const { search, page, updateFilters, setPage, finishEditing } = useCatalogSearchParams();
+  // API trả { members, pagination }, không phải mảng; không thay lỗi bằng dữ liệu giả.
+  const query = useApiQuery({
+    queryKey: ['admin-members', user?.user_id ?? user?.id ?? user?.email],
+    url: '/members', params: { search: search.trim() || undefined, page, limit: 10 }, retry: false,
+  });
+  const filteredMembers = query.data?.members || [];
+  const pagination = query.data?.pagination;
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
@@ -65,7 +39,7 @@ export default function MemberList() {
     return (
       <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${variants[status] || 'bg-[#6a8a66]/10 text-[#6a8a66]'}`}>
         <Shield size={12} />
-        {status}
+        {status || 'No membership'}
       </span>
     );
   };
@@ -83,19 +57,24 @@ export default function MemberList() {
             <Input
               className="pl-10"
               placeholder="Search by name or email..."
+              aria-label="Search members"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => updateFilters({ q: e.target.value }, { typing: true })}
+              onBlur={finishEditing}
+              onKeyDown={(e) => { if (e.key === 'Enter') finishEditing(); }}
             />
           </div>
         </div>
 
         <div className="rounded-xl border border-[#e3e9e1] bg-white shadow-card">
-          {loading ? (
+          {query.isPending ? (
             <div className="space-y-3 p-5" aria-label="Loading members">
               {[0, 1, 2, 3, 4].map((item) => (
                 <Skeleton className="h-12 w-full" key={item} />
               ))}
             </div>
+          ) : query.isError ? (
+            <div className="p-5" role="alert"><p className="text-sm text-red-700">{query.error.message}</p><button className="mt-3 min-h-11 rounded-xl border border-line px-4 text-sm font-bold" type="button" onClick={() => query.refetch()}>Try again</button></div>
           ) : filteredMembers.length === 0 ? (
             <EmptyState
               description={search ? 'No members match your search.' : 'Members will appear here when available.'}
@@ -130,6 +109,7 @@ export default function MemberList() {
               </table>
             </div>
           )}
+          {pagination && !query.isError && <div className="border-t border-line p-4"><Pagination page={pagination.page} pageSize={pagination.limit} total={pagination.total} onPageChange={setPage} disabled={query.isFetching} /></div>}
         </div>
       </div>
     </div>

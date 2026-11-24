@@ -6,6 +6,7 @@ import { apiClient } from '../lib/apiClient.js'
 import { clearAccessToken } from '../lib/authToken.js'
 import PublicLayout from '../layouts/PublicLayout.jsx'
 import StoreCartPage from './StoreCartPage.jsx'
+import { AuthProvider } from '../contexts/AuthContext.jsx'
 
 const originalAdapter = apiClient.defaults.adapter
 
@@ -34,11 +35,13 @@ function renderCart() {
   const view = render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={['/cart']}>
+        <AuthProvider>
         <Routes>
           <Route element={<PublicLayout />}>
             <Route path="/cart" element={<StoreCartPage />} />
           </Route>
         </Routes>
+        </AuthProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   )

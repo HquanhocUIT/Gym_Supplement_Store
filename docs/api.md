@@ -118,6 +118,10 @@ Checkout COD từ giỏ hàng hiện tại.
 | Method | URL | Quyền | Body / query | Response data |
 |---|---|---|---|---|
 | POST | `/api/store/orders` | Authenticated | CheckoutInput | CheckoutData |
+| GET | `/api/store/orders` | Authenticated, own orders | `page`, `limit` (1–100) | `{ items, pagination }` |
+| GET | `/api/store/orders/{orderId}` | Authenticated, own order | Positive integer ID | OwnOrderDetail |
+
+Lịch sử và chi tiết đơn luôn dùng `user_id` từ JWT. Truyền `user_id` khác trong query không đổi chủ tài khoản. Đơn không tồn tại và đơn của người khác cùng trả 404; endpoint khách hàng không cho Admin đọc đơn của tài khoản khác. Danh sách sắp theo ngày tạo mới nhất và ID để phân trang ổn định.
 
 ## Dashboard
 

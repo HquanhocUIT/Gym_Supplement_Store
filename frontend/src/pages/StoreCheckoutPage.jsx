@@ -43,7 +43,7 @@ function StoreCheckoutPage() {
   // Đăng nhập ngay trên trang này để người mua không mất thông tin giao hàng.
   const loginMutation = useMutation({
     mutationFn: () => login(email.trim(), password),
-    onSuccess: () => {
+    onSuccess: (result) => {
       saveAccessToken(result.access_token, result.user)
       setHasToken(true)
       setPassword('')
@@ -58,6 +58,7 @@ function StoreCheckoutPage() {
     mutationFn: () => requestApiData('post', '/store/orders', { ...form, payment_method: 'cod' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['store-cart'] })
+      queryClient.invalidateQueries({ queryKey: ['member-account'] })
     },
     // Sau xung đột tồn kho, tải lại giỏ để người mua thấy số lượng hiện tại.
     onError: (error) => {
@@ -83,7 +84,7 @@ function StoreCheckoutPage() {
     queryClient.removeQueries({ queryKey: ['store-cart'] })
   }
 
-  // Giữ xác nhận từ phản hồi POST để không gọi endpoint lịch sử chưa được tích hợp.
+  // Hiện xác nhận từ POST và cho khách mở lại đơn sau khi tải lại trang.
   if (placedOrder) {
     return (
       <section className="mx-auto min-h-[60vh] max-w-2xl break-words px-4 py-12 sm:px-6" aria-labelledby="order-success-title">
@@ -95,7 +96,7 @@ function StoreCheckoutPage() {
           <div className="flex flex-wrap justify-between gap-2"><dt>Member discount</dt><dd>{formatPrice(placedOrder.discount_amount)}</dd></div>
           <div className="flex flex-wrap justify-between gap-2 font-bold"><dt>Order total</dt><dd>{formatPrice(placedOrder.total_amount)}</dd></div>
         </dl>
-        <Link className={`${buttonClass} mt-6 bg-ink text-white`} to="/shop">Continue shopping</Link>
+        <div className="mt-6 flex flex-wrap gap-3"><Link className={`${buttonClass} bg-ink text-white`} to={`/member/orders/${placedOrder.id}`}>View order details</Link><Link className={`${buttonClass} border border-line`} to="/shop">Continue shopping</Link></div>
       </section>
     )
   }

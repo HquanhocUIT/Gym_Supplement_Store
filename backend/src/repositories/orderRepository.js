@@ -1,5 +1,45 @@
 const pool = require('../config/db');
 
+// Chỉ đếm và đọc đơn thuộc user lấy từ JWT, không nhận chủ đơn từ client.
+exports.listOwnOrders = async (userId, page, limit) => {
+  const count = await pool.query({
+    text: 'SELECT COUNT(*)::int AS total FROM orders WHERE user_id = $1',
+    values: [userId], query_timeout: 5000,
+  });
+  const result = await pool.query({
+    text: `SELECT o.id, o.status, o.subtotal, o.discount_amount, o.total_amount, o.created_at,
+      (SELECT COALESCE(SUM(oi.quantity), 0)::int FROM order_items oi WHERE oi.order_id = o.id) AS item_count
+      FROM orders o WHERE o.user_id = $1
+      ORDER BY o.created_at DESC, o.id DESC LIMIT $2 OFFSET $3`,
+    values: [userId, limit, (page - 1) * limit], query_timeout: 5000,
+  });
+  const total = count.rows[0].total;
+  return { items: result.rows, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
+};
+
+// Kiểm tra quyền sở hữu trước khi đọc địa chỉ và các dòng sản phẩm của đơn.
+exports.getOwnOrder = async (userId, orderId) => {
+  const result = await pool.query({
+    text: `SELECT id, recipient_name, recipient_phone, shipping_address, subtotal,
+      discount_amount, total_amount, status, created_at
+      FROM orders WHERE id = $1 AND user_id = $2`,
+    values: [orderId, userId], query_timeout: 5000,
+  });
+  const order = result.rows[0];
+  if (!order) return null;
+  const items = await pool.query({
+    text: `SELECT id, variant_id, product_name, variant_description, price, quantity
+      FROM order_items WHERE order_id = $1 ORDER BY id`,
+    values: [orderId], query_timeout: 5000,
+  });
+  const payment = await pool.query({
+    text: `SELECT payment_method, status FROM payments
+      WHERE order_id = $1 AND user_id = $2 ORDER BY id DESC LIMIT 1`,
+    values: [orderId, userId], query_timeout: 5000,
+  });
+  return { ...order, items: items.rows, payment: payment.rows[0] || null };
+};
+
 // Gắn HTTP status và mã lỗi để middleware trả lỗi nghiệp vụ cho client.
 function createRepositoryError(status, code, message) {
   const error = new Error(message);

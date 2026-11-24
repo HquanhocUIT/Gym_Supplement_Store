@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -24,7 +25,10 @@ export default function LoginPage() {
       const user = await login(email, password);
       // Chuyển tới khu vực phù hợp sau khi backend xác nhận quyền tài khoản.
       const home = { admin: '/admin/dashboard', staff: '/staff/check-in', member: '/member/dashboard' };
-      navigate(home[user.role] || '/', { replace: true });
+      // Trở lại mục khách đang tìm; chỉ chấp nhận đường dẫn nội bộ.
+      const from = location.state?.from;
+      const destination = typeof from === 'string' && /^\/(?![/\\])/.test(from) ? from : home[user.role] || '/';
+      navigate(destination, { replace: true });
     } catch (err) {
       setError(err.response?.data?.error?.message || err.message || 'Unable to sign in. Please try again.');
     } finally {

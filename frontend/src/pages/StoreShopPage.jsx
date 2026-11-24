@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
-import { CircleAlert, Search, ShoppingBag, SlidersHorizontal, X } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { CircleAlert, Search, SlidersHorizontal, X } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
 import { EmptyState, Pagination, SkeletonCard } from '../components/common/index.js'
 import { Eyebrow } from '../components/Brand.jsx'
 import useApiQuery from '../hooks/useApiQuery.js'
+import ProductPhoto from '../components/common/ProductPhoto.jsx'
+import useCatalogSearchParams from '../hooks/useCatalogSearchParams.js'
 
 const PAGE_SIZE = 12
 
@@ -21,37 +23,10 @@ function formatPrice(value) {
   }).format(Number(value))
 }
 
-// Hiện ảnh sản phẩm hoặc khung giữ chỗ nếu sản phẩm chưa có ảnh.
-function ProductImage({ product }) {
-  const [imageFailed, setImageFailed] = useState(false)
-
-  if (!product.image_url || imageFailed) {
-    return (
-      <div className="grid aspect-[4/3] place-items-center rounded-2xl bg-brand-50 text-brand-700" role="img" aria-label="Product image unavailable">
-        <ShoppingBag size={36} strokeWidth={1.5} aria-hidden="true" />
-      </div>
-    )
-  }
-
-  return (
-    <img
-      className="aspect-[4/3] w-full rounded-2xl bg-paper object-cover"
-      src={product.image_url}
-      alt={product.name}
-      loading="lazy"
-      onError={() => setImageFailed(true)}
-    />
-  )
-}
-
 function StoreShopPage() {
-  const [search, setSearch] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [category, setCategory] = useState('')
-  const [minPrice, setMinPrice] = useState('')
-  const [maxPrice, setMaxPrice] = useState('')
-  const [sort, setSort] = useState('newest')
-  const [page, setPage] = useState(1)
+  const { search, category, minPrice, maxPrice, sort, page, updateFilters, setPage, clearFilters, finishEditing, isHistoryNavigation } = useCatalogSearchParams()
+  const location = useLocation()
+  const [searchQuery, setSearchQuery] = useState(() => search.trim())
   const priceRangeInvalid = minPrice !== '' && maxPrice !== '' && Number(minPrice) > Number(maxPrice)
 
   // Đợi người dùng ngừng gõ một chút rồi mới gọi API tìm kiếm.
@@ -69,7 +44,8 @@ function StoreShopPage() {
 
   // Chỉ gửi khoảng giá khi ô có giá trị; backend kiểm tra định dạng và khoảng hợp lệ.
   const productParams = {
-    q: searchQuery || undefined,
+    // Back/Forward khôi phục kết quả ngay; chỉ chờ debounce khi đang nhập.
+    q: (isHistoryNavigation ? search.trim() : searchQuery) || undefined,
     category: category || undefined,
     minPrice: minPrice === '' ? undefined : minPrice,
     maxPrice: maxPrice === '' ? undefined : maxPrice,
@@ -95,16 +71,6 @@ function StoreShopPage() {
   else if (productsQuery.isError) resultStatus = 'Unable to load products'
   else if (pagination) resultStatus = `${pagination.total} items`
 
-  // Xóa bộ lọc giúp quay lại toàn bộ danh mục sản phẩm.
-  function clearFilters() {
-    setSearch('')
-    setCategory('')
-    setMinPrice('')
-    setMaxPrice('')
-    setSort('newest')
-    setPage(1)
-  }
-
   return (
     <div className="mx-auto max-w-7xl px-4 py-9 sm:px-6 sm:py-12 lg:px-8">
       {/* Tiêu đề và mô tả trang cửa hàng. */}
@@ -129,15 +95,17 @@ function StoreShopPage() {
             <span className="mb-2 block text-xs font-bold text-ink-soft">Search products</span>
             <Search className="pointer-events-none absolute left-3 top-[2.65rem] text-muted" size={17} aria-hidden="true" />
             <input
-              className={`${inputClass} pl-10 pr-10`}
+              className={`${inputClass} pl-10 pr-10 [&::-webkit-search-cancel-button]:appearance-none`}
               type="search"
               value={search}
-              onChange={(event) => { setSearch(event.target.value); setPage(1) }}
+              onChange={(event) => updateFilters({ q: event.target.value }, { typing: true })}
+              onBlur={finishEditing}
+              onKeyDown={(event) => { if (event.key === 'Enter') finishEditing() }}
               placeholder="Product name…"
               aria-label="Search by product name"
             />
             {search && (
-              <button className="absolute right-0 top-6 grid size-11 place-items-center rounded-lg text-muted hover:bg-paper hover:text-ink" type="button" onClick={() => { setSearch(''); setPage(1) }} aria-label="Clear search">
+              <button className="absolute right-0 top-6 grid size-11 place-items-center rounded-lg text-muted hover:bg-paper hover:text-ink" type="button" onClick={() => updateFilters({ q: '' })} aria-label="Clear search">
                 <X size={16} aria-hidden="true" />
               </button>
             )}
@@ -145,7 +113,7 @@ function StoreShopPage() {
 
           <label>
             <span className="mb-2 block text-xs font-bold text-ink-soft">Category</span>
-            <select className={selectClass} value={category} onChange={(event) => { setCategory(event.target.value); setPage(1) }}>
+            <select className={selectClass} value={category} onChange={(event) => updateFilters({ category: event.target.value })}>
               <option value="">All categories</option>
               {(categoriesQuery.data || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
             </select>
@@ -153,17 +121,17 @@ function StoreShopPage() {
 
           <label>
             <span className="mb-2 block text-xs font-bold text-ink-soft">Minimum price (VND)</span>
-            <input className={inputClass} type="number" min="0" step="1" inputMode="numeric" value={minPrice} onChange={(event) => { setMinPrice(event.target.value); setPage(1) }} placeholder="Any" />
+            <input className={inputClass} type="number" min="0" step="1" inputMode="numeric" value={minPrice} onChange={(event) => updateFilters({ minPrice: event.target.value }, { typing: true })} onBlur={finishEditing} placeholder="Any" />
           </label>
 
           <label>
             <span className="mb-2 block text-xs font-bold text-ink-soft">Maximum price (VND)</span>
-            <input className={inputClass} type="number" min="0" step="1" inputMode="numeric" value={maxPrice} onChange={(event) => { setMaxPrice(event.target.value); setPage(1) }} placeholder="Any" />
+            <input className={inputClass} type="number" min="0" step="1" inputMode="numeric" value={maxPrice} onChange={(event) => updateFilters({ maxPrice: event.target.value }, { typing: true })} onBlur={finishEditing} placeholder="Any" />
           </label>
 
           <label>
             <span className="mb-2 block text-xs font-bold text-ink-soft">Sort by</span>
-            <select className={selectClass} value={sort} onChange={(event) => { setSort(event.target.value); setPage(1) }}>
+            <select className={selectClass} value={sort} onChange={(event) => updateFilters({ sort: event.target.value })}>
               <option value="newest">Newest</option>
               <option value="name_asc">Name A–Z</option>
               <option value="name_desc">Name Z–A</option>
@@ -222,8 +190,8 @@ function StoreShopPage() {
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {products.map((product) => (
                 <article className="group min-w-0 break-words rounded-card border border-line bg-white p-3 transition motion-safe:hover:-translate-y-1 hover:shadow-card" key={product.id}>
-                  <Link className="block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-700" to={`/product/${product.id}`} aria-label={`View ${product.name}`}>
-                    <ProductImage product={product} />
+                  <Link className="block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-700" to={`/product/${product.id}`} state={{ returnTo: location.pathname + location.search }} aria-label={`View ${product.name}`}>
+                    <ProductPhoto product={product} />
                     <div className="px-1 pb-2 pt-4">
                       <p className="text-xs font-semibold text-brand-700">{product.category_name}</p>
                       <h2 className="mt-1 font-display text-base font-bold text-ink">{product.name}</h2>

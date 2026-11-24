@@ -4,12 +4,12 @@ import {
   ChartColumn,
   LayoutDashboard,
   Package,
-  Search,
   Settings,
   Users,
 } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { BrandMark } from '../components/Brand.jsx';
+import SiteSearch from '../components/SiteSearch';
 
 const navigation = [
   { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true },
@@ -74,13 +74,7 @@ function AdminLayout() {
               Store management <span className="px-2 text-line">/</span> Overview
             </p>
             <div className="flex items-center gap-3">
-              <button
-                className="grid size-10 place-items-center rounded-full border border-line text-muted hover:bg-paper"
-                type="button"
-                aria-label="Search admin pages"
-              >
-                <Search size={17} aria-hidden="true" />
-              </button>
+              <SiteSearch scope="admin" />
               <div
                 className="grid size-10 place-items-center rounded-full bg-brand-100 text-xs font-extrabold text-brand-700"
                 role="img"
