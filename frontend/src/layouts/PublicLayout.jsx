@@ -5,10 +5,8 @@ import { Link, NavLink, Outlet } from 'react-router-dom';
 import { BrandMark } from '../components/Brand';
 import { getAccessToken } from '../lib/authToken';
 import { getCart } from '../lib/cartApi';
-import { useAuth } from '../contexts/AuthContext';
 
 function PublicLayout() {
-  const { user } = useAuth();
   const [hasToken, setHasToken] = useState(() => Boolean(getAccessToken()));
 
   // Cập nhật trạng thái đăng nhập khi các trang auth lưu hoặc xóa token.
@@ -102,12 +100,7 @@ function PublicLayout() {
       <footer className="border-t border-line bg-surface">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <BrandMark />
-          <Link
-            className="inline-flex items-center gap-1 font-semibold text-ink hover:text-brand-700"
-            to={user?.role === 'admin' ? '/admin/dashboard' : hasToken ? '/member' : '/login'}
-          >
-            {user?.role === 'admin' ? 'Administration' : hasToken ? 'My account' : 'Sign in'} <ArrowUpRight size={15} aria-hidden="true" />
-          </Link>
+          <p className="text-sm font-medium text-ink-soft">Train well. Live stronger.</p>
         </div>
       </footer>
     </div>
