@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { CircleAlert, Search, ShoppingBag, SlidersHorizontal, X } from 'lucide-react'
+import { CircleAlert, Search, SlidersHorizontal, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { EmptyState, Pagination, SkeletonCard } from '../components/common/index.js'
 import { Eyebrow } from '../components/Brand.jsx'
 import useApiQuery from '../hooks/useApiQuery.js'
+import ProductPhoto from '../components/common/ProductPhoto.jsx'
 
 const PAGE_SIZE = 12
 
@@ -19,29 +20,6 @@ function formatPrice(value) {
     currency: 'VND',
     maximumFractionDigits: 0,
   }).format(Number(value))
-}
-
-// Hiện ảnh sản phẩm hoặc khung giữ chỗ nếu sản phẩm chưa có ảnh.
-function ProductImage({ product }) {
-  const [imageFailed, setImageFailed] = useState(false)
-
-  if (!product.image_url || imageFailed) {
-    return (
-      <div className="grid aspect-[4/3] place-items-center rounded-2xl bg-brand-50 text-brand-700" role="img" aria-label="Product image unavailable">
-        <ShoppingBag size={36} strokeWidth={1.5} aria-hidden="true" />
-      </div>
-    )
-  }
-
-  return (
-    <img
-      className="aspect-[4/3] w-full rounded-2xl bg-paper object-cover"
-      src={product.image_url}
-      alt={product.name}
-      loading="lazy"
-      onError={() => setImageFailed(true)}
-    />
-  )
 }
 
 function StoreShopPage() {
@@ -223,7 +201,7 @@ function StoreShopPage() {
               {products.map((product) => (
                 <article className="group min-w-0 break-words rounded-card border border-line bg-white p-3 transition motion-safe:hover:-translate-y-1 hover:shadow-card" key={product.id}>
                   <Link className="block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-700" to={`/product/${product.id}`} aria-label={`View ${product.name}`}>
-                    <ProductImage product={product} />
+                    <ProductPhoto product={product} />
                     <div className="px-1 pb-2 pt-4">
                       <p className="text-xs font-semibold text-brand-700">{product.category_name}</p>
                       <h2 className="mt-1 font-display text-base font-bold text-ink">{product.name}</h2>

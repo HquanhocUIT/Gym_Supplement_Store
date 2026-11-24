@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import { Eyebrow } from "../components/Brand.jsx";
 import ImageUploader from "../components/common/ImageUploader.jsx";
 import Pagination from "../components/common/Pagination.jsx";
+import ProductPhotoEditor from "../components/common/ProductPhotoEditor.jsx";
 import Modal from "../components/ui/Modal.jsx";
 import useApiQuery from "../hooks/useApiQuery.js";
 import { apiClient, getApiData } from "../lib/apiClient.js";
@@ -524,6 +525,7 @@ function AdminProductsPage() {
                       {isExpanded && (
                         <tr className="border-t border-line bg-paper/30">
                           <td className="px-5 py-4" colSpan={6}>
+                            <ProductPhotoEditor product={product} />
                             <h2 className="mb-3 font-bold">
                               Variants for {product.name}
                             </h2>

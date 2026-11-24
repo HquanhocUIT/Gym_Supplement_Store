@@ -1705,6 +1705,43 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
   /api/store/orders:
+    get:
+      tags: [Orders]
+      summary: List my orders
+      operationId: listOwnOrders
+      description: Returns only orders owned by the authenticated user. The owner is taken from the JWT; user_id in the query is ignored.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 12 }
+      responses:
+        "200":
+          description: Paginated order history for the current account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, enum: [true] }
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: "#/components/schemas/OwnOrderSummary" }
+                      pagination: { $ref: "#/components/schemas/Pagination" }
+                  error: { nullable: true, example: null }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
     post:
       tags:
         - Orders
@@ -1749,6 +1786,38 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "409":
           $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/store/orders/{orderId}:
+    get:
+      tags: [Orders]
+      summary: View my order
+      operationId: getOwnOrder
+      description: Returns delivery details, checkout item snapshots and payment status. A missing order and an order owned by someone else both return 404.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: Order details belonging to the authenticated account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, enum: [true] }
+                  data: { $ref: "#/components/schemas/OwnOrderDetail" }
+                  error: { nullable: true, example: null }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/ServerError"
   /api/admin/stats:
@@ -2553,6 +2622,33 @@ components:
         quantity:
           type: integer
           minimum: 1
+    OwnOrderSummary:
+      type: object
+      properties:
+        id: { type: integer, minimum: 1 }
+        status: { type: string, enum: [pending, confirmed, shipping, delivered, cancelled] }
+        subtotal: { type: string, description: PostgreSQL numeric amount in VND }
+        discount_amount: { type: string }
+        total_amount: { type: string }
+        created_at: { type: string, format: date-time }
+        item_count: { type: integer, minimum: 0, description: Sum of item quantities }
+    OwnOrderDetail:
+      allOf:
+        - $ref: "#/components/schemas/OwnOrderSummary"
+        - type: object
+          properties:
+            recipient_name: { type: string }
+            recipient_phone: { type: string }
+            shipping_address: { type: string }
+            items:
+              type: array
+              items: { $ref: "#/components/schemas/OrderItem" }
+            payment:
+              type: object
+              nullable: true
+              properties:
+                payment_method: { type: string, enum: [cod, bank_transfer] }
+                status: { type: string, enum: [pending, completed] }
     CheckoutData:
       type: object
       properties:

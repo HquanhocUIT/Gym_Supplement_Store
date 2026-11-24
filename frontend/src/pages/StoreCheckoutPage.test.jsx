@@ -9,8 +9,8 @@ const originalAdapter = apiClient.defaults.adapter
 let client
 
 // Giỏ nhỏ để kiểm tra checkout qua API client thật, chỉ giả lập đường truyền.
-function renderCheckout({ stock = 3, submit } = {}) {
-  localStorage.setItem('access_token', 'qa-token')
+function renderCheckout({ stock = 3, submit, signedIn = true } = {}) {
+  if (signedIn) localStorage.setItem('access_token', 'qa-token')
   apiClient.defaults.adapter = vi.fn(async (config) => {
     if (config.method === 'post') return submit(config)
     return {
@@ -54,7 +54,22 @@ it('dùng tổng tiền server trả về và không gọi API lịch sử sau c
   expect(screen.getByText('Order #17 is awaiting confirmation. Payment is due on delivery.')).toBeTruthy()
   expect(screen.getByRole('heading', { name: 'Order placed' })).toBe(document.activeElement)
   expect(submit).toHaveBeenCalledTimes(1)
+  expect(screen.getByRole('link', { name: 'View order details' }).getAttribute('href')).toBe('/member/orders/17')
   expect(apiClient.defaults.adapter.mock.calls.some(([c]) => /orders\//.test(c.url))).toBe(false)
+})
+
+it('đăng nhập tại checkout lưu token và user rồi tải giỏ hàng', async () => {
+  renderCheckout({ signedIn: false, submit: async (config) => ({
+    config, status: 200, headers: {}, data: { success: true, data: {
+      access_token: 'checkout-login', user: { user_id: 7, role: 'member', full_name: 'Checkout Member' },
+    } },
+  }) })
+  fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'member@example.test' } })
+  fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'test-password' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+  await screen.findByLabelText('Recipient name')
+  expect(localStorage.getItem('access_token')).toBe('checkout-login')
+  expect(JSON.parse(localStorage.getItem('user')).full_name).toBe('Checkout Member')
 })
 
 it('chặn đặt hàng khi số lượng vượt tồn kho', async () => {

@@ -55,3 +55,27 @@ exports.createOrder = (userId, input) => {
 
   return orderRepository.createCodOrder(parsedUserId, shipping);
 };
+
+// Chấp nhận số nguyên dương đúng định dạng, không cắt phần thập phân hoặc hậu tố.
+function positiveInteger(value, fallback, maximum, field) {
+  if (value === undefined) return fallback;
+  if (!['string', 'number'].includes(typeof value) || !/^\d+$/.test(String(value)) || !Number.isSafeInteger(Number(value))
+      || Number(value) < 1 || Number(value) > maximum) {
+    throw createServiceError(400, 'INVALID_PARAMETER', `${field} must be a valid positive integer.`);
+  }
+  return Number(value);
+}
+
+// Chủ tài khoản luôn lấy từ phiên xác thực; bỏ qua user_id trong query.
+exports.listOwnOrders = (userId, query = {}) => orderRepository.listOwnOrders(
+  parseUserId(userId),
+  positiveInteger(query.page, 1, 2147483647, 'page'),
+  positiveInteger(query.limit, 12, 100, 'limit'),
+);
+
+exports.getOwnOrder = async (userId, id) => {
+  const orderId = positiveInteger(id, undefined, 2147483647, 'order ID');
+  const order = await orderRepository.getOwnOrder(parseUserId(userId), orderId);
+  if (!order) throw createServiceError(404, 'ORDER_NOT_FOUND', 'Order not found.');
+  return order;
+};

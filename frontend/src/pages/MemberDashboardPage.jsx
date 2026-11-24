@@ -1,38 +1,48 @@
-import { ArrowRight, ArrowUpRight, CalendarDays, CircleCheck, Clock3, Dumbbell, PackageCheck } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import { Eyebrow } from '../components/Brand.jsx'
+import { ArrowRight, CalendarDays, PackageCheck, ShieldCheck } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import useMemberQuery from '../hooks/useMemberQuery';
+import { accountButton, accountCard, dateLabel, membershipStatus } from './member/accountUi';
+import AccountQueryState from './member/AccountQueryState';
 
-const week = [
-  { day: 'MON', name: 'Upper body', time: '45 min', done: true },
-  { day: 'WED', name: 'Lower body', time: '50 min', done: false },
-  { day: 'FRI', name: 'Full body', time: '40 min', done: false },
-]
-
-function MemberDashboardPage() {
-  return (
-    <div>
-      <section className="overflow-hidden rounded-[1.75rem] bg-night px-5 py-8 text-white sm:px-8 sm:py-10 lg:px-11">
-        <div className="grid gap-8 lg:grid-cols-[1fr_0.6fr] lg:items-center">
-          <div><Eyebrow dark>Your member space</Eyebrow><h1 className="mt-3 max-w-xl font-display text-4xl font-extrabold leading-tight tracking-[-0.055em] sm:text-5xl">One good choice at a time, Alex.</h1><p className="mt-4 max-w-lg text-sm leading-6 text-white/60">Your weekly plan and recent orders are together here. Keep showing up and let consistency do its thing.</p><Link className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-brand-500 px-5 text-sm font-extrabold text-ink transition hover:bg-white" to="/">Explore supplements <ArrowRight size={16} aria-hidden="true" /></Link></div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold text-white/55">WEEKLY MOVEMENT</p><p className="mt-2 font-display text-3xl font-extrabold">2 <span className="text-base font-semibold text-white/55">of 3 sessions</span></p></div><span className="grid size-10 place-items-center rounded-xl bg-brand-500 text-ink"><Dumbbell size={20} aria-hidden="true" /></span></div><div className="mt-5 h-2 rounded-full bg-white/10"><div className="h-full w-2/3 rounded-full bg-brand-500" /></div><p className="mt-3 text-xs text-white/50">You&apos;re building a steady rhythm.</p></div>
-        </div>
-      </section>
-
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <section className="rounded-card border border-line bg-white p-5 sm:p-6" id="member-plan">
-          <div className="flex items-center justify-between gap-4"><div><Eyebrow>This week</Eyebrow><h2 className="mt-2 font-display text-xl font-extrabold">Your training plan</h2></div><span className="grid size-10 place-items-center rounded-xl bg-brand-50 text-brand-700"><CalendarDays size={18} aria-hidden="true" /></span></div>
-          <div className="mt-5 space-y-3">{week.map(({ day, name, time, done }) => <article className="flex items-center gap-3 rounded-xl border border-line p-3" key={day}><span className="grid size-11 shrink-0 place-items-center rounded-lg bg-paper text-[9px] font-extrabold tracking-wide text-muted">{day}</span><div className="min-w-0 flex-1"><h3 className="text-sm font-bold">{name}</h3><p className="mt-1 inline-flex items-center gap-1 text-xs text-muted"><Clock3 size={12} aria-hidden="true" /> {time}</p></div>{done ? <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-700"><CircleCheck size={16} aria-hidden="true" /> Done</span> : <button className="rounded-full border border-line px-3 py-2 text-xs font-bold hover:border-brand-500" type="button">View plan</button>}</article>)}</div>
+// Tổng quan chỉ hiển thị thông tin của người đang đăng nhập, không dùng tài khoản mẫu.
+export default function MemberDashboardPage() {
+  const { user } = useAuth();
+  const profile = useMemberQuery('/me/profile');
+  const memberships = useMemberQuery('/me/memberships');
+  const orders = useMemberQuery('/store/orders', { page: 1, limit: 1 });
+  const current = memberships.data?.find((item) => membershipStatus(item) === 'active');
+  return <div className="space-y-6">
+    <header className="rounded-card bg-night px-6 py-8 text-white sm:p-9">
+      <p className="text-xs font-bold uppercase tracking-widest text-brand-500">Your account</p>
+      <h1 className="mt-3 font-display text-3xl font-extrabold sm:text-4xl">Welcome, {profile.data?.full_name || user?.full_name || 'member'}.</h1>
+      <p className="mt-3 max-w-xl text-base leading-7 text-white/85">Manage your gym membership and follow your store orders in one place.</p>
+      <Link className={`${accountButton} mt-5 border-transparent bg-brand-500 text-ink`} to="/shop">Shop supplements <ArrowRight size={17} aria-hidden="true" /></Link>
+    </header>
+    {profile.isError && <AccountQueryState query={profile} />}
+    <div className="grid gap-6 md:grid-cols-2">
+      <AccountQueryState query={memberships}>
+        <section className={accountCard}>
+          <ShieldCheck className="text-brand-700" aria-hidden="true" />
+          <h2 className="mt-4 text-xl font-bold">My membership</h2>
+          <p className="mt-3 text-lg font-semibold">{current?.plan_name || 'No active membership'}</p>
+          <p className="mt-2 text-sm leading-6 text-ink-soft">{current ? `Valid until ${dateLabel(current.end_date)}.` : 'Choose a membership plan and contact reception to get started.'}</p>
+          <Link className={`${accountButton} mt-5`} to="/member/plan">View my plan <ArrowRight size={16} aria-hidden="true" /></Link>
         </section>
-        <section className="rounded-card border border-line bg-white p-5 sm:p-6" id="member-orders">
-          <div className="flex items-center justify-between gap-4"><div><Eyebrow>Order history</Eyebrow><h2 className="mt-2 font-display text-xl font-extrabold">On its way</h2></div><span className="grid size-10 place-items-center rounded-xl bg-brand-50 text-brand-700"><PackageCheck size={18} aria-hidden="true" /></span></div>
-          <article className="mt-5 rounded-2xl bg-paper p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-xs font-bold text-ink">Order #FF-2078</p><p className="mt-1 text-xs text-muted">Placed Oct 10 · 2 items</p></div><span className="rounded-full bg-brand-100 px-2.5 py-1 text-[10px] font-extrabold text-brand-700">In transit</span></div><div className="mt-5 h-1.5 rounded-full bg-line"><div className="h-full w-3/4 rounded-full bg-brand-500" /></div><p className="mt-3 text-xs text-muted">Estimated delivery: Oct 18</p></article>
-          <button className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-brand-700 hover:text-ink" type="button">View all orders <ArrowUpRight size={13} aria-hidden="true" /></button>
+      </AccountQueryState>
+      <AccountQueryState query={orders}>
+        <section className={accountCard}>
+          <PackageCheck className="text-brand-700" aria-hidden="true" />
+          <h2 className="mt-4 text-xl font-bold">My orders</h2>
+          <p className="mt-3 text-lg font-semibold">{orders.data?.pagination.total || 0} orders placed</p>
+          <p className="mt-2 text-sm leading-6 text-ink-soft">{orders.data?.pagination.total ? 'View your order details, delivery address and current status.' : 'Your purchases will appear here after you place an order.'}</p>
+          <Link className={`${accountButton} mt-5`} to="/member/orders">View my orders <ArrowRight size={16} aria-hidden="true" /></Link>
         </section>
-      </div>
-
-      <section className="mt-6 flex flex-col gap-4 rounded-card border border-brand-100 bg-brand-50 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6" id="member-next-step"><div><p className="text-sm font-extrabold">Ready for your next session?</p><p className="mt-1 text-xs text-ink-soft">Start with the essentials that fit your routine.</p></div><Link className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-white px-4 text-xs font-bold text-ink hover:bg-brand-100" to="/"><ArrowRight size={14} aria-hidden="true" /> Browse the store</Link></section>
+      </AccountQueryState>
     </div>
-  )
+    <section className={`${accountCard} flex flex-wrap items-center justify-between gap-4`}>
+      <div><CalendarDays className="mb-3 text-brand-700" aria-hidden="true" /><h2 className="font-bold">Membership plans &amp; check-ins</h2><p className="mt-2 text-sm text-ink-soft">See your membership dates and your visits to the gym.</p></div>
+      <Link className={accountButton} to="/member/plan">Open membership details</Link>
+    </section>
+  </div>;
 }
-
-export default MemberDashboardPage

@@ -5,8 +5,10 @@ import { Link, NavLink, Outlet } from 'react-router-dom';
 import { BrandMark } from '../components/Brand';
 import { getAccessToken } from '../lib/authToken';
 import { getCart } from '../lib/cartApi';
+import { useAuth } from '../contexts/AuthContext';
 
 function PublicLayout() {
+  const { user } = useAuth();
   const [hasToken, setHasToken] = useState(() => Boolean(getAccessToken()));
 
   // Cập nhật trạng thái đăng nhập khi các trang auth lưu hoặc xóa token.
@@ -102,9 +104,9 @@ function PublicLayout() {
           <BrandMark />
           <Link
             className="inline-flex items-center gap-1 font-semibold text-ink hover:text-brand-700"
-            to="/admin"
+            to={user?.role === 'admin' ? '/admin/dashboard' : hasToken ? '/member' : '/login'}
           >
-            Administration <ArrowUpRight size={15} aria-hidden="true" />
+            {user?.role === 'admin' ? 'Administration' : hasToken ? 'My account' : 'Sign in'} <ArrowUpRight size={15} aria-hidden="true" />
           </Link>
         </div>
       </footer>

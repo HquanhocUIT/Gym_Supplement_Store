@@ -29,3 +29,18 @@ Passwords are entered on the registration page. The API hashes them before savin
 ## English sample catalog
 
 For an existing database containing the Vietnamese sample descriptions, run database/migrations/03_catalog_english.sql in the SQL Editor. It updates descriptions that still match the original seed text. It can be run again without changing already translated descriptions.
+
+## Product photos on the live site
+
+The sample catalog does not include product photos. Add your own photos through Admin → Products. Expand a product, choose a JPG, PNG or WebP file up to 5 MB, then use Upload photo or Replace photo. The same saved URL is used by the shop and product detail page.
+
+For production uploads, configure SUPABASE_URL, SUPABASE_SECRET_KEY and SUPABASE_STORAGE_BUCKET in the Render service environment. Set the bucket name to product-images and make that bucket public for product photo viewing. These values belong to the backend; never add the secret key to Vercel frontend variables or commit it. Save and redeploy the Render service after changing its environment.
+
+## Member navigation
+
+- /member shows the signed-in account's membership and order summary.
+- /member/plan shows real memberships and check-in history.
+- /member/orders and /member/orders/:orderId show only that account's purchases.
+- /member/dashboard redirects to /member so the old login destination remains valid.
+
+Empty sections explain the next action instead of displaying sample people, workouts or orders. An order created at checkout can be reopened from its confirmation screen and after refreshing the account pages.

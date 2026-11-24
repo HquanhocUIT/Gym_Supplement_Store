@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLayout from './layouts/AdminLayout';
@@ -26,7 +26,9 @@ import MemberList from './pages/admin/MemberList';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import CheckInScreen from './pages/staff/CheckInScreen';
 import MembershipForm from './pages/staff/MembershipForm';
-import MemberDashboard from './pages/member/MemberDashboard';
+import MembershipPage from './pages/member/MembershipPage';
+import OrdersPage from './pages/member/OrdersPage';
+import OrderDetailPage from './pages/member/OrderDetailPage';
 
 function App() {
   return (
@@ -61,7 +63,10 @@ function App() {
         }
       >
         <Route index element={<MemberDashboardPage />} />
-        <Route path="dashboard" element={<MemberDashboard />} />
+        <Route path="dashboard" element={<Navigate replace to="/member" />} />
+        <Route path="plan" element={<MembershipPage />} />
+        <Route path="orders" element={<OrdersPage />} />
+        <Route path="orders/:orderId" element={<OrderDetailPage />} />
       </Route>
 
       {/* Các trang quản trị chỉ dành cho admin. */}
