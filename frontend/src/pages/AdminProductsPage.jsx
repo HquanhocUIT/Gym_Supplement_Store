@@ -15,6 +15,7 @@ import ProductPhotoEditor from "../components/common/ProductPhotoEditor.jsx";
 import Modal from "../components/ui/Modal.jsx";
 import useApiQuery from "../hooks/useApiQuery.js";
 import { apiClient, getApiData } from "../lib/apiClient.js";
+import useCatalogSearchParams from "../hooks/useCatalogSearchParams.js";
 
 // Cảnh báo tồn kho thấp khi tổng số lượng không quá 20.
 const LOW_STOCK_THRESHOLD = 20;
@@ -27,10 +28,8 @@ function AdminProductsPage() {
   const [formError, setFormError] = useState("");
 
   // Theo dõi nội dung tìm kiếm và bộ lọc danh mục.
-  const [searchTerm, setSearchTerm] = useState("");
+  const { search: searchTerm, category: selectedCategory, page, updateFilters, setPage } = useCatalogSearchParams();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [page, setPage] = useState(1);
 
   // Theo dõi sản phẩm đang mở phần chi tiết variant.
   const [expandedProductId, setExpandedProductId] = useState(null);
@@ -314,8 +313,7 @@ function AdminProductsPage() {
               type="search"
               value={searchTerm}
               onChange={(event) => {
-                setSearchTerm(event.target.value);
-                setPage(1);
+                updateFilters({ q: event.target.value });
               }}
             />
           </label>
@@ -344,8 +342,7 @@ function AdminProductsPage() {
                   className="min-h-10 w-full rounded-lg border border-line bg-white px-2 text-sm"
                   value={selectedCategory}
                   onChange={(event) => {
-                    setSelectedCategory(event.target.value);
-                    setPage(1);
+                    updateFilters({ category: event.target.value });
                   }}
                   disabled={isCategoriesLoading}
                 >

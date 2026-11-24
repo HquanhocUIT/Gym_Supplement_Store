@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowUpRight, CircleUserRound, Search, ShoppingBag } from 'lucide-react';
+import { ArrowUpRight, CircleUserRound, ShoppingBag } from 'lucide-react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { BrandMark } from '../components/Brand';
 import { getAccessToken } from '../lib/authToken';
 import { getCart } from '../lib/cartApi';
+import SiteSearch from '../components/SiteSearch';
 
 function PublicLayout() {
   const [hasToken, setHasToken] = useState(() => Boolean(getAccessToken()));
@@ -60,13 +61,7 @@ function PublicLayout() {
             </NavLink>
           </nav>
           <div className="flex items-center gap-2">
-            <Link
-              className="grid size-11 place-items-center rounded-full text-ink-soft transition hover:bg-paper hover:text-ink"
-              to="/shop"
-              aria-label="Search products"
-            >
-              <Search size={19} aria-hidden="true" />
-            </Link>
+            <SiteSearch />
             <Link
               className="relative grid size-11 place-items-center rounded-full text-ink-soft transition hover:bg-paper hover:text-ink"
               to="/cart"

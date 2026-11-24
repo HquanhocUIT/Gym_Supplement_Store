@@ -5,6 +5,7 @@ import { EmptyState, Pagination, SkeletonCard } from '../components/common/index
 import { Eyebrow } from '../components/Brand.jsx'
 import useApiQuery from '../hooks/useApiQuery.js'
 import ProductPhoto from '../components/common/ProductPhoto.jsx'
+import useCatalogSearchParams from '../hooks/useCatalogSearchParams.js'
 
 const PAGE_SIZE = 12
 
@@ -23,13 +24,8 @@ function formatPrice(value) {
 }
 
 function StoreShopPage() {
-  const [search, setSearch] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [category, setCategory] = useState('')
-  const [minPrice, setMinPrice] = useState('')
-  const [maxPrice, setMaxPrice] = useState('')
-  const [sort, setSort] = useState('newest')
-  const [page, setPage] = useState(1)
+  const { search, category, minPrice, maxPrice, sort, page, updateFilters, setPage, clearFilters } = useCatalogSearchParams()
+  const [searchQuery, setSearchQuery] = useState(() => search.trim())
   const priceRangeInvalid = minPrice !== '' && maxPrice !== '' && Number(minPrice) > Number(maxPrice)
 
   // Đợi người dùng ngừng gõ một chút rồi mới gọi API tìm kiếm.
@@ -73,16 +69,6 @@ function StoreShopPage() {
   else if (productsQuery.isError) resultStatus = 'Unable to load products'
   else if (pagination) resultStatus = `${pagination.total} items`
 
-  // Xóa bộ lọc giúp quay lại toàn bộ danh mục sản phẩm.
-  function clearFilters() {
-    setSearch('')
-    setCategory('')
-    setMinPrice('')
-    setMaxPrice('')
-    setSort('newest')
-    setPage(1)
-  }
-
   return (
     <div className="mx-auto max-w-7xl px-4 py-9 sm:px-6 sm:py-12 lg:px-8">
       {/* Tiêu đề và mô tả trang cửa hàng. */}
@@ -110,12 +96,12 @@ function StoreShopPage() {
               className={`${inputClass} pl-10 pr-10`}
               type="search"
               value={search}
-              onChange={(event) => { setSearch(event.target.value); setPage(1) }}
+              onChange={(event) => updateFilters({ q: event.target.value })}
               placeholder="Product name…"
               aria-label="Search by product name"
             />
             {search && (
-              <button className="absolute right-0 top-6 grid size-11 place-items-center rounded-lg text-muted hover:bg-paper hover:text-ink" type="button" onClick={() => { setSearch(''); setPage(1) }} aria-label="Clear search">
+              <button className="absolute right-0 top-6 grid size-11 place-items-center rounded-lg text-muted hover:bg-paper hover:text-ink" type="button" onClick={() => updateFilters({ q: '' })} aria-label="Clear search">
                 <X size={16} aria-hidden="true" />
               </button>
             )}
@@ -123,7 +109,7 @@ function StoreShopPage() {
 
           <label>
             <span className="mb-2 block text-xs font-bold text-ink-soft">Category</span>
-            <select className={selectClass} value={category} onChange={(event) => { setCategory(event.target.value); setPage(1) }}>
+            <select className={selectClass} value={category} onChange={(event) => updateFilters({ category: event.target.value })}>
               <option value="">All categories</option>
               {(categoriesQuery.data || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
             </select>
@@ -131,17 +117,17 @@ function StoreShopPage() {
 
           <label>
             <span className="mb-2 block text-xs font-bold text-ink-soft">Minimum price (VND)</span>
-            <input className={inputClass} type="number" min="0" step="1" inputMode="numeric" value={minPrice} onChange={(event) => { setMinPrice(event.target.value); setPage(1) }} placeholder="Any" />
+            <input className={inputClass} type="number" min="0" step="1" inputMode="numeric" value={minPrice} onChange={(event) => updateFilters({ minPrice: event.target.value })} placeholder="Any" />
           </label>
 
           <label>
             <span className="mb-2 block text-xs font-bold text-ink-soft">Maximum price (VND)</span>
-            <input className={inputClass} type="number" min="0" step="1" inputMode="numeric" value={maxPrice} onChange={(event) => { setMaxPrice(event.target.value); setPage(1) }} placeholder="Any" />
+            <input className={inputClass} type="number" min="0" step="1" inputMode="numeric" value={maxPrice} onChange={(event) => updateFilters({ maxPrice: event.target.value })} placeholder="Any" />
           </label>
 
           <label>
             <span className="mb-2 block text-xs font-bold text-ink-soft">Sort by</span>
-            <select className={selectClass} value={sort} onChange={(event) => { setSort(event.target.value); setPage(1) }}>
+            <select className={selectClass} value={sort} onChange={(event) => updateFilters({ sort: event.target.value })}>
               <option value="newest">Newest</option>
               <option value="name_asc">Name A–Z</option>
               <option value="name_desc">Name Z–A</option>

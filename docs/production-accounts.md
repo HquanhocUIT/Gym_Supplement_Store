@@ -44,3 +44,7 @@ For production uploads, configure SUPABASE_URL, SUPABASE_SECRET_KEY and SUPABASE
 - /member/dashboard redirects to /member so the old login destination remains valid.
 
 Empty sections explain the next action instead of displaying sample people, workouts or orders. An order created at checkout can be reopened from its confirmation screen and after refreshing the account pages.
+
+## Header search
+
+The search icon opens a keyword field with page suggestions. Product names open the shop with q in the URL; orders opens My orders, my plan opens the account's membership, and gym or membership plans opens the available plans. Vietnamese keywords such as đơn hàng and giỏ hàng are also supported. Guests who choose a protected account page return to that page after signing in. Admin search offers management pages and searches the product inventory.
