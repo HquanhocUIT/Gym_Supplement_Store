@@ -28,7 +28,7 @@ function AdminProductsPage() {
   const [formError, setFormError] = useState("");
 
   // Theo dõi nội dung tìm kiếm và bộ lọc danh mục.
-  const { search: searchTerm, category: selectedCategory, page, updateFilters, setPage } = useCatalogSearchParams();
+  const { search: searchTerm, category: selectedCategory, page, updateFilters, setPage, finishEditing } = useCatalogSearchParams();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Theo dõi sản phẩm đang mở phần chi tiết variant.
@@ -313,8 +313,10 @@ function AdminProductsPage() {
               type="search"
               value={searchTerm}
               onChange={(event) => {
-                updateFilters({ q: event.target.value });
+                updateFilters({ q: event.target.value }, { typing: true });
               }}
+              onBlur={finishEditing}
+              onKeyDown={(event) => { if (event.key === 'Enter') finishEditing(); }}
             />
           </label>
 

@@ -8,6 +8,7 @@ import useApiQuery from '../hooks/useApiQuery.js'
 import { getAccessToken } from '../lib/authToken.js'
 import { addCartItem } from '../lib/cartApi.js'
 import ProductPhoto from '../components/common/ProductPhoto.jsx'
+import ListBackLink from '../components/ListBackLink.jsx'
 
 const inputClass = 'min-h-12 w-full rounded-xl border border-line bg-white px-3 text-sm text-ink outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-100'
 const buttonClass = 'inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700 disabled:cursor-not-allowed disabled:opacity-50'
@@ -164,9 +165,9 @@ function StoreProductDetailPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-      <Link className="inline-flex min-h-11 items-center gap-2 rounded-lg text-sm font-semibold text-ink-soft hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700" to="/shop">
+      <ListBackLink className="inline-flex min-h-11 items-center gap-2 rounded-lg text-sm font-semibold text-ink-soft hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700" fallback="/shop">
         <ArrowLeft size={17} aria-hidden="true" /> Back to shop
-      </Link>
+      </ListBackLink>
 
       {productQuery.isPending ? (
         // Khung giữ chỗ giúp bố cục ổn định trong lúc tải dữ liệu.
@@ -186,7 +187,7 @@ function StoreProductDetailPage() {
           <EmptyState icon={CircleAlert} title={productQuery.error.status === 404 ? 'Product not found' : 'Unable to load products'} description={productQuery.error.message} />
           <div className="mt-2 flex flex-wrap justify-center gap-3">
             <button className={`${buttonClass} bg-ink text-white hover:bg-brand-700`} type="button" onClick={() => productQuery.refetch()}>Try again</button>
-            <Link className={`${buttonClass} border border-line bg-white text-ink hover:bg-paper`} to="/shop">Back to shop</Link>
+            <ListBackLink className={`${buttonClass} border border-line bg-white text-ink hover:bg-paper`} fallback="/shop">Back to shop</ListBackLink>
           </div>
         </div>
       ) : product ? (

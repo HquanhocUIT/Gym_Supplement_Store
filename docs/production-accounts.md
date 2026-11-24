@@ -48,3 +48,9 @@ Empty sections explain the next action instead of displaying sample people, work
 ## Header search
 
 The search icon opens a keyword field with page suggestions. Product names open the shop with q in the URL; orders opens My orders, my plan opens the account's membership, and gym or membership plans opens the available plans. Vietnamese keywords such as đơn hàng and giỏ hàng are also supported. Guests who choose a protected account page return to that page after signing in. Admin search offers management pages and searches the product inventory.
+
+## Back and Forward behavior
+
+In Shop, Admin Products and Admin Members, typing into one field creates one history step for that editing session. Back restores the previous keyword, filters and page; Forward restores the completed input. Selecting a category, changing sort order, clearing filters and changing pages can also be undone with Back. Members reads the API's members/pagination response and shows an error if loading fails rather than displaying sample accounts.
+
+Product and order detail pages return to the list entry that opened them, preserving its filters and page number. Directly opened detail links use a safe default list. Orders keeps its page in the URL so refreshing a page-2 list does not reset it to page 1.

@@ -1,5 +1,5 @@
 import { ArrowUpRight, CircleUserRound, Dumbbell, LogOut } from 'lucide-react'
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { BrandMark } from '../components/Brand.jsx'
@@ -10,10 +10,14 @@ function MemberLayout() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const navigationType = useNavigationType()
   const mainRef = useRef(null)
 
   // Đưa tiêu điểm tới nội dung mới để người dùng nhận biết đã chuyển trang.
-  useEffect(() => { mainRef.current?.focus(); window.scrollTo(0, 0) }, [pathname])
+  useEffect(() => {
+    mainRef.current?.focus({ preventScroll: true })
+    if (navigationType !== 'POP') window.scrollTo(0, 0)
+  }, [pathname, navigationType])
   function signOut() {
     logout()
     queryClient.clear()

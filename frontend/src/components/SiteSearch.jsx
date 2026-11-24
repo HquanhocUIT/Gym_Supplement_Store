@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { ArrowRight, Search, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { keywordDestination, searchDestinations } from '../lib/siteSearch';
 
 // Dùng cùng một ô tìm kiếm cho header khách và header quản trị.
@@ -12,6 +12,7 @@ export default function SiteSearch({ scope = 'store' }) {
   const panelRef = useRef(null);
   const id = useId();
   const navigate = useNavigate();
+  const location = useLocation();
   const destinations = searchDestinations(keyword, scope);
   const label = scope === 'admin' ? 'Search admin pages' : 'Search the site';
 
@@ -25,7 +26,12 @@ export default function SiteSearch({ scope = 'store' }) {
   }, [open]);
 
   function close() { setOpen(false); setKeyword(''); }
-  function go(to) { if (to) { close(); navigate(to); } }
+  function go(to) {
+    if (!to) return;
+    close();
+    // Tìm lại đúng kết quả hiện tại không thêm entry trùng làm Back bị đứng tại chỗ.
+    if (to !== location.pathname + location.search) navigate(to);
+  }
   function handleKey(event) {
     if (event.key === 'Escape') { event.preventDefault(); close(); }
     // Giữ Tab trong hộp tìm kiếm; Escape hoặc nút Close luôn đóng được hộp.

@@ -69,7 +69,10 @@ it('phân trang và mở chi tiết đơn với địa chỉ, snapshot và payme
   await screen.findByText('Delivery address', { selector: 'p' });
   expect(screen.getByText('Daily Whey')).toBeTruthy();
   expect(screen.getByText(/Cash on delivery/)).toBeTruthy();
-  expect(screen.getByRole('link', { name: 'Back to my orders' }).getAttribute('href')).toBe('/member/orders');
+  expect(screen.getByRole('link', { name: 'Back to my orders' }).getAttribute('href')).toBe('/member/orders?page=2');
+  fireEvent.click(screen.getByRole('link', { name: 'Back to my orders' }));
+  await screen.findByRole('heading', { name: 'Order #2' });
+  expect(screen.getByText('13–13 / 13 results')).toBeTruthy();
 });
 it('mở trực tiếp trang kế hoạch với trạng thái trống và hành động rõ ràng', async () => {
   empty = true; renderAccount('/member/plan');

@@ -1,8 +1,9 @@
 import { ArrowLeft } from 'lucide-react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import useMemberQuery from '../../hooks/useMemberQuery';
 import { accountButton, accountCard, dateLabel, money, orderStatusLabels } from './accountUi';
 import AccountQueryState from './AccountQueryState';
+import ListBackLink from '../../components/ListBackLink';
 
 // Đọc snapshot của đơn thay vì giá sản phẩm đang có thể thay đổi trong catalog.
 export default function OrderDetailPage() {
@@ -10,7 +11,7 @@ export default function OrderDetailPage() {
   const query = useMemberQuery(`/store/orders/${orderId}`);
   const order = query.data;
   return <div className="space-y-6">
-    <Link className={accountButton} to="/member/orders"><ArrowLeft size={16} aria-hidden="true" /> Back to my orders</Link>
+    <ListBackLink className={accountButton} fallback="/member/orders"><ArrowLeft size={16} aria-hidden="true" /> Back to my orders</ListBackLink>
     <AccountQueryState query={query}>
       {order && <>
         <header><h1 className="font-display text-3xl font-extrabold">Order #{order.id}</h1><p className="mt-3 text-ink-soft">{dateLabel(order.created_at, true)}</p><p className="mt-3 font-semibold text-brand-700">{orderStatusLabels[order.status] || order.status}</p></header>

@@ -21,7 +21,7 @@ afterEach(() => {
 
 function LocationProbe() {
   const location = useLocation(), navigate = useNavigate();
-  return <><output data-testid="location">{location.pathname}{location.search}</output><button onClick={() => navigate(-1)}>Go back</button><button onClick={() => navigate('/shop?q=creatine')}>Find creatine</button></>;
+  return <><output data-testid="location">{location.pathname}{location.search}</output><button onClick={() => navigate(-1)}>Go back</button><button onClick={() => navigate(1)}>Go forward</button><button onClick={() => navigate('/shop?q=creatine')}>Find creatine</button></>;
 }
 function renderSearch({ scope = 'store', path = '/' } = {}) {
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -106,4 +106,18 @@ it('từ khóa trang hỗ trợ tiếng Việt, admin riêng và không coi URL 
   expect(keywordDestination('whey isolate', 'admin')).toBe('/admin/products?q=whey+isolate');
   expect(keywordDestination('https://example.test')).toBe('/shop?q=https%3A%2F%2Fexample.test');
   expect(keywordDestination('   ')).toBeNull();
+});
+
+it('Back sau khi nhập tại Shop khôi phục ô trống và toàn bộ kết quả, không rời Shop', async () => {
+  renderSearch({ path: '/shop' });
+  await screen.findByText('Result for all');
+  for (const value of ['w', 'wh', 'whey']) fireEvent.change(screen.getByLabelText('Search by product name'), { target: { value } });
+  await screen.findByText('Result for whey');
+  fireEvent.click(screen.getByRole('button', { name: 'Go back' }));
+  expect(screen.getByTestId('location').textContent).toBe('/shop');
+  expect(screen.getByLabelText('Search by product name').value).toBe('');
+  await screen.findByText('Result for all');
+  fireEvent.click(screen.getByRole('button', { name: 'Go forward' }));
+  await screen.findByText('Result for whey');
+  expect(screen.getByLabelText('Search by product name').value).toBe('whey');
 });

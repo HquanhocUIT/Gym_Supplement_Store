@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CircleAlert, Search, SlidersHorizontal, X } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { EmptyState, Pagination, SkeletonCard } from '../components/common/index.js'
 import { Eyebrow } from '../components/Brand.jsx'
 import useApiQuery from '../hooks/useApiQuery.js'
@@ -24,7 +24,8 @@ function formatPrice(value) {
 }
 
 function StoreShopPage() {
-  const { search, category, minPrice, maxPrice, sort, page, updateFilters, setPage, clearFilters } = useCatalogSearchParams()
+  const { search, category, minPrice, maxPrice, sort, page, updateFilters, setPage, clearFilters, finishEditing, isHistoryNavigation } = useCatalogSearchParams()
+  const location = useLocation()
   const [searchQuery, setSearchQuery] = useState(() => search.trim())
   const priceRangeInvalid = minPrice !== '' && maxPrice !== '' && Number(minPrice) > Number(maxPrice)
 
@@ -43,7 +44,8 @@ function StoreShopPage() {
 
   // Chỉ gửi khoảng giá khi ô có giá trị; backend kiểm tra định dạng và khoảng hợp lệ.
   const productParams = {
-    q: searchQuery || undefined,
+    // Back/Forward khôi phục kết quả ngay; chỉ chờ debounce khi đang nhập.
+    q: (isHistoryNavigation ? search.trim() : searchQuery) || undefined,
     category: category || undefined,
     minPrice: minPrice === '' ? undefined : minPrice,
     maxPrice: maxPrice === '' ? undefined : maxPrice,
@@ -93,10 +95,12 @@ function StoreShopPage() {
             <span className="mb-2 block text-xs font-bold text-ink-soft">Search products</span>
             <Search className="pointer-events-none absolute left-3 top-[2.65rem] text-muted" size={17} aria-hidden="true" />
             <input
-              className={`${inputClass} pl-10 pr-10`}
+              className={`${inputClass} pl-10 pr-10 [&::-webkit-search-cancel-button]:appearance-none`}
               type="search"
               value={search}
-              onChange={(event) => updateFilters({ q: event.target.value })}
+              onChange={(event) => updateFilters({ q: event.target.value }, { typing: true })}
+              onBlur={finishEditing}
+              onKeyDown={(event) => { if (event.key === 'Enter') finishEditing() }}
               placeholder="Product name…"
               aria-label="Search by product name"
             />
@@ -117,12 +121,12 @@ function StoreShopPage() {
 
           <label>
             <span className="mb-2 block text-xs font-bold text-ink-soft">Minimum price (VND)</span>
-            <input className={inputClass} type="number" min="0" step="1" inputMode="numeric" value={minPrice} onChange={(event) => updateFilters({ minPrice: event.target.value })} placeholder="Any" />
+            <input className={inputClass} type="number" min="0" step="1" inputMode="numeric" value={minPrice} onChange={(event) => updateFilters({ minPrice: event.target.value }, { typing: true })} onBlur={finishEditing} placeholder="Any" />
           </label>
 
           <label>
             <span className="mb-2 block text-xs font-bold text-ink-soft">Maximum price (VND)</span>
-            <input className={inputClass} type="number" min="0" step="1" inputMode="numeric" value={maxPrice} onChange={(event) => updateFilters({ maxPrice: event.target.value })} placeholder="Any" />
+            <input className={inputClass} type="number" min="0" step="1" inputMode="numeric" value={maxPrice} onChange={(event) => updateFilters({ maxPrice: event.target.value }, { typing: true })} onBlur={finishEditing} placeholder="Any" />
           </label>
 
           <label>
@@ -186,7 +190,7 @@ function StoreShopPage() {
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {products.map((product) => (
                 <article className="group min-w-0 break-words rounded-card border border-line bg-white p-3 transition motion-safe:hover:-translate-y-1 hover:shadow-card" key={product.id}>
-                  <Link className="block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-700" to={`/product/${product.id}`} aria-label={`View ${product.name}`}>
+                  <Link className="block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-700" to={`/product/${product.id}`} state={{ returnTo: location.pathname + location.search }} aria-label={`View ${product.name}`}>
                     <ProductPhoto product={product} />
                     <div className="px-1 pb-2 pt-4">
                       <p className="text-xs font-semibold text-brand-700">{product.category_name}</p>
