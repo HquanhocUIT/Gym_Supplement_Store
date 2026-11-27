@@ -15,6 +15,7 @@ process.env.JWT_SECRET = 'test_secret_key';
 const app = require('../src/app');
 const pool = require('../src/config/db');
 const orderRepository = require('../src/repositories/orderRepository');
+const orderWebhookService = require('../src/services/orderWebhookService');
 
 const userId = 42;
 const memberToken = jwt.sign({ user_id: userId, role: 'member' }, process.env.JWT_SECRET);
@@ -114,6 +115,24 @@ test('POST order returns the created order and pending COD payment', async (t) =
   assert.deepEqual(result.json.data, data);
 });
 
+test('POST order notifies n8n with the customer email without exposing it in the API response', async (t) => {
+  const created = {
+    order: { id: 16, status: 'pending', recipient_name: 'Gym Member', total_amount: '90.00', items: [] },
+    payment: { id: 24, order_id: 16, amount: '90.00', payment_method: 'cod', status: 'pending' },
+    customerEmail: 'member@example.com',
+  };
+  let notification;
+  t.mock.method(orderRepository, 'createCodOrder', async () => created);
+  t.mock.method(orderWebhookService, 'notifyOrderCreated', async (payload) => { notification = payload; });
+
+  const result = await request('POST', '/api/store/orders', { token: memberToken, body: validOrderBody });
+
+  assert.equal(result.status, 201);
+  assert.deepEqual(notification, { customerEmail: 'member@example.com', order: created.order });
+  assert.deepEqual(result.json.data, { order: created.order, payment: created.payment });
+  assert.equal('customerEmail' in result.json.data, false);
+});
+
 test('stock conflict from checkout is returned as 409', async (t) => {
   const stockError = new Error('Sản phẩm hiện không còn đủ hàng.');
   stockError.status = 409;
@@ -136,6 +155,7 @@ test('checkout rejects insufficient stock and rolls back before creating the ord
       statements.push({ text: normalized, values });
 
       if (normalized === 'BEGIN' || normalized === 'ROLLBACK') return { rows: [] };
+      if (normalized.startsWith('SELECT email FROM users')) return { rows: [{ email: 'member@example.com' }] };
       if (normalized.startsWith('SELECT id FROM carts')) return { rows: [{ id: 9 }] };
       if (normalized.startsWith('SELECT ci.id AS cart_item_id')) {
         return { rows: [{ cart_item_id: 3, variant_id: 5, quantity: 4, price: '20.00', stock: 3, size: '1 kg', product_name: 'Daily Whey' }] };
@@ -170,6 +190,7 @@ test('checkout commits order, items, stock deduction, payment and cart cleanup t
       statements.push({ text: normalized, values });
 
       if (normalized === 'BEGIN' || normalized === 'COMMIT') return { rows: [] };
+      if (normalized.startsWith('SELECT email FROM users')) return { rows: [{ email: 'member@example.com' }] };
       if (normalized.startsWith('SELECT id FROM carts')) return { rows: [{ id: 9 }] };
       if (normalized.startsWith('SELECT ci.id AS cart_item_id')) {
         return { rows: [{ cart_item_id: 3, variant_id: 5, quantity: 2, price: '50.00', stock: 8, flavor: 'Vanilla', size: '1 kg', product_name: 'Daily Whey' }] };
@@ -228,6 +249,7 @@ test('checkout rolls back all changes if payment creation fails', async (t) => {
       statements.push(normalized);
 
       if (normalized === 'BEGIN' || normalized === 'COMMIT' || normalized === 'ROLLBACK') return { rows: [] };
+      if (normalized.startsWith('SELECT email FROM users')) return { rows: [{ email: 'member@example.com' }] };
       if (normalized.startsWith('SELECT id FROM carts')) return { rows: [{ id: 9 }] };
       if (normalized.startsWith('SELECT ci.id AS cart_item_id')) {
         return { rows: [{ cart_item_id: 3, variant_id: 5, quantity: 2, price: '50.00', stock: 8, size: '1 kg', product_name: 'Daily Whey' }] };

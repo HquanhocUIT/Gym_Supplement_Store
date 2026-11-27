@@ -115,7 +115,7 @@ function StoreCartPage() {
 
       <header className="mt-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <Eyebrow>Form &amp; Fuel · Your order</Eyebrow>
+          <Eyebrow>Gym Bro · Your order</Eyebrow>
           <h1 className="mt-3 font-display text-4xl font-extrabold tracking-[-0.06em] text-ink sm:text-5xl">Shopping cart</h1>
           <p className="mt-2 text-sm text-ink-soft" aria-live="polite">
             {hasToken ? `${itemCount} items in your cart` : 'Sign in to view your selected items.'}

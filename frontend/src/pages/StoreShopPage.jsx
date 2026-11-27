@@ -76,7 +76,7 @@ function StoreShopPage() {
       {/* Tiêu đề và mô tả trang cửa hàng. */}
       <header className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <Eyebrow>Form &amp; Fuel · Store</Eyebrow>
+          <Eyebrow>Gym Bro · Store</Eyebrow>
           <h1 className="mt-3 font-display text-4xl font-extrabold tracking-[-0.06em] text-ink sm:text-5xl">Shop supplements</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-ink-soft sm:text-base">
             Find supplements and accessories for your training goals.
