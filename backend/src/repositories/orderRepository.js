@@ -55,6 +55,13 @@ exports.createCodOrder = async (userId, shipping) => {
   try {
     await client.query('BEGIN');
 
+    const customerResult = await client.query({
+      text: 'SELECT email FROM users WHERE id = $1',
+      values: [userId],
+      query_timeout: 5000,
+    });
+    const customerEmail = customerResult.rows[0]?.email;
+
     // Khóa giỏ trước để không bị sửa trong lúc đang checkout.
     const cartResult = await client.query({
       text: 'SELECT id FROM carts WHERE user_id = $1 FOR UPDATE',
@@ -226,7 +233,11 @@ exports.createCodOrder = async (userId, shipping) => {
 
     await client.query('COMMIT');
 
-    return { order: { ...order, items: orderItems }, payment: paymentResult.rows[0] };
+    return {
+      order: { ...order, items: orderItems },
+      payment: paymentResult.rows[0],
+      customerEmail,
+    };
   } catch (error) {
     try {
       await client.query('ROLLBACK');

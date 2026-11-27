@@ -16,7 +16,7 @@ function ProductBottle({ product }) {
       <div className="relative mt-7 flex h-32 w-24 flex-col items-center rounded-b-[1.15rem] rounded-t-md bg-white shadow-card">
         <div className="h-5 w-12 -translate-y-4 rounded-t-md bg-night" />
         <span className="-mt-2 grid size-10 place-items-center rounded-full bg-brand-100 font-display text-sm font-extrabold text-brand-700">{product.mark}</span>
-        <span className="mt-2 text-[8px] font-black tracking-[0.12em] text-ink">FORM &amp; FUEL</span>
+        <span className="mt-2 text-[8px] font-black tracking-[0.12em] text-ink">GYM BRO</span>
         <span className="mt-1 text-[7px] text-muted">{product.name}</span>
       </div>
     </div>
