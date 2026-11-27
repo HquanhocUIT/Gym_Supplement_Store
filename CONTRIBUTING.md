@@ -5,7 +5,7 @@ Guidelines for Group 28 working in the Gym and Supplement Store Management Syste
 ## Workflow
 
 1. Choose an assigned task on the Notion board. If it does not have a GitHub issue, create one using the appropriate template.
-2. Start from the shared `dev` branch and work on your personal branch, `dev/<github-username>`. Do not push directly to `dev` or `main`.
+2. Start from the shared `dev` branch and work on your personal branch, `user/<github-username>`. Do not push directly to `dev` or `main`.
 3. Keep commits focused on the task and update related documentation.
 4. Open a PR from your personal branch into `dev` using the process below.
 5. After integration checks pass, open a release PR from `dev` into `main`. Production deploys from `main` only.
@@ -14,12 +14,12 @@ Guidelines for Group 28 working in the Gym and Supplement Store Management Syste
 
 - `main` is the stable production branch. Do not push directly to it.
 - `dev` is the shared integration branch. Keep it buildable and use it to verify completed work before release.
-- Each contributor works on one personal branch created from `dev`, named `dev/<github-username>` (for example, `dev/quan`). Do not share a personal branch between contributors.
+- Each contributor works on one personal branch created from `dev`, named `user/<github-username>` (for example, `user/hquanhocuit`). Do not share a personal branch between contributors.
 - After a PR from a personal branch is merged into `dev`, sync that personal branch with the latest `dev` before starting more work.
 - Create short-lived task branches from your personal branch only when a task needs isolated parallel work; merge them back into that personal branch before opening the PR to `dev`.
 - Use `<type>/<module>-<short-description>` for these short-lived task branches.
 - Examples: `feature/store-product-list`, `fix/store-cart-total`, `docs/api-contract-store`, `chore/docker-compose`.
-- Types: `feature`, `fix`, `docs`, `chore`, `test`.
+- Types: `feature`, `fix`, `docs`, `chore`, `test`, `user`.
 - Use lowercase ASCII characters with hyphens between words; do not use spaces.
 
 ## Commits
