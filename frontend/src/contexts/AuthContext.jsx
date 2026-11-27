@@ -39,11 +39,6 @@ export function AuthProvider({ children }) {
     return saveSession(response.data.data);
   }
 
-  async function loginWithGoogle(credential) {
-    const response = await axiosClient.post('/auth/google', { credential });
-    return saveSession(response.data.data);
-  }
-
   async function register(email, password, full_name) {
     const response = await axiosClient.post('/auth/register', {
       email: email.trim(), password, full_name: full_name.trim(),
@@ -56,7 +51,7 @@ export function AuthProvider({ children }) {
     setSession({ token: null, user: null });
   }
 
-  return <AuthContext.Provider value={{ ...session, isLoading: false, login, loginWithGoogle, register, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ ...session, isLoading: false, login, register, logout }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
