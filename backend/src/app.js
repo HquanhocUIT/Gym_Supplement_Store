@@ -46,6 +46,7 @@ app.get('/health', healthController.check);
 app.get('/health/db', healthController.checkDatabase);
 // Chặn brute-force cho endpoint đăng nhập trước khi vào router.
 app.use('/api/auth/login', loginLimiter);
+app.use('/api/auth/google', loginLimiter);
 app.use('/api', routes);
 
 app.use((req, res) => {

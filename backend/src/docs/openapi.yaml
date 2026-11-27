@@ -4,7 +4,7 @@ openapi: 3.0.3
 info:
   title: Gym and Supplement Store API
   version: 0.3.0
-  description: "Tài liệu cho 39 endpoint đang được mount trong backend. Nhấn Try it out để gửi request. Đăng nhập để lấy data.access_token rồi dán token vào Authorize, không thêm chữ Bearer. Đơn vị tiền: VND. Token và mật khẩu thật không được lưu trong tài liệu."
+  description: "Tài liệu cho các endpoint đang được mount trong backend. Nhấn Try it out để gửi request. Đăng nhập để lấy data.access_token rồi dán token vào Authorize, không thêm chữ Bearer. Đơn vị tiền: VND. Token và mật khẩu thật không được lưu trong tài liệu."
 servers:
   - url: /
     description: Cùng máy chủ đang phục vụ Swagger UI
@@ -169,6 +169,57 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "500":
           $ref: "#/components/responses/ServerError"
+  /api/auth/google:
+    post:
+      tags:
+        - Auth
+      summary: Sign in with Google
+      operationId: googleLogin
+      description: |-
+        Public member sign-in. Send the Google Identity Services ID token in `credential`.
+        The backend verifies its signature, audience and verified email before issuing the app JWT.
+        Staff and admin accounts continue to use password sign-in.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoogleLoginInput"
+      responses:
+        "200":
+          description: Google sign-in succeeded
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/AuthData"
+                  error:
+                    nullable: true
+                    example: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/ServerError"
+        "503":
+          description: Google sign-in is not configured
+
   /api/plans:
     get:
       tags:
@@ -1960,6 +2011,15 @@ components:
         password:
           type: string
           format: password
+          writeOnly: true
+    GoogleLoginInput:
+      type: object
+      required:
+        - credential
+      properties:
+        credential:
+          type: string
+          description: Google Identity Services ID token
           writeOnly: true
     RegisterInput:
       type: object
