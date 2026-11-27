@@ -5,14 +5,19 @@ Guidelines for Group 28 working in the Gym and Supplement Store Management Syste
 ## Workflow
 
 1. Choose an assigned task on the Notion board. If it does not have a GitHub issue, create one using the appropriate template.
-2. Create a branch from `main` using the conventions below. Do not push directly to `main`.
+2. Start from the shared `dev` branch and work on your personal branch, `dev/<github-username>`. Do not push directly to `dev` or `main`.
 3. Keep commits focused on the task and update related documentation.
-4. Open a PR using the process below.
+4. Open a PR from your personal branch into `dev` using the process below.
+5. After integration checks pass, open a release PR from `dev` into `main`. Production deploys from `main` only.
 
 ## Branches
 
-- Keep `main` in a working state; do not push directly to it.
-- Create a separate branch for each task using `<type>/<module>-<short-description>`.
+- `main` is the stable production branch. Do not push directly to it.
+- `dev` is the shared integration branch. Keep it buildable and use it to verify completed work before release.
+- Each contributor works on one personal branch created from `dev`, named `dev/<github-username>` (for example, `dev/quan`). Do not share a personal branch between contributors.
+- After a PR from a personal branch is merged into `dev`, sync that personal branch with the latest `dev` before starting more work.
+- Create short-lived task branches from your personal branch only when a task needs isolated parallel work; merge them back into that personal branch before opening the PR to `dev`.
+- Use `<type>/<module>-<short-description>` for these short-lived task branches.
 - Examples: `feature/store-product-list`, `fix/store-cart-total`, `docs/api-contract-store`, `chore/docker-compose`.
 - Types: `feature`, `fix`, `docs`, `chore`, `test`.
 - Use lowercase ASCII characters with hyphens between words; do not use spaces.
@@ -31,11 +36,12 @@ docs(project): add contribution guide
 
 ## Pull requests
 
-1. Open a PR from your branch into `main` using the PR template.
+1. Open a PR from your personal branch into `dev` using the PR template.
 2. Fill in blank by follow template: 1. Problem: 2. Fix:
 3. Screenshot your output 
 4. Request review from teammate before merging.
-5. Squash-merge once approved; delete the branch after merge.
+5. Squash-merge once approved. Keep personal branches; delete short-lived task branches after merge.
+6. When the team is ready to release, open a separate PR from `dev` into `main`, review it, and merge after checks pass.
 
 ## Project structure
 
