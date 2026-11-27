@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-const GOOGLE_IDENTITY_SCRIPT = 'https://accounts.google.com/gsi/client';
+const GOOGLE_IDENTITY_SCRIPT = 'https://accounts.google.com/gsi/client?hl=en';
 let scriptLoadPromise;
 
 function loadGoogleIdentityScript() {
@@ -67,6 +67,7 @@ export default function GoogleSignInButton({ onCredential, disabled = false }) {
       theme: 'outline',
       size: 'large',
       text: 'continue_with',
+      locale: 'en',
       shape: 'rectangular',
       width: Math.max(240, Math.min(mount.clientWidth || 360, 400)),
     });
