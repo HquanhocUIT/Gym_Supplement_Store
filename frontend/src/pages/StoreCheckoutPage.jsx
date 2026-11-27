@@ -108,7 +108,7 @@ function StoreCheckoutPage() {
       </Link>
 
       <header className="mt-6">
-        <Eyebrow>Form &amp; Fuel · Checkout</Eyebrow>
+        <Eyebrow>Gym Bro · Checkout</Eyebrow>
         <h1 className="mt-3 font-display text-4xl font-extrabold tracking-[-0.06em] text-ink sm:text-5xl">Checkout</h1>
         <p className="mt-2 text-sm text-ink-soft">Pay when your order arrives with cash on delivery.</p>
       </header>

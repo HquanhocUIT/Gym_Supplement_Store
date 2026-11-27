@@ -100,6 +100,7 @@ if (!testDatabaseUrl) {
       assert.equal(order.order.total_amount, '180.00');
       assert.equal(order.payment.payment_method, 'cod');
       assert.equal(order.payment.status, 'pending');
+      assert.equal(order.customerEmail, `checkout-${suffix}@example.com`);
       assert.equal(order.order.items.length, 1);
 
       const stockAfterCheckout = await pool.query({

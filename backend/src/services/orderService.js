@@ -1,4 +1,5 @@
 const orderRepository = require('../repositories/orderRepository');
+const orderWebhookService = require('./orderWebhookService');
 
 // Tạo lỗi đầu vào để API trả status và code cụ thể.
 function createServiceError(status, code, message) {
@@ -49,11 +50,25 @@ function validateShipping(input = {}) {
 }
 
 // Tạo đơn COD sau khi xác thực người dùng và dữ liệu giao hàng.
-exports.createOrder = (userId, input) => {
+exports.createOrder = async (userId, input) => {
   const parsedUserId = parseUserId(userId);
   const shipping = validateShipping(input);
 
-  return orderRepository.createCodOrder(parsedUserId, shipping);
+  const created = await orderRepository.createCodOrder(parsedUserId, shipping);
+  const { customerEmail, ...responseData } = created;
+
+  if (customerEmail) {
+    try {
+      await orderWebhookService.notifyOrderCreated({
+        customerEmail,
+        order: created.order,
+      });
+    } catch {
+      console.warn(`Could not start the order-created notification for order ${created.order.id}.`);
+    }
+  }
+
+  return responseData;
 };
 
 // Chấp nhận số nguyên dương đúng định dạng, không cắt phần thập phân hoặc hậu tố.

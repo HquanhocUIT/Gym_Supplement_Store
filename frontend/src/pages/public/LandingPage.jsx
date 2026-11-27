@@ -33,7 +33,7 @@ export default function LandingPage() {
 
       {/* Icon nét đồng nhất và khoảng cách rộng giúp nội dung dễ đọc trên điện thoại. */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8" aria-labelledby="why-title">
-        <h2 id="why-title" className="text-center font-display text-3xl font-extrabold tracking-tight sm:text-4xl">Why train with Form &amp; Fuel?</h2>
+        <h2 id="why-title" className="text-center font-display text-3xl font-extrabold tracking-tight sm:text-4xl">Why train with Gym Bro?</h2>
         <div className="mt-10 grid gap-6 md:grid-cols-3 lg:mt-12 lg:gap-8">
           {features.map(({ icon: Icon, title, description }) => (
             <article key={title} className="rounded-card border border-line bg-white px-7 py-9 shadow-card sm:px-8 sm:py-10">

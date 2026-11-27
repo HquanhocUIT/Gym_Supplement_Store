@@ -6,13 +6,13 @@ export function BrandMark({ light = false }) {
     <Link
       to="/"
       className={`inline-flex items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-4 ${light ? 'text-white' : 'text-ink'}`}
-      aria-label="Form and Fuel home"
+      aria-label="Gym Bro home"
     >
       <span className="grid size-10 place-items-center rounded-xl bg-brand-500 text-ink">
         <Dumbbell size={21} strokeWidth={2.5} aria-hidden="true" />
       </span>
       <span className="font-display text-[15px] font-extrabold leading-none tracking-[-0.04em]">
-        FORM <span className={light ? 'text-brand-500' : 'text-brand-700'}>&amp;</span> FUEL
+        GYM <span className={light ? 'text-brand-500' : 'text-brand-700'}>BRO</span>
       </span>
     </Link>
   )
