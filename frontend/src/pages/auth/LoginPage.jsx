@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import GoogleSignInButton from '../../components/auth/GoogleSignInButton';
 
 /**
  * LoginPage - Login page.
@@ -13,9 +14,10 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const googleSignInEnabled = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim());
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -26,6 +28,22 @@ export default function LoginPage() {
       // Chuyển tới khu vực phù hợp sau khi backend xác nhận quyền tài khoản.
       const home = { admin: '/admin/dashboard', staff: '/staff/check-in', member: '/member/dashboard' };
       // Trở lại mục khách đang tìm; chỉ chấp nhận đường dẫn nội bộ.
+      const from = location.state?.from;
+      const destination = typeof from === 'string' && /^\/(?![/\\])/.test(from) ? from : home[user.role] || '/';
+      navigate(destination, { replace: true });
+    } catch (err) {
+      setError(err.response?.data?.error?.message || err.message || 'Unable to sign in. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleCredential(credential) {
+    setError('');
+    setLoading(true);
+    try {
+      const user = await loginWithGoogle(credential);
+      const home = { admin: '/admin/dashboard', staff: '/staff/check-in', member: '/member/dashboard' };
       const from = location.state?.from;
       const destination = typeof from === 'string' && /^\/(?![/\\])/.test(from) ? from : home[user.role] || '/';
       navigate(destination, { replace: true });
@@ -76,6 +94,17 @@ export default function LoginPage() {
             Login
           </Button>
         </form>
+
+        {googleSignInEnabled && (
+          <>
+            <div className="flex items-center gap-3 text-xs text-muted" aria-hidden="true">
+              <span className="h-px flex-1 bg-line" />
+              <span>or continue with</span>
+              <span className="h-px flex-1 bg-line" />
+            </div>
+            <GoogleSignInButton onCredential={handleGoogleCredential} disabled={loading} />
+          </>
+        )}
 
         <p className="text-center text-sm text-muted">
           New here?{' '}

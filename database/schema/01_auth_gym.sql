@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
+    google_sub VARCHAR(255),
     full_name VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'staff', 'member')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -54,6 +55,9 @@ CREATE TABLE IF NOT EXISTS checkins (
 -- (email already has a unique index from the UNIQUE constraint)
 -- ============================================================
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_sub_unique
+    ON users (google_sub)
+    WHERE google_sub IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_memberships_user_id ON memberships(user_id);
 CREATE INDEX IF NOT EXISTS idx_memberships_status ON memberships(status);
 CREATE INDEX IF NOT EXISTS idx_memberships_plan_id ON memberships(plan_id);

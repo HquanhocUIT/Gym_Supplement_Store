@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import { AuthProvider, useAuth } from '../../contexts/AuthContext';
@@ -13,6 +13,8 @@ afterEach(() => {
   cleanup();
   localStorage.clear();
   axiosClient.defaults.adapter = originalAdapter;
+  delete window.google;
+  vi.unstubAllEnvs();
 });
 
 function renderLogin() {
@@ -20,9 +22,36 @@ function renderLogin() {
     <AuthProvider><MemoryRouter initialEntries={['/login']}><Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/admin/dashboard" element={<h1>Admin dashboard</h1>} />
+      <Route path="/member/dashboard" element={<h1>Member dashboard</h1>} />
     </Routes></MemoryRouter></AuthProvider>,
   );
 }
+
+it('signs a member in with the Google ID credential and saves the same app session', async () => {
+  vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'test-web-client-id');
+  let googleCallback;
+  let request;
+  window.google = { accounts: { id: {
+    initialize: vi.fn(({ callback }) => { googleCallback = callback; }),
+    renderButton: vi.fn((element) => { element.textContent = 'Continue with Google'; }),
+  } } };
+  axiosClient.defaults.adapter = vi.fn(async (config) => {
+    request = { url: config.url, body: JSON.parse(config.data) };
+    return { config, status: 200, headers: {}, data: { success: true, data: {
+      access_token: 'google-session',
+      user: { user_id: 12, email: 'member@example.test', full_name: 'Gym Member', role: 'member' },
+    } } };
+  });
+
+  renderLogin();
+  await waitFor(() => expect(window.google.accounts.id.renderButton).toHaveBeenCalled());
+  await act(async () => { await googleCallback({ credential: 'g'.repeat(120) }); });
+  await screen.findByRole('heading', { name: 'Member dashboard' });
+
+  expect(request.url).toBe('/auth/google');
+  expect(request.body.credential).toHaveLength(120);
+  expect(getAccessToken()).toBe('google-session');
+});
 
 it('hiện và ẩn mật khẩu mà không đổi giá trị hoặc gửi form', () => {
   const adapter = vi.fn();
