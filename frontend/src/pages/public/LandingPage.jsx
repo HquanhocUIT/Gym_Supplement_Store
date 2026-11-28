@@ -20,12 +20,12 @@ export default function LandingPage() {
           <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-slate-200 sm:text-lg">
             Flexible gym memberships, purposeful training and supplements that support your goals.
           </p>
-          <div className="mt-9 flex flex-col items-stretch justify-center gap-4 sm:flex-row sm:items-center">
-            <Link to="/pricing" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-500 px-7 py-3 text-sm font-bold text-ink transition hover:bg-brand-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
-              Explore memberships <ArrowRight size={18} aria-hidden="true" />
+          <div className="mx-auto mt-9 grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2">
+            <Link to="/shop" className="inline-flex min-h-16 items-center justify-center gap-3 rounded-xl bg-brand-500 px-7 py-4 text-base font-bold text-ink transition hover:bg-brand-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:min-h-[72px]">
+              Explore the shop <ArrowRight size={19} aria-hidden="true" />
             </Link>
-            <Link to="/shop" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-7 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
-              Browse the store
+            <Link to="/pricing" className="inline-flex min-h-16 items-center justify-center gap-3 rounded-xl border border-white/45 bg-white/5 px-7 py-4 text-base font-bold text-white transition hover:border-white hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:min-h-[72px]">
+              Explore memberships <ArrowRight size={19} aria-hidden="true" />
             </Link>
           </div>
         </div>
