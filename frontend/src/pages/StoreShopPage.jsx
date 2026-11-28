@@ -1,61 +1,16 @@
 import { useEffect, useState } from 'react'
-import { CircleAlert, ImageOff, Search, SlidersHorizontal, X } from 'lucide-react'
+import { CircleAlert, Search, SlidersHorizontal, X } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { EmptyState, Pagination, SkeletonCard } from '../components/common/index.js'
 import { Eyebrow } from '../components/Brand.jsx'
 import useApiQuery from '../hooks/useApiQuery.js'
+import ProductPhoto from '../components/common/ProductPhoto.jsx'
 import useCatalogSearchParams from '../hooks/useCatalogSearchParams.js'
 
 const PAGE_SIZE = 12
 
 const inputClass = 'min-h-11 w-full rounded-xl border border-line bg-white px-3 text-sm text-ink outline-none transition placeholder:text-muted focus:border-brand-600 focus:ring-2 focus:ring-brand-100'
 const selectClass = `${inputClass} cursor-pointer`
-
-function ShopProductCard({ product, returnTo }) {
-  const [failedUrl, setFailedUrl] = useState(null)
-  const hasImage = product.image_url && failedUrl !== product.image_url
-
-  return (
-    <article className={`shop-product-card min-w-0 break-words${hasImage ? ' shop-product-card--with-image' : ''}`}>
-      <Link className="shop-product-card__link" to={`/product/${product.id}`} state={{ returnTo }} aria-label={`View ${product.name}`}>
-        <div className="shop-product-card__surface">
-          <div className="shop-product-card__header">
-            <div className="min-w-0">
-              <p className="shop-product-card__category">{product.category_name}</p>
-              <h2 className="shop-product-card__title">{product.name}</h2>
-            </div>
-            <div className="shop-product-card__price">
-              <p className="shop-product-card__price-label">From</p>
-              <p className="shop-product-card__price-value">{formatPrice(product.lowest_price)}</p>
-              <span className="shop-product-card__details">View details</span>
-            </div>
-          </div>
-          <div className="shop-product-card__image-stage">
-            {hasImage ? (
-              <img className="shop-product-card__image" src={product.image_url} alt={product.name} loading="lazy" onError={() => setFailedUrl(product.image_url)} />
-            ) : (
-              <div className="flex h-full flex-col items-center justify-center gap-3 text-brand-700" role="img" aria-label={`Photo unavailable for ${product.name}`}>
-                <ImageOff size={36} strokeWidth={1.5} aria-hidden="true" />
-                <span className="text-sm font-medium">No photo yet</span>
-              </div>
-            )}
-          </div>
-          <div className="shop-product-card__footer">
-            <p className="shop-product-card__description">{product.description || 'Product details are being updated.'}</p>
-            <p className={`shop-product-card__stock ${Number(product.total_stock) > 0 ? 'text-brand-700' : 'text-red-600'}`}>
-              {Number(product.total_stock) > 0 ? `${product.total_stock} in stock` : 'Out of stock'}
-            </p>
-          </div>
-        </div>
-        {hasImage && (
-          <div className="shop-product-card__foreground" aria-hidden="true">
-            <img className="shop-product-card__image" src={product.image_url} alt="" loading="lazy" onError={() => setFailedUrl(product.image_url)} />
-          </div>
-        )}
-      </Link>
-    </article>
-  )
-}
 
 // Hiển thị giá theo định dạng tiền Việt Nam.
 function formatPrice(value) {
@@ -216,7 +171,7 @@ function StoreShopPage() {
             Adjust the price range to view products.
           </div>
         ) : productsQuery.isPending ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-label="Loading products">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" role="status" aria-label="Loading products">
             {Array.from({ length: 8 }, (_, index) => <SkeletonCard key={index} />)}
           </div>
         ) : productsQuery.isError ? (
@@ -232,9 +187,27 @@ function StoreShopPage() {
           </div>
         ) : (
           <>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {products.map((product) => (
-                <ShopProductCard key={product.id} product={product} returnTo={location.pathname + location.search} />
+                <article className="group min-w-0 break-words rounded-card border border-line bg-white p-3 transition motion-safe:hover:-translate-y-1 hover:shadow-card" key={product.id}>
+                  <Link className="block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-700" to={`/product/${product.id}`} state={{ returnTo: location.pathname + location.search }} aria-label={`View ${product.name}`}>
+                    <ProductPhoto product={product} />
+                    <div className="px-1 pb-2 pt-4">
+                      <p className="text-xs font-semibold text-brand-700">{product.category_name}</p>
+                      <h2 className="mt-1 font-display text-base font-bold text-ink">{product.name}</h2>
+                      <p className="mt-2 min-h-10 text-sm leading-5 text-ink-soft">{product.description || 'Product details are being updated.'}</p>
+                      <div className="mt-4 flex items-end justify-between gap-3 border-t border-line pt-3">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-muted">From</p>
+                          <p className="mt-1 text-sm font-extrabold text-ink">{formatPrice(product.lowest_price)}</p>
+                        </div>
+                        <p className={`text-xs font-semibold ${Number(product.total_stock) > 0 ? 'text-brand-700' : 'text-red-600'}`}>
+                          {Number(product.total_stock) > 0 ? `${product.total_stock} in stock` : 'Out of stock'}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                </article>
               ))}
             </div>
 
