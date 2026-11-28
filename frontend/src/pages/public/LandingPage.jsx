@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowRight, ArrowUpRight, Dumbbell, UserRoundCheck, Smartphone } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Dumbbell, UserRoundCheck, Smartphone, ZoomIn, ZoomOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useApiQuery from '../../hooks/useApiQuery';
 import { Eyebrow } from '../../components/Brand';
@@ -18,6 +18,7 @@ const features = [
 ];
 
 export default function LandingPage() {
+  const [expandedProductId, setExpandedProductId] = useState(null);
   const featuredQuery = useApiQuery({
     queryKey: ['overview-featured-products'],
     url: '/store/products',
@@ -91,8 +92,8 @@ export default function LandingPage() {
           </header>
 
           {featuredQuery.isPending ? (
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3" role="status" aria-label="Loading featured products">
-              {featuredCategories.map(({ id }) => <div key={id} className="min-h-[26rem] animate-pulse bg-white/10" />)}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3" role="status" aria-label="Loading featured products">
+              {featuredCategories.map(({ id }) => <div key={id} className="min-h-[29rem] motion-safe:animate-pulse bg-white/10" />)}
             </div>
           ) : featuredQuery.isError ? (
             <div className="rounded-2xl border border-white/20 p-8 text-center" role="alert">
@@ -102,8 +103,16 @@ export default function LandingPage() {
           ) : featuredQuery.data.length === 0 ? (
             <p className="rounded-2xl border border-white/20 p-8 text-center text-slate-300" role="status">No featured products are available right now.</p>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {featuredQuery.data.map((product) => <FeaturedProductCard key={product.featuredKey} product={product} />)}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {featuredQuery.data.map((product) => (
+                <FeaturedProductCard
+                  key={product.featuredKey}
+                  product={product}
+                  expanded={expandedProductId === product.id}
+                  onToggle={() => setExpandedProductId((current) => current === product.id ? null : product.id)}
+                  onReset={() => setExpandedProductId(null)}
+                />
+              ))}
             </div>
           )}
         </div>
@@ -122,7 +131,7 @@ export default function LandingPage() {
   );
 }
 
-function FeaturedProductCard({ product }) {
+function FeaturedProductCard({ product, expanded, onToggle, onReset }) {
   const [failedUrl, setFailedUrl] = useState(null);
   const hasImage = product.image_url && failedUrl !== product.image_url;
   const price = product.lowest_price === null || product.lowest_price === undefined
@@ -130,30 +139,36 @@ function FeaturedProductCard({ product }) {
     : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(Number(product.lowest_price));
 
   return (
-    <article className={`overview-feature-card${hasImage ? ' overview-feature-card--with-image' : ''}`}>
-      <Link className="overview-feature-card__link" to={`/product/${product.id}`} aria-label={`View ${product.name}`}>
+    <article className={`overview-feature-card${hasImage ? ' overview-feature-card--with-image' : ''}${hasImage && expanded ? ' overview-feature-card--expanded' : ''}`}>
+      <div className="overview-feature-card__scene" onKeyDown={(event) => { if (event.key === 'Escape') onReset(); }}>
         <div className="overview-feature-card__surface">
           <div className="overview-feature-card__header">
             <div className="min-w-0">
               <p className="overview-feature-card__category">{product.featuredCategory}</p>
-              <h3 className="overview-feature-card__title">{product.name}</h3>
+              <h3 className="overview-feature-card__title"><Link to={`/product/${product.id}`}>{product.name}</Link></h3>
             </div>
             <div className="overview-feature-card__price">
               <p className="overview-feature-card__price-label">From</p>
               <p className="overview-feature-card__price-value">{price}</p>
-              <span className="overview-feature-card__details">View details</span>
+              <Link className="overview-feature-card__details" to={`/product/${product.id}`} aria-label={`View details for ${product.name}`}>View details</Link>
             </div>
           </div>
-          <div className="overview-feature-card__image-stage">
-            {hasImage ? (
+          {hasImage ? (
+            <button className="overview-feature-card__image-stage" type="button" aria-label={`Enlarge image of ${product.name}`} aria-pressed={expanded} onClick={onToggle}>
               <img className="overview-feature-card__image" src={product.image_url} alt={product.name} loading="lazy" onError={() => setFailedUrl(product.image_url)} />
-            ) : (
+              <span className="overview-feature-card__zoom-hint" aria-hidden="true">
+                {expanded ? <ZoomOut size={16} /> : <ZoomIn size={16} />}
+                {expanded ? 'Reset' : 'Enlarge'}
+              </span>
+            </button>
+          ) : (
+            <div className="overview-feature-card__image-stage">
               <span className="text-sm font-medium text-ink-soft">Product photo coming soon</span>
-            )}
-          </div>
+            </div>
+          )}
           <div className="overview-feature-card__footer">
             <p className="overview-feature-card__description">{product.description || 'Product details are being updated.'}</p>
-            <span className="inline-flex shrink-0 items-center gap-1 text-xs font-extrabold uppercase text-ink">Explore <ArrowUpRight size={15} aria-hidden="true" /></span>
+            <Link to={`/product/${product.id}`} aria-label={`Explore ${product.name}`} className="inline-flex min-h-11 shrink-0 items-center gap-1 text-xs font-extrabold uppercase text-ink">Explore <ArrowUpRight size={15} aria-hidden="true" /></Link>
           </div>
         </div>
         {hasImage && (
@@ -161,7 +176,7 @@ function FeaturedProductCard({ product }) {
             <img className="overview-feature-card__image" src={product.image_url} alt="" loading="lazy" onError={() => setFailedUrl(product.image_url)} />
           </div>
         )}
-      </Link>
+      </div>
     </article>
   );
 }

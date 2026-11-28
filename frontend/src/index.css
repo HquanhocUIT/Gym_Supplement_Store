@@ -62,19 +62,21 @@ input {
 .overview-feature-card {
   --feature-padding-x: 1.35rem;
   --feature-padding-bottom: 1rem;
-  --feature-image-height: 14rem;
-  position: relative;
-  min-height: 26rem;
-  isolation: isolate;
-}
-
-.overview-feature-card__link {
+  --feature-image-height: 16rem;
+  --feature-footer-height: 3.5rem;
   --feature-surface-transform: none;
   --feature-surface-filter: none;
   --feature-surface-shadow: none;
   --feature-surface-shade: 0;
   --feature-foreground-opacity: 0;
   --feature-foreground-transform: none;
+  position: relative;
+  min-width: 0;
+  min-height: 29rem;
+  isolation: isolate;
+}
+
+.overview-feature-card__scene {
   position: relative;
   display: block;
   height: 100%;
@@ -84,7 +86,7 @@ input {
   text-decoration: none;
 }
 
-.overview-feature-card__link:focus-visible {
+.overview-feature-card :is(a, button):focus-visible {
   outline: 3px solid var(--color-brand-500);
   outline-offset: 5px;
 }
@@ -118,11 +120,12 @@ input {
   position: absolute;
   z-index: 1;
   right: var(--feature-padding-x);
-  bottom: calc(var(--feature-padding-bottom) + 3.2rem);
+  bottom: calc(var(--feature-padding-bottom) + var(--feature-footer-height));
   left: var(--feature-padding-x);
-  display: grid;
+  display: flex;
   height: var(--feature-image-height);
-  place-items: center;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
   opacity: var(--feature-foreground-opacity);
   transform: var(--feature-foreground-transform);
@@ -131,7 +134,7 @@ input {
 
 .overview-feature-card__header {
   display: flex;
-  min-height: 5.2rem;
+  min-height: 6rem;
   flex: 1 0 auto;
   align-items: flex-start;
   justify-content: space-between;
@@ -140,7 +143,7 @@ input {
 
 .overview-feature-card__category,
 .overview-feature-card__price-label {
-  color: #747a78;
+  color: #606966;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -187,24 +190,57 @@ input {
 
 .overview-feature-card__image-stage {
   position: relative;
-  display: grid;
+  display: flex;
+  width: 100%;
   height: var(--feature-image-height);
   flex: 0 0 var(--feature-image-height);
-  overflow: hidden;
-  place-items: center;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+button.overview-feature-card__image-stage {
+  cursor: zoom-in;
+}
+
+.overview-feature-card--expanded button.overview-feature-card__image-stage {
+  cursor: zoom-out;
 }
 
 .overview-feature-card__image {
-  width: 82%;
-  height: 86%;
+  display: block;
+  width: calc(100% - 2rem);
+  height: calc(var(--feature-image-height) - 2rem);
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   mix-blend-mode: multiply;
   filter: drop-shadow(0 9px 7px rgb(0 0 0 / 14%));
 }
 
+.overview-feature-card__zoom-hint {
+  position: absolute;
+  right: 0;
+  bottom: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 0.25rem;
+  padding: 0.25rem;
+  background: #f1f1f1;
+  color: var(--color-ink-soft);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
 .overview-feature-card__footer {
   display: flex;
-  min-height: 3.2rem;
+  height: var(--feature-footer-height);
+  flex: 0 0 var(--feature-footer-height);
   align-items: end;
   justify-content: space-between;
   gap: 0.75rem;
@@ -223,18 +259,25 @@ input {
   -webkit-line-clamp: 2;
 }
 
-@media (min-width: 640px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .overview-feature-card--with-image:is(:hover, :focus-within) {
-    z-index: 2;
-  }
+.overview-feature-card--expanded {
+  --feature-surface-transform: perspective(900px) translateY(-5%) rotateX(25deg);
+  --feature-surface-filter: blur(1.5px);
+  --feature-surface-shadow: 0 24px 26px -12px rgb(0 0 0 / 55%);
+  --feature-surface-shade: 1;
+  --feature-foreground-opacity: 1;
+  --feature-foreground-transform: translate3d(0, -18%, 0) scale(1.15);
+  z-index: 2;
+}
 
-  .overview-feature-card--with-image .overview-feature-card__link:is(:hover, :focus-visible) {
+@media (min-width: 640px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .overview-feature-card--with-image:hover {
     --feature-surface-transform: perspective(900px) translateY(-5%) rotateX(25deg);
     --feature-surface-filter: blur(1.5px);
     --feature-surface-shadow: 0 24px 26px -12px rgb(0 0 0 / 55%);
     --feature-surface-shade: 1;
     --feature-foreground-opacity: 1;
-    --feature-foreground-transform: translate3d(0, -22%, 0) scale(1.15);
+    --feature-foreground-transform: translate3d(0, -18%, 0) scale(1.15);
+    z-index: 2;
   }
 }
 
@@ -242,8 +285,8 @@ input {
   .overview-feature-card {
     --feature-padding-x: 1rem;
     --feature-padding-bottom: 0.85rem;
-    --feature-image-height: 13rem;
-    min-height: 24rem;
+    --feature-image-height: 16rem;
+    min-height: 29rem;
   }
 
   .overview-feature-card__surface {
@@ -256,6 +299,14 @@ input {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .overview-feature-card--expanded {
+    --feature-surface-transform: none;
+    --feature-surface-filter: none;
+    --feature-surface-shade: 0;
+    --feature-surface-shadow: none;
+    --feature-foreground-transform: scale(1.1);
+  }
+
   .overview-feature-card__surface,
   .overview-feature-card__surface::after,
   .overview-feature-card__foreground {
