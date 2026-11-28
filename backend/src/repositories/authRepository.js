@@ -15,6 +15,14 @@ async function findUserByEmail(email) {
   return result.rows[0] || null;
 }
 
+async function findUserById(userId) {
+  const result = await pool.query(
+    `SELECT id, email, full_name, role FROM users WHERE id = $1`,
+    [userId]
+  );
+  return result.rows[0] || null;
+}
+
 async function findUserByGoogleSub(googleSub) {
   const result = await pool.query(
     `SELECT id, email, full_name, role, google_sub FROM users WHERE google_sub = $1`,
@@ -61,4 +69,4 @@ async function createUser(email, passwordHash, fullName, role = 'member') {
   return result.rows[0];
 }
 
-module.exports = { findUserByEmail, findUserByGoogleSub, linkGoogleSubject, createGoogleUser, createUser };
+module.exports = { findUserByEmail, findUserById, findUserByGoogleSub, linkGoogleSubject, createGoogleUser, createUser };

@@ -182,6 +182,25 @@ describe('Auth & permissions', () => {
     assert.equal(result.status, 403, JSON.stringify(result.json));
   });
 
+  test('an active session refreshes its role after a database promotion', async () => {
+    await pool.query(`UPDATE users SET role = 'staff' WHERE email = $1`, [memberEmail]);
+
+    try {
+      const oldTokenResult = await request('GET', '/api/members', undefined, memberToken);
+      assert.equal(oldTokenResult.status, 403);
+
+      const refreshResult = await request('POST', '/api/auth/refresh', {}, memberToken);
+      assert.equal(refreshResult.status, 200, JSON.stringify(refreshResult.json));
+      assert.equal(refreshResult.json.data.user.role, 'staff');
+      assert.ok(refreshResult.json.data.access_token);
+
+      const staffResult = await request('GET', '/api/members', undefined, refreshResult.json.data.access_token);
+      assert.equal(staffResult.status, 200, JSON.stringify(staffResult.json));
+    } finally {
+      await pool.query(`UPDATE users SET role = 'member' WHERE email = $1`, [memberEmail]);
+    }
+  });
+
   // Admin được phép tạo gói tập và nhận dữ liệu đúng schema.
   test('admin can create a membership plan', async () => {
     const result = await request(

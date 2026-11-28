@@ -15,6 +15,7 @@ function readSession() {
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(readSession);
+  const [isLoading, setIsLoading] = useState(() => Boolean(getAccessToken()));
 
   // Đồng bộ khi giỏ hàng đăng nhập, đăng xuất hoặc tab khác thay đổi phiên.
   useEffect(() => {
@@ -24,6 +25,47 @@ export function AuthProvider({ children }) {
     return () => {
       window.removeEventListener('auth-token-changed', refresh);
       window.removeEventListener('storage', refresh);
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    let refreshing = false;
+
+    const refreshSession = async () => {
+      if (!active || refreshing) return;
+      const existingToken = getAccessToken();
+      if (!existingToken) {
+        setSession(readSession());
+        setIsLoading(false);
+        return;
+      }
+
+      refreshing = true;
+      try {
+        const response = await axiosClient.post('/auth/refresh');
+        if (!active || getAccessToken() !== existingToken) return;
+
+        const refreshed = response.data?.data;
+        if (!refreshed?.access_token || !refreshed?.user) return;
+        saveAccessToken(refreshed.access_token, refreshed.user);
+        setSession({ token: refreshed.access_token, user: refreshed.user });
+      } catch (error) {
+        if (error.response?.status === 401 && getAccessToken() === existingToken) {
+          clearAccessToken();
+          if (active) setSession({ token: null, user: null });
+        }
+      } finally {
+        refreshing = false;
+        if (active) setIsLoading(false);
+      }
+    };
+
+    refreshSession();
+    window.addEventListener('focus', refreshSession);
+    return () => {
+      active = false;
+      window.removeEventListener('focus', refreshSession);
     };
   }, []);
 
@@ -56,7 +98,7 @@ export function AuthProvider({ children }) {
     setSession({ token: null, user: null });
   }
 
-  return <AuthContext.Provider value={{ ...session, isLoading: false, login, loginWithGoogle, register, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ ...session, isLoading, login, loginWithGoogle, register, logout }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
