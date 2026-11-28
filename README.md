@@ -301,9 +301,13 @@ Interactive API documentation is available through **Swagger UI**:
 
 - **Swagger UI:** `http://localhost:5000/docs/`
 - **OpenAPI JSON:** `http://localhost:5000/openapi.json`
+- **Render Swagger UI:** `https://<render-service>.onrender.com/docs/` (replace with the backend URL shown in the Render Dashboard)
+- **Render OpenAPI JSON:** `https://<render-service>.onrender.com/openapi.json`
 - **OpenAPI source:** `backend/src/docs/openapi.yaml`
 - **Endpoint reference:** `docs/api.md`
 - **Postman collection:** `docs/postman/gym-supplement-store.postman_collection.json`
+
+The Render Blueprint deploys the backend API and its docs from the same service; no separate static site is needed. See [the API guide](docs/api.md) for required Render settings and a checkout endpoint walkthrough.
 
 ### Authentication in Swagger
 

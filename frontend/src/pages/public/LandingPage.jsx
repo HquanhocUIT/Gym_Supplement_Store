@@ -1,5 +1,14 @@
-import { ArrowRight, Dumbbell, UserRoundCheck, Smartphone } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowRight, ArrowUpRight, Dumbbell, UserRoundCheck, Smartphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import useApiQuery from '../../hooks/useApiQuery';
+import { Eyebrow } from '../../components/Brand';
+
+const featuredCategories = [
+  { id: 'whey', label: 'Whey protein', matches: /whey|protein/i },
+  { id: 'creatine', label: 'Creatine', matches: /creatine/i },
+  { id: 'pre-workout', label: 'Pre-workout', matches: /pre[ -]?workout/i },
+];
 
 // Trang chủ giữ cùng kiểu chữ, màu và icon với các trang Store.
 const features = [
@@ -9,6 +18,27 @@ const features = [
 ];
 
 export default function LandingPage() {
+  const featuredQuery = useApiQuery({
+    queryKey: ['overview-featured-products'],
+    url: '/store/products',
+    params: { page: 1, limit: 100, sort: 'name_asc' },
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+    select: (data) => {
+      if (!Array.isArray(data?.items)) throw new Error('The server returned an unexpected product list.');
+
+      return featuredCategories.map(({ id, label, matches }) => {
+        const products = data.items.filter((product) => matches.test(product.category_name || ''));
+        const product = products.find((item) => item.image_url && Number(item.total_stock) > 0)
+          || products.find((item) => item.image_url)
+          || products.find((item) => Number(item.total_stock) > 0)
+          || products[0];
+
+        return product ? { ...product, featuredCategory: label, featuredKey: id } : null;
+      }).filter(Boolean);
+    },
+  });
+
   return (
     <div className="bg-paper text-ink">
       {/* Nền tối dùng chữ sáng; hành động chính dẫn tới gói tập. */}
@@ -47,6 +77,38 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section className="bg-night px-4 py-16 text-white sm:px-6 sm:py-20 lg:px-8" aria-labelledby="featured-shop-title">
+        <div className="mx-auto max-w-7xl">
+          <header className="mb-9 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <Eyebrow dark>From the Gym Bro shop</Eyebrow>
+              <h2 id="featured-shop-title" className="mt-3 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">Take a look at the shop</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">A few training essentials to get you started.</p>
+            </div>
+            <Link to="/shop" className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-ink transition hover:bg-brand-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
+              Explore the shop <ArrowRight size={18} aria-hidden="true" />
+            </Link>
+          </header>
+
+          {featuredQuery.isPending ? (
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3" role="status" aria-label="Loading featured products">
+              {featuredCategories.map(({ id }) => <div key={id} className="min-h-[26rem] animate-pulse bg-white/10" />)}
+            </div>
+          ) : featuredQuery.isError ? (
+            <div className="rounded-2xl border border-white/20 p-8 text-center" role="alert">
+              <p>Featured products are temporarily unavailable.</p>
+              <button className="mt-4 min-h-11 rounded-xl border border-white/50 px-5 font-bold hover:bg-white/10" type="button" onClick={() => featuredQuery.refetch()} disabled={featuredQuery.isFetching}>Try again</button>
+            </div>
+          ) : featuredQuery.data.length === 0 ? (
+            <p className="rounded-2xl border border-white/20 p-8 text-center text-slate-300" role="status">No featured products are available right now.</p>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {featuredQuery.data.map((product) => <FeaturedProductCard key={product.featuredKey} product={product} />)}
+            </div>
+          )}
+        </div>
+      </section>
+
       <section className="border-t border-line bg-white px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="font-display text-3xl font-extrabold tracking-tight">Ready for your next session?</h2>
@@ -57,5 +119,49 @@ export default function LandingPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+function FeaturedProductCard({ product }) {
+  const [failedUrl, setFailedUrl] = useState(null);
+  const hasImage = product.image_url && failedUrl !== product.image_url;
+  const price = product.lowest_price === null || product.lowest_price === undefined
+    ? 'Price unavailable'
+    : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(Number(product.lowest_price));
+
+  return (
+    <article className={`overview-feature-card${hasImage ? ' overview-feature-card--with-image' : ''}`}>
+      <Link className="overview-feature-card__link" to={`/product/${product.id}`} aria-label={`View ${product.name}`}>
+        <div className="overview-feature-card__surface">
+          <div className="overview-feature-card__header">
+            <div className="min-w-0">
+              <p className="overview-feature-card__category">{product.featuredCategory}</p>
+              <h3 className="overview-feature-card__title">{product.name}</h3>
+            </div>
+            <div className="overview-feature-card__price">
+              <p className="overview-feature-card__price-label">From</p>
+              <p className="overview-feature-card__price-value">{price}</p>
+              <span className="overview-feature-card__details">View details</span>
+            </div>
+          </div>
+          <div className="overview-feature-card__image-stage">
+            {hasImage ? (
+              <img className="overview-feature-card__image" src={product.image_url} alt={product.name} loading="lazy" onError={() => setFailedUrl(product.image_url)} />
+            ) : (
+              <span className="text-sm font-medium text-ink-soft">Product photo coming soon</span>
+            )}
+          </div>
+          <div className="overview-feature-card__footer">
+            <p className="overview-feature-card__description">{product.description || 'Product details are being updated.'}</p>
+            <span className="inline-flex shrink-0 items-center gap-1 text-xs font-extrabold uppercase text-ink">Explore <ArrowUpRight size={15} aria-hidden="true" /></span>
+          </div>
+        </div>
+        {hasImage && (
+          <div className="overview-feature-card__foreground" aria-hidden="true">
+            <img className="overview-feature-card__image" src={product.image_url} alt="" loading="lazy" onError={() => setFailedUrl(product.image_url)} />
+          </div>
+        )}
+      </Link>
+    </article>
   );
 }
