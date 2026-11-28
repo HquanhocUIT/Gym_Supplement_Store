@@ -425,7 +425,7 @@ exports.deleteProductVariant = async (productId, variantId) => {
   }
 };
 
-// Xóa sản phẩm và báo lỗi nếu sản phẩm còn variant.
+// Xóa sản phẩm cùng variants; không cho xóa nếu giỏ hàng hoặc đơn hàng đang tham chiếu.
 exports.deleteProduct = async (id) => {
   const numericId = Number(id);
 
@@ -461,8 +461,8 @@ exports.deleteProduct = async (id) => {
     if (error.code === "23503") {
       throw createServiceError(
         409,
-        "PRODUCT_HAS_VARIANTS",
-        "Hãy xóa các variant trước khi xóa sản phẩm.",
+        "PRODUCT_IN_USE",
+        "This product is in a cart or order and cannot be deleted.",
       );
     }
 

@@ -6,6 +6,7 @@ const messages = {
   INVALID_TOKEN: 'Your session has expired. Please sign in again.',
   FORBIDDEN: 'You do not have permission to perform this action.',
   INSUFFICIENT_STOCK: 'There is not enough stock. Please review your cart.',
+  PRODUCT_IN_USE: 'This product is in a cart or order and cannot be deleted.',
   CART_EMPTY: 'Your cart is empty.',
   INVALID_QUANTITY: 'Quantity must be a positive whole number.',
   INVALID_PRICE_RANGE: 'Minimum price cannot exceed maximum price.',
