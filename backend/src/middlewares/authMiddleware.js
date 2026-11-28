@@ -32,6 +32,7 @@ function authenticate(req, res, next) {
     req.user = {
       user_id: decoded.user_id,
       role: decoded.role,
+      token_expires_at: decoded.exp,
     };
     next();
   } catch {

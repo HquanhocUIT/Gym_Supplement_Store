@@ -220,6 +220,44 @@ paths:
         "503":
           description: Google sign-in is not configured
 
+  /api/auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: Refresh the current session role
+      operationId: refreshAuthSession
+      description: |-
+        Requires the current Bearer token. Returns the account's latest role from the database
+        and issues a new JWT with the same expiry as the current token. The client cannot choose
+        or modify the role. Call this after an administrator changes the account role.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Session refreshed with the current account role
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - error
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  data:
+                    $ref: "#/components/schemas/AuthData"
+                  error:
+                    nullable: true
+                    example: null
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
   /api/plans:
     get:
       tags:

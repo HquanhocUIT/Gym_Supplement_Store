@@ -131,3 +131,31 @@ it('form đăng ký cũng có nút xem mật khẩu và nhãn cho từng ô', ()
   fireEvent.click(screen.getByRole('button', { name: 'Show password' }));
   expect(field.type).toBe('text');
 });
+
+it('refreshes the current session role after the account role changes', async () => {
+  saveAccessToken('member-session', { user_id: 12, role: 'member' });
+  const adapter = vi.fn(async (config) => {
+    const role = adapter.mock.calls.length === 1 ? 'member' : 'staff';
+    return {
+      config,
+      status: 200,
+      headers: {},
+      data: { success: true, data: {
+        access_token: role === 'member' ? 'member-refreshed' : 'staff-session',
+        user: { user_id: 12, email: 'member@example.test', full_name: 'Gym Member', role },
+      } },
+    };
+  });
+  axiosClient.defaults.adapter = adapter;
+
+  render(<AuthProvider><SessionProbe /></AuthProvider>);
+  await screen.findByText('member');
+  await waitFor(() => expect(getAccessToken()).toBe('member-refreshed'));
+
+  await act(async () => { window.dispatchEvent(new Event('focus')); });
+  await screen.findByText('staff');
+  expect(adapter).toHaveBeenCalledTimes(2);
+  expect(adapter.mock.calls[0][0].url).toBe('/auth/refresh');
+  expect(adapter.mock.calls[1][0].url).toBe('/auth/refresh');
+  expect(getAccessToken()).toBe('staff-session');
+});

@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { randomBytes } = require('node:crypto');
 const {
   findUserByEmail,
+  findUserById,
   findUserByGoogleSub,
   linkGoogleSubject,
   createGoogleUser,
@@ -183,7 +184,62 @@ async function login(req, res) {
 }
 
 /**
- * Xác minh Google ID token rồi đăng nhập hoặc liên kết tài khoản member.
+ * Refresh the current session using the account's latest database role.
+ * POST /api/auth/refresh
+ */
+async function refreshSession(req, res) {
+  const userId = Number(req.user?.user_id);
+  const tokenExpiresAt = req.user?.token_expires_at;
+
+  if (!Number.isInteger(userId) || userId <= 0 || !Number.isInteger(tokenExpiresAt)) {
+    return res.status(401).json({
+      success: false,
+      data: null,
+      error: { code: 'INVALID_TOKEN', message: 'Token cannot be refreshed' },
+    });
+  }
+
+  try {
+    const user = await findUserById(userId);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        data: null,
+        error: { code: 'UNAUTHORIZED', message: 'Account no longer exists' },
+      });
+    }
+
+    // Keep the original expiry so refreshing permissions does not extend session lifetime.
+    const token = jwt.sign(
+      { user_id: user.id, role: user.role, exp: tokenExpiresAt },
+      JWT_SECRET
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        user: {
+          user_id: user.id,
+          email: user.email,
+          full_name: user.full_name,
+          role: user.role,
+        },
+        access_token: token,
+      },
+      error: null,
+    });
+  } catch (err) {
+    console.error('refresh session error:', err);
+    return res.status(500).json({
+      success: false,
+      data: null,
+      error: { code: 'SERVER_ERROR', message: 'Internal Server Error' },
+    });
+  }
+}
+
+/**
+ * Verify a Google ID token, then sign in or link a member account.
  * POST /api/auth/google
  */
 async function googleLogin(req, res) {
@@ -314,4 +370,4 @@ async function googleLogin(req, res) {
   }
 }
 
-module.exports = { register, login, googleLogin };
+module.exports = { register, login, refreshSession, googleLogin };
