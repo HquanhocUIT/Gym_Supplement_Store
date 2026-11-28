@@ -871,6 +871,44 @@
                   ]
                 }
               ]
+            },
+            {
+              "name": "??ng nh?p b?ng Google",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/google",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "google"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"credential\": \"{{googleIdToken}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "C?n Google Identity Services ID token h?p l? trong {{googleIdToken}} v? GOOGLE_CLIENT_ID tr?n backend."
+              },
+              "response": []
             }
           ]
         },
@@ -10892,6 +10930,92 @@
                       "body": "{\n  \"success\": false,\n  \"data\": null,\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\"\n  }\n}"
                     }
                   ]
+                },
+                {
+                  "name": "Xem l?ch s? ??n c?a t?i",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/store/orders?page=1&limit=12",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "store",
+                        "orders"
+                      ],
+                      "query": [
+                        {
+                          "key": "page",
+                          "value": "1"
+                        },
+                        {
+                          "key": "limit",
+                          "value": "12"
+                        }
+                      ]
+                    },
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{accessToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "description": "Ch? tr? ??n c?a t?i kho?n t??ng ?ng v?i accessToken."
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Chi ti?t ??n h?ng",
+                  "item": [
+                    {
+                      "name": "Xem chi ti?t ??n c?a t?i",
+                      "request": {
+                        "method": "GET",
+                        "header": [
+                          {
+                            "key": "Accept",
+                            "value": "application/json"
+                          }
+                        ],
+                        "url": {
+                          "raw": "{{baseUrl}}/api/store/orders/{{orderId}}",
+                          "host": [
+                            "{{baseUrl}}"
+                          ],
+                          "path": [
+                            "api",
+                            "store",
+                            "orders",
+                            "{{orderId}}"
+                          ]
+                        },
+                        "auth": {
+                          "type": "bearer",
+                          "bearer": [
+                            {
+                              "key": "token",
+                              "value": "{{accessToken}}",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "description": "??t orderId b?ng ID ??n c? trong k?t qu? checkout ho?c l?ch s? ??n."
+                      },
+                      "response": []
+                    }
+                  ]
                 }
               ]
             }
@@ -10953,6 +11077,16 @@
     },
     {
       "key": "password",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "googleIdToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
       "value": "",
       "type": "string"
     }

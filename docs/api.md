@@ -24,12 +24,15 @@ Kiểm tra ứng dụng và database.
 
 ## Auth
 
-Đăng ký và đăng nhập; đăng ký luôn tạo role member.
+Đăng ký bằng email/mật khẩu hoặc Google Identity Services; tài khoản đăng ký công khai có role `member`. Đăng nhập email/mật khẩu hỗ trợ các tài khoản nhân viên và admin.
 
 | Method | URL | Quyền | Body / query | Response data |
 |---|---|---|---|---|
 | POST | `/api/auth/register` | Public | RegisterInput | AuthData |
 | POST | `/api/auth/login` | Public | LoginInput | AuthData |
+| POST | `/api/auth/google` | Public | GoogleLoginInput (`credential`) | AuthData |
+
+`credential` phải là Google ID token hợp lệ dành cho đúng OAuth client của ứng dụng. Backend xác minh chữ ký, audience và email đã xác thực trước khi cấp JWT của ứng dụng. Trên Render cần cấu hình `GOOGLE_CLIENT_ID`; nếu thiếu, endpoint trả `503 GOOGLE_AUTH_NOT_CONFIGURED`.
 
 ## Plans
 
@@ -123,6 +126,23 @@ Checkout COD từ giỏ hàng hiện tại.
 
 Lịch sử và chi tiết đơn luôn dùng `user_id` từ JWT. Truyền `user_id` khác trong query không đổi chủ tài khoản. Đơn không tồn tại và đơn của người khác cùng trả 404; endpoint khách hàng không cho Admin đọc đơn của tài khoản khác. Danh sách sắp theo ngày tạo mới nhất và ID để phân trang ổn định.
 
+### API để giải thích khi demo: checkout COD
+
+`POST /api/store/orders` nhận thông tin giao hàng và JWT; sản phẩm được lấy từ giỏ hàng của chính tài khoản, không truyền giá hay `user_id` trong request. Ví dụ body:
+
+```json
+{
+  "recipient_name": "Nguyen Van A",
+  "recipient_phone": "0900000000",
+  "shipping_address": "12 Nguyen Hue, Quan 1",
+  "payment_method": "cod"
+}
+```
+
+Luồng xử lý: middleware xác thực JWT → service kiểm tra dữ liệu giao hàng và phương thức COD → repository mở transaction, khóa giỏ/variant và kiểm tra tồn kho → server tính tổng tiền (giảm 10% nếu hội viên có gói còn hiệu lực) → tạo đơn, snapshot mặt hàng và payment pending, trừ tồn kho rồi xóa giỏ → commit. Nếu giỏ rỗng hoặc thiếu hàng, API trả `409` và rollback để không tạo đơn dở dang. Thành công trả `201` với `data.order` và `data.payment`.
+
+Sau khi đơn đã commit, backend gửi sự kiện `order.created` tới n8n nếu `N8N_ORDER_CREATED_WEBHOOK_URL` được cấu hình. Lỗi webhook không hủy đơn đã tạo. Đây là API ghi dữ liệu thật: khi demo hãy dùng tài khoản và giỏ hàng thử vì tồn kho sẽ giảm, giỏ sẽ được xóa và workflow có thể gửi email.
+
 ## Dashboard
 
 | Method | URL | Quyền | Response data |
@@ -136,9 +156,18 @@ Trả doanh thu hôm nay/tháng của Gym và Store, số hội viên active, g�
 - Tên trường, schema request/response, tham số path/query và mã HTTP chi tiết nằm trong OpenAPI; Swagger hiển thị trực tiếp từ file này.
 - ID hội viên khác ID membership; ID món giỏ hàng khác ID variant. Lấy ID thật từ API danh sách tương ứng.
 - Upload chỉ nhận trường `image`, JPEG/PNG/WebP, tối đa 5 MB. Không cần đưa Supabase secret vào request.
-- Checkout là thao tác ghi thật: tạo đơn, trừ kho, tạo payment pending và dọn giỏ. Hội viên đủ điều kiện nhận giảm 10%.
-- Các route lịch sử đơn và quản lý đơn chưa được mount trên nhánh này nên chưa được mô tả là API hoạt động. Cập nhật tài liệu khi các PR tương ứng được merge.
+- Khách hàng có API xem lịch sử/chi tiết đơn của chính mình. API quản trị đơn hàng riêng chưa được mount; `/api/admin/stats` chỉ cung cấp số liệu tổng quan.
+
+## Mở API docs trên Render
+
+Render Blueprint ở `render.yaml` chạy backend Docker và kiểm tra sức khỏe qua `/health`. Swagger và OpenAPI JSON được phục vụ trực tiếp bởi cùng backend, không cần tạo static site riêng. Trong Render Dashboard, mở web service `gym-store-api`, lấy hostname hiển thị ở đầu trang rồi thay `<render-service>` bằng phần hostname đó:
+
+- Swagger UI: `https://<render-service>.onrender.com/docs/`
+- Đặc tả JSON để tải hoặc import Postman: `https://<render-service>.onrender.com/openapi.json`
+- Health check: `https://<render-service>.onrender.com/health`
+
+Service cần kết nối database để khởi động; cấu hình `DATABASE_URL` trong Render. Blueprint bật SSL và đặt `JWT_SECRET` được sinh tự động. Đặt `CORS_ORIGIN` thành domain frontend nếu frontend gọi API từ trình duyệt. Nếu demo đăng nhập Google, thêm `GOOGLE_CLIENT_ID`; nếu demo email xác nhận đơn, thêm `N8N_ORDER_CREATED_WEBHOOK_URL`. Trang `/docs/` và `/openapi.json` công khai; các endpoint có `bearerAuth` vẫn cần JWT hợp lệ.
 
 ## Postman
 
-Collection v2.1 gồm 39 request nằm tại `docs/postman/gym-supplement-store.postman_collection.json`. Bản chia sẻ dùng `baseUrl = http://localhost:5000`, các biến `accessToken` và `password` để trống. Xem `docs/postman/README.md` để cấu hình trên máy cá nhân. Khi cần tạo lại collection, import `/openapi.json` hoặc `backend/src/docs/openapi.yaml` vào Postman rồi xuất và kiểm tra các biến trước khi commit.
+Collection v2.1 gồm 42 request nằm tại `docs/postman/gym-supplement-store.postman_collection.json`, khớp với các operation hiện có trong OpenAPI. Bản chia sẻ dùng `baseUrl = http://localhost:5000`; `accessToken`, `password`, `googleIdToken` và `orderId` để trống. Xem `docs/postman/README.md` để cấu hình trên máy cá nhân. Có thể import `/openapi.json` trên Render hoặc `backend/src/docs/openapi.yaml` vào Postman để tạo lại collection.
