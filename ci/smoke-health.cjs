@@ -24,10 +24,11 @@ function getFreePort() {
 }
 
 async function main() {
+  if (!process.env.TEST_DATABASE_URL) throw new Error('Smoke test requires TEST_DATABASE_URL for membership initialization.');
   const port = await getFreePort();
   const folder = path.resolve(process.cwd(), backendDir);
 
-  // Health API không cần database; không kết nối Supabase khi chạy CI.
+  // Start against the explicit test database, never a developer's .env database.
   const server = spawn(process.execPath, [path.join(folder, 'src/index.js')], {
     cwd: folder,
     stdio: 'ignore',
@@ -35,7 +36,7 @@ async function main() {
       ...process.env,
       NODE_ENV: 'test',
       PORT: String(port),
-      DATABASE_URL: '',
+      DATABASE_URL: process.env.TEST_DATABASE_URL,
       DATABASE_SSL: 'false',
       DATABASE_SSL_CA_PATH: '',
       PGHOST: '127.0.0.1',

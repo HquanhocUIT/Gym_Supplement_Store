@@ -84,6 +84,12 @@ jobs:
           JWT_SECRET: test_secret_key
         run: npm test
 
+      - name: Smoke test startup and health endpoint
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+          JWT_SECRET: test_secret_key
+        run: node ci/smoke-health.cjs backend
+
   docker-build:
     name: Docker build
     needs: detect-project
@@ -127,7 +133,7 @@ jobs:
         run: npm run build
 
   backend:
-    name: Backend lint and health
+    name: Backend lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -161,11 +167,6 @@ jobs:
       # Dùng phiên bản cố định; không sửa package.json của Task 3 đang chờ merge.
       - name: Lint backend
         run: npx --yes oxlint@1.81.0 --deny-warnings --config ci/oxlint-backend.json "${{ steps.backend.outputs.dir }}/src"
-
-      - name: Smoke test health endpoint
-        env:
-          JWT_SECRET: test_secret_key
-        run: node ci/smoke-health.cjs "${{ steps.backend.outputs.dir }}"
 
   pr-title:
     name: PR title
