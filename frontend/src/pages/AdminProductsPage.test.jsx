@@ -11,10 +11,12 @@ let queryClient;
 let products;
 let stock;
 let requests;
+let blockProductDelete;
 
 beforeEach(() => {
   stock = 5;
   requests = [];
+  blockProductDelete = false;
   products = Array.from({ length: 23 }, (_, index) => ({
     id: index + 1, name: `Product ${index + 1}`, description: 'Sample supplement',
     category_id: index < 12 ? 1 : 2, category_name: index < 12 ? 'Whey' : 'Creatine',
@@ -36,6 +38,16 @@ beforeEach(() => {
         items: filtered.slice((page - 1) * limit, page * limit),
         pagination: { page, limit, total: filtered.length, totalPages: Math.ceil(filtered.length / limit) },
       };
+    } else if (config.method === 'delete') {
+      if (blockProductDelete) {
+        throw new AxiosError('Conflict', 'ERR_BAD_RESPONSE', config, null, {
+          status: 409,
+          data: { success: false, error: { code: 'PRODUCT_IN_USE', message: 'This product is in a cart or order and cannot be deleted.' } },
+        });
+      }
+      const productId = Number(config.url.split('/').at(-1));
+      const productIndex = products.findIndex((product) => product.id === productId);
+      data = products.splice(productIndex, 1)[0] || null;
     } else if (config.method === 'put') {
       stock = JSON.parse(config.data).stock;
       data = { id: 101, size: '1 kg', price: 100000, stock };
@@ -105,6 +117,36 @@ it('lưu tồn kho và tạo sản phẩm nhiều variant sau khi sửa hợp đ
   fireEvent.click(screen.getByRole('button', { name: 'Save product' }));
   await screen.findByText('New demo product');
   expect(requests.filter((r) => r.method === 'post' && r.url === '/store/products/24/variants')).toHaveLength(2);
+});
+
+it('requires confirmation before deleting a product and removes it from the catalog', async () => {
+  renderPage();
+  await screen.findByText('Product 1');
+
+  fireEvent.click(screen.getByRole('button', { name: 'Delete Product 1' }));
+  expect(screen.getByText('Product 1', { selector: 'strong' })).toBeTruthy();
+  expect(screen.getByText(/This action cannot be undone/)).toBeTruthy();
+  expect(requests.some((request) => request.method === 'delete')).toBe(false);
+
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(requests.some((request) => request.method === 'delete')).toBe(false);
+
+  fireEvent.click(screen.getByRole('button', { name: 'Delete Product 1' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Delete product' }));
+  await waitFor(() => expect(requests.some((request) => request.method === 'delete' && request.url === '/store/products/1')).toBe(true));
+  await waitFor(() => expect(screen.queryByText('Product 1')).toBeNull());
+});
+
+it('keeps products referenced by orders and shows the API explanation', async () => {
+  blockProductDelete = true;
+  renderPage();
+  await screen.findByText('Product 1');
+
+  fireEvent.click(screen.getByRole('button', { name: 'Delete Product 1' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Delete product' }));
+
+  expect((await screen.findByRole('alert')).textContent).toContain('This product is in a cart or order and cannot be deleted.');
+  expect(screen.getAllByText('Product 1').length).toBe(2);
 });
 
 it('hiển thị lỗi API mà không làm trắng trang hoặc gọi map trên object', async () => {

@@ -40,6 +40,13 @@ function PublicLayout() {
           >
             <NavLink
               className={({ isActive }) => isActive ? 'transition text-brand-700' : 'transition hover:text-brand-700'}
+              to="/"
+              end
+            >
+              Overview
+            </NavLink>
+            <NavLink
+              className={({ isActive }) => isActive ? 'transition text-brand-700' : 'transition hover:text-brand-700'}
               to="/shop"
             >
               Shop
@@ -50,9 +57,6 @@ function PublicLayout() {
             >
               Membership plans
             </NavLink>
-            <Link className="transition hover:text-brand-700" to="/store#why-us">
-              Our standard
-            </Link>
             <NavLink
               className={({ isActive }) => isActive ? 'transition text-brand-700' : 'transition hover:text-brand-700'}
               to="/member"

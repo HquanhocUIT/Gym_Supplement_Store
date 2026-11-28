@@ -1233,7 +1233,9 @@ paths:
       description: |-
         Quyền truy cập: Admin.
 
-        Trả 409 nếu sản phẩm vẫn còn variant.
+        Xóa sản phẩm cùng các variant trong một transaction.
+        Trả 409 (PRODUCT_IN_USE) nếu giỏ hàng hoặc đơn hàng tham chiếu sản phẩm;
+        khi đó giữ nguyên sản phẩm và toàn bộ variant.
       security:
         - bearerAuth: []
       parameters:
