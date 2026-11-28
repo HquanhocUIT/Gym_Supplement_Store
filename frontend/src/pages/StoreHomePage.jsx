@@ -67,7 +67,6 @@ function StoreHomePage() {
                 <p className="mt-5 text-sm font-bold">What you can trust</p><p className="mt-1 text-xs leading-5 text-white/55">Transparent labels at every step.</p>
               </div>
             </div>
-            <a className="relative mt-6 inline-flex items-center gap-2 text-sm font-bold text-brand-500 hover:text-white" href="#why-us">Our quality promise <ArrowUpRight size={15} aria-hidden="true" /></a>
           </div>
         </div>
       </section>
@@ -89,17 +88,6 @@ function StoreHomePage() {
               </article>
             ))}
           </div>
-        </div>
-      </section>
-
-      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-[0.8fr_1.2fr] lg:px-8" id="why-us">
-        <div><Eyebrow>Our standard</Eyebrow><h2 className="mt-3 max-w-md font-display text-3xl font-extrabold tracking-[-0.05em] sm:text-4xl">Good products should make sense.</h2></div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {[
-            ['01', 'Clear by design', 'Ingredients and serving details are easy to understand.'],
-            ['02', 'Made for routines', 'Useful essentials that fit into a balanced training plan.'],
-            ['03', 'Progress together', 'A member space keeps your orders and plan in one place.'],
-          ].map(([number, title, body]) => <article className="rounded-card border border-line bg-white p-5" key={number}><span className="text-xs font-extrabold text-brand-700">{number}</span><h3 className="mt-5 font-display font-bold">{title}</h3><p className="mt-2 text-sm leading-6 text-muted">{body}</p></article>)}
         </div>
       </section>
 

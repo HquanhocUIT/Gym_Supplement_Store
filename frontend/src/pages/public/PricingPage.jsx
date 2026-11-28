@@ -1,82 +1,18 @@
-import { useState, useEffect } from 'react';
-import axiosClient from '../../api/axiosClient';
 import { Link } from 'react-router-dom';
-import { Clock, Flame, Check, DollarSign } from 'lucide-react';
-
-/**
- * PricingPage - Gym membership pricing page.
- * Calls GET /plans API, uses mock data if API fails.
- * Displays plans as Pricing Cards.
- */
-const MOCK_PLANS = [
-  {
-    id: 1,
-    name: '1 Month Pass',
-    duration_days: 30,
-    price: 250000,
-    status: 'active',
-    features: ['Gym 24/7 access', 'Group classes', 'Body consultation'],
-  },
-  {
-    id: 2,
-    name: '3 Month Pass',
-    duration_days: 90,
-    price: 690000,
-    status: 'active',
-    features: ['Gym 24/7 access', 'Group classes', 'Body consultation', 'Body assessment'],
-  },
-  {
-    id: 3,
-    name: '6 Month Pass',
-    duration_days: 180,
-    price: 1290000,
-    status: 'active',
-    features: [
-      'Gym 24/7 access',
-      'Group classes',
-      'Body consultation',
-      'Body assessment',
-      'Sports nutrition',
-    ],
-  },
-  {
-    id: 4,
-    name: '1 Year Pass',
-    duration_days: 365,
-    price: 2390000,
-    status: 'active',
-    features: [
-      'Gym 24/7 access',
-      'Group classes',
-      'Body consultation',
-      'Body assessment',
-      'Sports nutrition',
-      'Personal locker',
-    ],
-  },
-];
+import { Check } from 'lucide-react';
+import useApiQuery from '../../hooks/useApiQuery';
 
 export default function PricingPage() {
-  const [plans, setPlans] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchPlans() {
-      try {
-        const response = await axiosClient.get('/plans');
-        if (response.data?.data && Array.isArray(response.data.data)) {
-          setPlans(response.data.data);
-        } else {
-          setPlans(MOCK_PLANS);
-        }
-      } catch {
-        setPlans(MOCK_PLANS);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchPlans();
-  }, []);
+  const plansQuery = useApiQuery({
+    queryKey: ['membership-plans'],
+    url: '/plans',
+    retry: false,
+    select: (data) => {
+      if (!Array.isArray(data)) throw new Error('The server returned an unexpected plan list.');
+      return data;
+    },
+  });
+  const plans = plansQuery.data || [];
 
   const formatPrice = (price) =>
     new Intl.NumberFormat('en-US', {
@@ -85,29 +21,20 @@ export default function PricingPage() {
     }).format(price);
 
   const formatDuration = (days) => {
-    if (days >= 365) return '1 year';
-    if (days >= 180) return '6 months';
-    if (days >= 90) return '3 months';
+    if (days === 365) return '1 year';
+    if (days >= 30 && days % 30 === 0) return `${days / 30} ${days === 30 ? 'month' : 'months'}`;
     return `${days} days`;
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-night">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#9aca42]"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-night text-ink">
       {/* Header */}
       <section className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-12">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div>
               <h1 className="text-3xl font-bold text-white">Choose Your Membership Plan</h1>
-              <p className="text-muted mt-2">All plans include 24/7 gym access and basic amenities.</p>
+              <p className="text-slate-300 mt-2">Choose the membership duration that fits your training routine.</p>
             </div>
             <Link to="/register" className="px-6 py-3 border border-[#9aca42] rounded-xl text-[#9aca42] font-bold hover:bg-[#9aca42] hover:text-white transition-colors">
               Create Account
@@ -117,13 +44,28 @@ export default function PricingPage() {
       </section>
 
       {/* Pricing Cards */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8">
+      <section className="pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {plans.map((plan) => (
-              <PricingCard key={plan.id} plan={plan} formatPrice={formatPrice} formatDuration={formatDuration} />
-            ))}
-          </div>
+          {plansQuery.isPending ? (
+            <p className="py-12 text-center text-slate-200" role="status">Loading membership plans...</p>
+          ) : plansQuery.isError ? (
+            <div className="rounded-2xl border border-white/20 p-8 text-center text-white" role="alert">
+              <h2 className="text-xl font-bold">Unable to load membership plans</h2>
+              <p className="mt-3 text-slate-200">{plansQuery.error.message}</p>
+              <button type="button" className="mt-5 min-h-11 rounded-xl bg-brand-500 px-6 font-bold text-ink disabled:opacity-60" onClick={() => plansQuery.refetch()} disabled={plansQuery.isFetching}>Try again</button>
+            </div>
+          ) : plans.length === 0 ? (
+            <div className="rounded-2xl border border-white/20 p-8 text-center text-white" role="status">
+              <h2 className="text-xl font-bold">No membership plans available yet</h2>
+              <p className="mt-3 text-slate-200">Please check back soon or contact the gym for membership options.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+              {plans.map((plan) => (
+                <PricingCard key={plan.id} plan={plan} formatPrice={formatPrice} formatDuration={formatDuration} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -152,26 +94,19 @@ export default function PricingPage() {
 }
 
 function PricingCard({ plan, formatPrice, formatDuration }) {
-  const isPopular = plan.id === 3; // 6 Month Pass is most popular
 
   return (
-    <div className={`relative flex flex-col rounded-2xl border p-8 transition-all duration-300 ${isPopular ? 'border-[#9aca42] bg-[#22332b]/50 shadow-[0_0_30px_rgba(138,202,66,0.15)]' : 'border-[#3a4a3e] bg-[#22332b] hover:border-[#6a8a66]'}`}>
-      {isPopular && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-[#9aca42] text-white text-xs font-bold">
-          MOST POPULAR
-        </div>
-      )}
-
+    <div className="relative flex min-w-0 flex-col rounded-2xl border border-[#3a4a3e] bg-[#22332b] p-6 transition-colors hover:border-[#6a8a66]">
       <div className="flex-1">
         <h3 className="text-xl font-bold text-white">{plan.name}</h3>
-        <p className="text-muted text-sm mb-6">{formatDuration(plan.duration_days)}</p>
+        <p className="text-slate-300 text-sm mb-6">{formatDuration(plan.duration_days)}</p>
 
         <div className="mb-8">
-          <span className="text-4xl font-extrabold text-white">{formatPrice(plan.price).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}</span>
-          <span className="text-sm text-muted ml-2">/month</span>
+          <p className="whitespace-nowrap text-3xl font-extrabold text-white">{formatPrice(plan.price)}</p>
+          <p className="mt-2 text-sm text-slate-300">Total for {formatDuration(plan.duration_days)}</p>
         </div>
 
-        <ul className="space-y-3 mb-8 text-sm text-muted">
+        <ul className="space-y-3 mb-8 text-sm text-slate-300">
           {(plan.features || []).map((feature, idx) => (
             <li key={idx} className="flex items-start gap-3">
               <Check className="w-4 h-4 text-[#9aca42] shrink-0 mt-0.5" />
@@ -182,7 +117,7 @@ function PricingCard({ plan, formatPrice, formatDuration }) {
       </div>
 
       <div className="mt-auto">
-        <Link to="/register" className={`w-full py-4 px-6 rounded-xl font-bold transition-colors ${isPopular ? 'bg-[#9aca42] text-white hover:bg-[#7cac2c]' : 'border border-[#3a4a3e] text-white hover:bg-[#2a3a32]'}`}>
+        <Link to="/register" className="flex min-h-12 w-full items-center justify-center rounded-xl border border-[#6a8a66] px-4 py-3 font-bold text-white transition-colors hover:bg-[#2a3a32]">
           Register Now
         </Link>
       </div>
@@ -194,7 +129,7 @@ function FaqItem({ question, answer }) {
   return (
     <div className="p-4 rounded-xl border border-[#3a4a3e] bg-[#22332b] text-left">
       <h4 className="font-bold text-white mb-2">{question}</h4>
-      <p className="text-sm text-muted">{answer}</p>
+      <p className="text-sm text-slate-300">{answer}</p>
     </div>
   );
 }

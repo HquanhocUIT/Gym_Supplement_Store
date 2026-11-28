@@ -279,19 +279,41 @@ exports.deleteProductVariant = async (productId, variantId) => {
 
   return result.rows[0] || null;
 };
-// Xóa sản phẩm; database sẽ chặn nếu sản phẩm còn variant.
+// Xóa sản phẩm và các variant trong cùng transaction. Khóa ngoại từ giỏ hàng
+// hoặc đơn hàng sẽ chặn thao tác và rollback toàn bộ để giữ lịch sử nguyên vẹn.
 exports.deleteProduct = async (id) => {
-  const result = await pool.query({
-    text: `
-      DELETE FROM products
-      WHERE id = $1
-      RETURNING id, category_id, name, description, image_url
-    `,
-    values: [id],
-    query_timeout: 5000,
-  });
+  const client = await pool.connect();
 
-  return result.rows[0] || null;
+  try {
+    await client.query('BEGIN');
+    await client.query({
+      text: 'DELETE FROM product_variants WHERE product_id = $1',
+      values: [id],
+      query_timeout: 5000,
+    });
+
+    const result = await client.query({
+      text: `
+        DELETE FROM products
+        WHERE id = $1
+        RETURNING id, category_id, name, description, image_url
+      `,
+      values: [id],
+      query_timeout: 5000,
+    });
+
+    await client.query('COMMIT');
+    return result.rows[0] || null;
+  } catch (error) {
+    try {
+      await client.query('ROLLBACK');
+    } catch {
+      // Preserve the original database error if rollback also fails.
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
 };
 
 // Lưu URL ảnh mới vào sản phẩm.

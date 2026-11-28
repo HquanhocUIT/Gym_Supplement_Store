@@ -5,6 +5,7 @@ import {
   Plus,
   Search,
   SlidersHorizontal,
+  Trash2,
 } from "lucide-react";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -14,7 +15,7 @@ import Pagination from "../components/common/Pagination.jsx";
 import ProductPhotoEditor from "../components/common/ProductPhotoEditor.jsx";
 import Modal from "../components/ui/Modal.jsx";
 import useApiQuery from "../hooks/useApiQuery.js";
-import { apiClient, getApiData } from "../lib/apiClient.js";
+import { apiClient, getApiData, requestApiData } from "../lib/apiClient.js";
 import useCatalogSearchParams from "../hooks/useCatalogSearchParams.js";
 
 // Cảnh báo tồn kho thấp khi tổng số lượng không quá 20.
@@ -26,6 +27,9 @@ function AdminProductsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState("");
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   // Theo dõi nội dung tìm kiếm và bộ lọc danh mục.
   const { search: searchTerm, category: selectedCategory, page, updateFilters, setPage, finishEditing } = useCatalogSearchParams();
@@ -258,6 +262,32 @@ function AdminProductsPage() {
       }));
     } finally {
       setSavingVariantId(null);
+    }
+  }
+
+  async function handleDeleteProduct() {
+    if (!productToDelete) return;
+
+    setIsDeleting(true);
+    setDeleteError("");
+
+    try {
+      await requestApiData("delete", `/store/products/${productToDelete.id}`);
+
+      if (expandedProductId === productToDelete.id) {
+        setExpandedProductId(null);
+      }
+
+      if (page > 1 && pagination?.total === (page - 1) * PAGE_SIZE + 1) {
+        setPage(page - 1);
+      }
+
+      setProductToDelete(null);
+      await queryClient.invalidateQueries({ queryKey: ["store-products"] });
+    } catch (error) {
+      setDeleteError(error.message);
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -497,27 +527,41 @@ function AdminProductsPage() {
                         </td>
 
                         <td className="px-5 py-4 text-right">
-                          <button
-                            className="rounded-lg p-2 text-muted hover:bg-paper hover:text-ink"
-                            type="button"
-                            aria-label={
-                              isExpanded
-                                ? `Close ${product.name} variants`
-                                : `Open ${product.name} variants`
-                            }
-                            aria-expanded={isExpanded}
-                            onClick={() =>
-                              setExpandedProductId(
-                                isExpanded ? null : product.id,
-                              )
-                            }
-                          >
-                            <ArrowUpRight
-                              className={isExpanded ? "rotate-90" : ""}
-                              size={16}
-                              aria-hidden="true"
-                            />
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700"
+                              type="button"
+                              aria-label={`Delete ${product.name}`}
+                              onClick={() => {
+                                setDeleteError("");
+                                setProductToDelete(product);
+                              }}
+                            >
+                              <Trash2 size={15} aria-hidden="true" />
+                              Delete
+                            </button>
+                            <button
+                              className="rounded-lg p-2 text-muted hover:bg-paper hover:text-ink"
+                              type="button"
+                              aria-label={
+                                isExpanded
+                                  ? `Close ${product.name} variants`
+                                  : `Open ${product.name} variants`
+                              }
+                              aria-expanded={isExpanded}
+                              onClick={() =>
+                                setExpandedProductId(
+                                  isExpanded ? null : product.id,
+                                )
+                              }
+                            >
+                              <ArrowUpRight
+                                className={isExpanded ? "rotate-90" : ""}
+                                size={16}
+                                aria-hidden="true"
+                              />
+                            </button>
+                          </div>
                         </td>
                       </tr>
 
@@ -924,6 +968,54 @@ function AdminProductsPage() {
             ))}
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        isOpen={Boolean(productToDelete)}
+        onClose={() => {
+          if (!isDeleting) {
+            setProductToDelete(null);
+            setDeleteError("");
+          }
+        }}
+        title="Delete product?"
+        size="sm"
+        footer={
+          <>
+            <button
+              className="min-h-10 rounded-lg border border-line px-4 text-sm font-semibold disabled:opacity-60"
+              type="button"
+              onClick={() => {
+                setProductToDelete(null);
+                setDeleteError("");
+              }}
+              disabled={isDeleting}
+            >
+              Cancel
+            </button>
+            <button
+              className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-red-700 px-4 text-sm font-semibold text-white hover:bg-red-800 disabled:opacity-60"
+              type="button"
+              onClick={handleDeleteProduct}
+              disabled={isDeleting}
+            >
+              <Trash2 size={15} aria-hidden="true" />
+              {isDeleting ? "Deleting..." : "Delete product"}
+            </button>
+          </>
+        }
+      >
+        <p className="text-sm leading-6 text-ink-soft">
+          Delete <strong className="text-ink">{productToDelete?.name}</strong> and its variants from the catalog? This action cannot be undone.
+        </p>
+        <p className="mt-3 text-sm leading-6 text-ink-soft">
+          Products referenced by a cart or order are protected and cannot be deleted.
+        </p>
+        {deleteError && (
+          <p className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert">
+            {deleteError}
+          </p>
+        )}
       </Modal>
     </div>
   );

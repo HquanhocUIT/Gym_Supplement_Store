@@ -26,6 +26,14 @@ RETURNING id, email, role;
 
 Passwords are entered on the registration page. The API hashes them before saving them. Account roles are assigned through the database by the project owner; public registration always creates a member.
 
+## Membership plans on deployment
+
+The backend initializes four active membership plans before accepting HTTP requests **only when `membership_plans` is completely empty**: 30 days (250,000 VND), 90 days (690,000 VND), 180 days (1,290,000 VND), and 365 days (2,390,000 VND). These are total prices for each term. The schema must already exist. An initialization failure stops startup and logs the database error code without credentials.
+
+Redeploying preserves all existing plans, customized prices, and hidden plans. If every existing plan is hidden, the public list remains empty; an administrator must update or create a plan through plan management. Do not load the Auth/Gym demo seed into production to fix missing plans: it also contains demo accounts and memberships.
+
+After deploying the backend commit, verify `GET /api/plans` returns the intended active plans and open `/pricing`. The page shows loading, empty, and retryable error states rather than sample prices when data is unavailable. Deploy the frontend commit as well to receive these states and the full-term price labels.
+
 ## English sample catalog
 
 For an existing database containing the Vietnamese sample descriptions, run database/migrations/03_catalog_english.sql in the SQL Editor. It updates descriptions that still match the original seed text. It can be run again without changing already translated descriptions.
